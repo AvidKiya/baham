@@ -547,7 +547,6 @@ body[data-mode="admin"]{overflow-y:auto}
 @keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-7vmax,5vmax,0) scale(1.18)}}
 #app::after{content:"";position:absolute;inset:0;z-index:40;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E")}
-.btn.primary{position:relative;overflow:hidden}
 .btn.primary>.btn-shine,.btn.primary>span{position:relative;z-index:2}
 .btn.primary::before{content:"";position:absolute;top:-2px;bottom:-2px;width:34%;left:-70%;
   background:linear-gradient(105deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-18deg);

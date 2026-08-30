@@ -77,6 +77,12 @@ console.log("— جریان کامل دعوت‌نامه");
   await sleep(300);
   ok((await active(p)) === "scr-question", "→ question");
   ok(await p.isVisible("text=با من رل می‌زنی"), "سؤال اصلی نمایان");
+  const yesC = await p.evaluate(() => {
+    const el = document.getElementById("yesBtn");
+    const r = el.getBoundingClientRect();
+    return { cx: r.left + r.width / 2, vw: window.innerWidth, pos: getComputedStyle(el).position };
+  });
+  ok(yesC.pos === "absolute" && Math.abs(yesC.cx - yesC.vw / 2) < 12, "دکمه‌ی آره دقیقاً وسط صفحه است (" + yesC.pos + ", cx=" + Math.round(yesC.cx) + ")");
 
   // playful no — رد کردن باید غیرممکن باشد
   for (let i = 0; i < 10; i++) await p.click(".answers .no", { force: true });
