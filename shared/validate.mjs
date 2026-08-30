@@ -7,6 +7,7 @@ import { DEFAULT_CONFIG } from "./config.mjs";
 
 const MAX = { short: 60, name: 32, text: 600, url: 400, list: 12, clauses: 10 };
 const URL_RE = /^https?:\/\/[^\s"'<>]{3,}$/i;
+const LOCAL_RE = /^\/assets\/[A-Za-z0-9._\/-]{2,120}$/; // مسیر داخلی خود پروژه
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const THEME_KEYS = ["bg", "bg2", "acc", "acc2"]; // glow is derived from acc
 const ASSET_KEYS = ["nervous", "happy", "celebrate", "confused", "date", "sparkles", "letter", "roses"];
@@ -81,7 +82,7 @@ export function validatePatch(patch) {
   if (patch.music !== undefined) {
     const r = str(patch.music, MAX.url);
     if (r.err) return { err: r.err, path: "music" };
-    if (r.ok && !URL_RE.test(r.ok)) return { err: "آدرس موسیقی باید با http/https شروع شود", path: "music" };
+    if (r.ok && !URL_RE.test(r.ok) && !LOCAL_RE.test(r.ok)) return { err: "آدرس موسیقی باید http/https یا مسیری مثل /assets/music/x.mp3 باشد", path: "music" };
     out.music = r.ok.trim();
   }
 
@@ -94,7 +95,7 @@ export function validatePatch(patch) {
       if (v === undefined) continue;
       const r = str(v, MAX.url);
       if (r.err) return { err: r.err, path: "assets." + ak };
-      if (r.ok && !URL_RE.test(r.ok)) return { err: "آدرس استیکر باید با http/https شروع شود", path: "assets." + ak };
+      if (r.ok && !URL_RE.test(r.ok) && !LOCAL_RE.test(r.ok)) return { err: "آدرس استیکر باید http/https یا مسیری مثل /assets/stickers/x.webp باشد", path: "assets." + ak };
       out.assets[ak] = r.ok.trim();
     }
   }

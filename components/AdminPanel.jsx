@@ -601,7 +601,7 @@ export default function AdminPanel() {
                 <h2>🎵 موسیقی</h2>
                 <Row label="آدرس فایل موسیقی" hint="mp3/ogg مستقیم؛ خالی = دکمه‌ی موسیقی مخفی می‌شود">
                   <div className="adm-audio">
-                    <TextInput value={D.music} onChange={(v) => set("music", v)} ph="https://example.com/song.mp3" dir="ltr" />
+                    <TextInput value={D.music} onChange={(v) => set("music", v)} ph="https://example.com/song.mp3 یا /assets/music/ahang.mp3" dir="ltr" />
                     {D.music ? (
                       <button className="btn ghost" type="button" onClick={() => { const a = new Audio(D.music); a.volume = 0.4; a.play().catch(() => alert("پخش نشد — آدرس یا فرمت مشکل دارد")); a.onended = () => a.remove(); }}>تست پخش</button>
                     ) : null}

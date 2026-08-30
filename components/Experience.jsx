@@ -80,9 +80,20 @@ function MusicButton({ cfg, toast }) {
         a.addEventListener("playing", () => setPlaying(true));
         a.addEventListener("pause", () => setPlaying(false));
         a.addEventListener("error", () => {
-          setAvailable(false);
-          setPlaying(false);
-          if (triedUnlock.current) toast("موسیقی در دسترس نیست");
+          // یک بار بی‌صدا با نسخه‌ی تازه‌ی فایل دوباره تلاش می‌کند؛ اگر باز نشد دکمه را آرام مخفی می‌کند
+          if (a.dataset.retried) {
+            setAvailable(false);
+            setPlaying(false);
+            return;
+          }
+          a.dataset.retried = "1";
+          try {
+            const sep = cfg.music.includes("?") ? "&" : "?";
+            a.src = cfg.music + sep + "v=" + Date.now();
+            a.load();
+          } catch (e) {
+            setAvailable(false);
+          }
         });
         audioRef.current = a;
       } catch (e) {
@@ -119,7 +130,9 @@ function MusicButton({ cfg, toast }) {
     const onCta = () => { triedUnlock.current = true; attemptPlay(); };
     const onToggle = () => toggle();
     // اولین لمس/کلیک هرجای صفحه‌ی دعوت → شروع موزیک (unlock استاندارد iOS)
-    const onFirstTouch = () => {
+    const onFirstTouch = (e) => {
+      // کلیک روی خود دکمه‌ی موزیک را خودِ دکمه هندل می‌کند (وگرنه لمس، پخش را شروع و کلیک فوراً متوقفش می‌کند)
+      if (e && e.target && e.target.closest && e.target.closest("#musicBtn")) return;
       if (!triedUnlock.current) { triedUnlock.current = true; attemptPlay(); }
     };
     window.addEventListener("rol:cta", onCta);
