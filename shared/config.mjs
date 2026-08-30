@@ -1,0 +1,198 @@
+// ---------------------------------------------------------------------------
+// shared/config.mjs — ✏️ THE single source of truth for every text & setting.
+// Imported by BOTH the Next.js app AND the Pages Function, so what you see in
+// the admin panel, the invite page and the API always agree.
+// (The admin panel writes overrides into KV at runtime; these are the defaults.)
+// ---------------------------------------------------------------------------
+export const DEFAULT_CONFIG = {
+  // ---- who -----------------------------------------------------------------
+  senderName: "",              // اسم خودت (اختیاری) — پایین صفحه و کارت پایانی
+  recipientName: "",           // اسم پیش‌فرض او (وقتی لینک name نداشته باشد)
+  demoName: "سارا",            // اسم نمونه در حالت /demo
+
+  // ---- the big question ----------------------------------------------------
+  question: "با من رل می‌زنی؟ ❤️",
+  petPhrase: "خانومِ من",       // بعد از بله: «خب خانومِ من…»
+
+  // ---- look & feel ---------------------------------------------------------
+  theme: "romantic",           // romantic | violet | wine  (یا با ?theme= در لینک)
+  themes: {
+    romantic: { bg: "#0b0715", bg2: "#180c2e", acc: "#ff4f8b", acc2: "#c96bff", glow: "255,79,139" },
+    violet:   { bg: "#0a0819", bg2: "#181040", acc: "#a06bff", acc2: "#ff5ec4", glow: "160,107,255" },
+    wine:     { bg: "#130610", bg2: "#2b0c22", acc: "#ff3d71", acc2: "#c22e8f", glow: "255,61,113" },
+  },
+
+  // ---- music (optional) ----------------------------------------------------
+  // یک آدرس مستقیم mp3/ogg بذار (مثلاً داخل یک bucket یا هر CDN معتبر).
+  // خالی بذاری، دکمه‌ی موسیقی کلاً مخفی می‌شود.
+  music: "",
+
+  // ---- optional stickers (leave "" to use the built-in ones) ---------------
+  // اگر خواستی استیکر دلخواه بذاری، آدرس تصویر (webp/png/gif) رو اینجا بذار.
+  assets: {
+    nervous:  "",   // قلبِ خجالتی — صفحه اول
+    happy:    "",   // قلبِ خوشحال — کارت پایانی
+    celebrate:"",   // قلبِ جشن — لحظه‌ی بله
+    confused: "",   // قلبِ گیج — کنار جواب‌های «نه»
+    date:     "",   // قرار اول
+    sparkles: "",   // پیام‌های مخفی
+  },
+
+  // ---- date options --------------------------------------------------------
+  dateOptions: [
+    { id: "cafe",     emoji: "☕", label: "کافه",            hint: "کتاب، قهوه و حرف‌زدن" },
+    { id: "food",     emoji: "🍕", label: "یه چیزی بخوریم",  hint: "پیتزا همیشه جوابه" },
+    { id: "cinema",   emoji: "🎬", label: "سینما",           hint: "فیلم رو با هم انتخاب کنیم" },
+    { id: "drive",    emoji: "🌃", label: "یه دور دور",       hint: "مقصد مهم نیست" },
+    { id: "billiard", emoji: "🎱", label: "بلیارد",          hint: "قول می‌دم بذارم ببری" },
+    { id: "calm",     emoji: "🌙", label: "یه جای آروم",     hint: "فقط آروم و قشنگ" },
+    { id: "surprise", emoji: "🎁", label: "سورپرایز با تو",   hint: "انتخاب با خودت" },
+  ],
+  whenOptions: [
+    { id: "w1", label: "این هفته ⚡" },
+    { id: "w2", label: "هفته‌ی بعد 🌱" },
+    { id: "w3", label: "هر وقت تو بگی 🌷" },
+  ],
+  timeOptions: [
+    { id: "t1", label: "عصر ☕" },
+    { id: "t2", label: "شب 🌙" },
+  ],
+
+  // ---- the little contract -------------------------------------------------
+  contractClauses: [
+    "گاهی دلتنگ شدیم، حق داریم بگیم.",
+    "قهر کردن آزاده؛ ولی طولانی‌شدنش ممنوع.",
+    "قرارهای خوب باید زیاد باشن.",
+    "خندیدن کنار هم اجباری نیست… ولی شدیداً توصیه می‌شه.",
+    "هر وقت یکی ازمون «یه چیزی هست» گفت، اون یکی گوش می‌ده.",
+  ],
+
+  // ---- hidden messages (easter eggs) --------------------------------------
+  secrets: [
+    "راستش از همون اول می‌دونستم تو اینو پیدا می‌کنی؛ چون تو از اون آدمای خاصی 🤍",
+    "این قلب کوچیک پایین صفحه، از اول به اسم تو می‌تپید ❤️",
+    "ستاره‌ها هم از خبر بودن؛ فقط تو دیرتر فهمیدی ✨",
+  ],
+
+  // ---- optional, privacy-conscious stats ----------------------------------
+  // فقط تعداد کلیک‌ها ذخیره می‌شود (بله / نه / قرار / …) — بدون IP، بدون کوکی.
+  // کار می‌کند فقط اگر KV با نام STATS وصل کرده باشی (در wrangler.toml).
+  // storeName: true یعنی اسم (هش‌نشده) هم ذخیره شود تا بفهمی کدوم لینک جواب داده.
+  stats: {
+    enabled: true,
+    storeName: false,
+    adminKey: "rol-admin-1234",   // ← حتماً عوضش کن! /api/stats?key=...
+  },
+
+  // ---- share ---------------------------------------------------------------
+  finalShareText: "رسماً گفت آره ❤️",
+
+  // ---- all the copy (به همین ترتیب توی صفحه‌ها می‌نشیند) --------------------
+  text: {
+    siteTitle: "یه سؤال کوچیک برای تو ❤️",
+    siteDesc: "یه دعوت کوچیک، برای یه آدم خاص.",
+    ogDesc: "همین که بازش کردی، نصف جواب رو دادی 👀",
+
+    landingBadge: "یه دعوت‌نامه‌ی کوچیک 💌",
+    landingH1a: "یه سؤال رو بپرس…",
+    landingH1b: "بذار بله بگه ❤️",
+    landingSub: "یه تجربه‌ی کوچیک و شخصی برای یه آدم خاص؛ لینکش رو بفرست، بقیه‌ش با دکمه‌ی «آره».",
+    landingCta: "ساخت لینک شخصی ✨",
+    landingTry: "تجربه‌ی نمونه 👀",
+    landingFeatures: "بدون ثبت‌نام · بدون ردیابیِ اذیت‌کننده · فقط یه سؤال ☺️",
+
+    introL1: "یه چیزی هست که مدت‌هاست می‌خوام بهت بگم…",
+    introL2: "ولی گفتم شاید اینجوری قشنگ‌تر باشه 👀",
+    introBtn: "بزن بریم ❤️",
+
+    buildL1: "قول می‌دم طولانی نشه…",
+    buildL2: "فقط یه سؤال کوچیک دارم.",
+    buildL3: "ولی جوابش برام خیلی مهمه ❤️",
+    buildSkip: "برای رد شدن سریع، لمس کن",
+    buildBtn: "خب بپرس 😶‍🌫️",
+
+    qPre: "خب…",
+    yesBtn: "آره ❤️",
+    noBtn: "نه 😐",
+    noTaunts: [
+      "عه؟ 😐 مطمئنی؟",
+      "یه بار دیگه فکر کن 😂",
+      "نه نگو دیگه 🥺",
+      "این دکمه چرا اینقدر فراریه؟ 😂",
+      "من هنوز امیدوارم ❤️",
+    ],
+    noReal: "اگه واقعاً می‌گی نه، اینجا بزن",
+    noRealNote: "قول می‌دم ناراحت نمی‌شم ❤️",
+
+    yesL1: "جدی می‌گی؟ 😳",
+    yesL2: "پس شد! 🥹",
+    yesL3: "از امروز رسماً باید تحملم کنی 😂❤️",
+    yesBtnNext: "خب، بعدش؟ ✨",
+
+    afterL1: "خب {pet}…",
+    afterL2: "حالا بریم سراغ اولین قرار؟ 👀",
+    afterBtn: "آره، بریم 😌",
+
+    dateTitle: "اولین قرارمون کجا باشه؟ ❤️",
+    datePicked: "انتخاب شد ❤️",
+    whenTitle: "حالا کِی؟",
+    whenTimeLabel: "چه ساعتی؟ (اختیاری)",
+    whenBtn: "ثبت قرار ✨",
+
+    contractTitle: "یه قرارداد کوچیک 😂❤️",
+    contractFine: "* این قرارداد با یک قلب امضا می‌شود و اعتبار عاطفی کامل دارد.",
+    contractSign: "امضا می‌کنم ❤️",
+    contractLawyer: "نیاز به وکیل دارم 😂",
+    contractLawyerMsg: "باشه… پس باید با وکیلم صحبت کنیم 😂",
+    contractLawyerOk: "خب ببخشید، امضا می‌کنم ❤️",
+    contractStamp: "مُهر و امضا شد ❤️",
+
+    finalTitle: "قرارمون ثبت شد ❤️",
+    finalSaid: "رسماً گفت آره!",
+    finalDateRow: "اولین قرارمون",
+    finalWhenRow: "کِی",
+    finalNote: "حالا فقط مونده یه روز خوب براش پیدا کنیم 😌",
+    finalSave: "این لحظه رو ذخیره کن 📸",
+    finalShare: "اشتراک‌گذاری",
+    finalAgain: "از اول",
+
+    noTitle: "باشه ❤️",
+    noL1: "ممنون که صادق بودی.",
+    noL2: "همین که جوابم رو دادی، برام ارزش داشت.",
+    noL3: "امیدوارم همیشه خوشحال باشی 🌷",
+    noAgain: "یه بار دیگه نگاه کن",
+    noRestart: "از اول",
+
+    resumeChip: "ادامه از جایی که موندیم",
+    secretTitle: "خب… این یکی رو قرار نبود پیدا کنی 👀",
+    secretClose: "باشه باشه، رفتم 😂",
+    musicLabel: "موسیقی",
+    madeWith: "ساخته‌شده با ❤️ و کمی جسارت",
+
+    builderTitle: "لینک شخصی‌ات رو بساز",
+    builderNamePh: "اسمش چیه؟",
+    builderCopy: "کپی لینک",
+    builderOpen: "باز کردن",
+    builderShare: "فرستادن",
+    copied: "کپی شد ✨",
+  },
+};
+
+// deep-merge stored KV overrides on top of the defaults
+export function mergeConfig(base, patch) {
+  if (!patch || typeof patch !== "object") return base;
+  const out = Array.isArray(base) ? base.slice() : { ...base };
+  for (const k of Object.keys(patch)) {
+    const bv = base ? base[k] : undefined;
+    const pv = patch[k];
+    if (pv === undefined || pv === null) continue;
+    if (Array.isArray(bv) || Array.isArray(pv)) {
+      if (Array.isArray(pv)) out[k] = pv;
+    } else if (bv && typeof bv === "object" && pv && typeof pv === "object") {
+      out[k] = mergeConfig(bv, pv);
+    } else if (typeof bv === "undefined" || typeof bv === typeof pv) {
+      out[k] = pv;
+    }
+  }
+  return out;
+}
