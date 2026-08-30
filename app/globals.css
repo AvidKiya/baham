@@ -543,7 +543,7 @@ body[data-mode="admin"]{overflow-y:auto}
 .poem-card::before{content:"";position:absolute;inset:-45% -25%;background:radial-gradient(closest-side,rgba(var(--glow),.16),transparent 72%);pointer-events:none}
 .poem-body{display:flex;flex-direction:column;gap:16px;position:relative}
 .bayt{display:flex;flex-direction:column;gap:1px}
-.bayt span{font-size:16.5px;line-height:2.05;color:#ffeaf4;text-shadow:0 2px 18px rgba(var(--glow),.4)}
+.bayt span{font-size:16.5px;line-height:2.05;color:#ffeaf4;text-shadow:0 2px 18px rgba(var(--glow),.4);overflow-wrap:break-word}
 .bayt + .bayt{border-top:1px dashed rgba(255,255,255,.16);padding-top:15px}
 .bayt.anim{opacity:0;animation:baytIn .8s cubic-bezier(.2,.7,.3,1) forwards}
 @keyframes baytIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -562,12 +562,19 @@ body[data-mode="admin"]{overflow-y:auto}
 .adm-chip.sel{background:rgba(var(--glow),.22);border-color:rgba(var(--glow),.7)}
 .adm-h3{font-size:15px;margin:18px 0 2px;color:#ffd7ea;font-weight:700}
 
-/* ====================== iphone emoji ====================== */
-.emj{height:1.06em;width:1.06em;vertical-align:-0.2em;margin:0 .045em;display:inline-block;user-select:none;pointer-events:none}
-.d-emoji .emj{height:1.5em;width:1.5em;margin:0}
-.d-emoji{display:inline-flex;align-items:center;justify-content:center}
-.f-val .emj{height:1.15em;width:1.15em}
-.q-text .emj{height:1.12em;width:1.12em}
+/* ---------- ریسپانسیو: موبایل‌های کوچک ---------- */
+@media (max-width: 380px){
+  .bayt span{font-size:15px;line-height:1.95}
+  .poem-card{padding:20px 14px 12px;border-radius:22px}
+  .poem-body{gap:13px}
+  .line.big{font-size:21px}
+  .m-card{padding:18px 14px}
+  .occ-chip{padding:7px 11px;font-size:12.5px}
+}
+@media (max-width: 340px){
+  .bayt span{font-size:14px}
+  .dcard{min-height:0;padding:14px 10px}
+}
 
 /* reply cta */
 .btn.reply-cta{border:1px solid rgba(var(--glow),.45);background:rgba(var(--glow),.09);color:#ffe3f0;

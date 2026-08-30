@@ -48,8 +48,8 @@ console.log("— جریان کامل دعوت‌نامه");
   await p.goto(BASE + "/invite?name=" + encodeURIComponent("سارا"), { waitUntil: "networkidle" });
   await sleep(400);
   ok((await active(p)) === "scr-intro", "boot → intro");
-  const emjIntro = await p.evaluate(() => document.querySelectorAll("#scr-intro .emj").length);
-  ok(emjIntro >= 1, "ایموجی‌های ایفونی (تصویری) در متن‌ها: " + emjIntro + " مورد");
+  const emjIntro = await p.evaluate(() => /\p{Extended_Pictographic}/u.test(document.getElementById("scr-intro").textContent));
+  ok(emjIntro, "ایموجی‌های native در متن مقدمه حضور دارند");
   await audit(p, "intro");
 
   await p.click("text=بزن بریم");
@@ -73,8 +73,8 @@ console.log("— جریان کامل دعوت‌نامه");
   ok(answerState === null, "هیچ جواب «نه»ی ثبت نشده");
   const tauntVisible = await p.locator("#taunt").textContent();
   ok(tauntVisible.length > 0, "پیام tease فعال: " + tauntVisible);
-  const tauntEmj = await p.evaluate(() => document.querySelectorAll("#taunt .emj").length);
-  ok(tauntEmj >= 1, "ایموجی تصویری داخل پیام tease");
+  const tauntEmj = await p.evaluate(() => /\p{Extended_Pictographic}/u.test(document.getElementById("taunt").textContent));
+  ok(tauntEmj, "ایموجی native داخل پیام tease");
   // کلیک روی دکمه‌ی تسلیم‌شده = بله
   await p.click(".answers .no", { force: true });
   await sleep(600);
@@ -103,8 +103,8 @@ console.log("— جریان کامل دعوت‌نامه");
   ok(bayts >= 3, `${bayts} بیت شعر روی صفحه`);
   ok(await p.isVisible("text=شهریار"), "شاعر پیش‌فرض: شهریار");
   ok((await p.locator("#scr-poem .bayt .m1").first().textContent()).includes("شهریارت می‌شوم"), "بیت اولِ شهریار درست است");
-  const poemEmj = await p.evaluate(() => document.querySelectorAll("#scr-poem .emj").length);
-  ok(poemEmj >= 1, "ایموجی تصویری در صفحه‌ی شعر: " + poemEmj + " مورد");
+  const poemEmj = await p.evaluate(() => /\p{Extended_Pictographic}/u.test(document.querySelector("#scr-poem .line.big").textContent));
+  ok(poemEmj, "ایموجی native در عنوان صفحه‌ی شعر");
   await p.click("text=بریم سراغ قرار");
   await sleep(350);
   ok((await active(p)) === "scr-date", "شعر → انتخاب قرار");
@@ -356,6 +356,55 @@ console.log("— ادامه بعد از رفرش + reduced motion");
   await p.click(".answers .yes", { force: true }).catch(() => {});
   await sleep(300);
   ok(true, "RM: جریان بدون کرش");
+  await ctx.close();
+}
+
+
+/* ================= 5) ریسپانسیو — بدون سرریز افقی در موبایل ================= */
+console.log("— ریسپانسیو موبایل");
+{
+  const noOverflow = (pg, label) =>
+    pg.evaluate(() => ({
+      sw: document.scrollingElement ? document.scrollingElement.scrollWidth : document.documentElement.scrollWidth,
+      iw: window.innerWidth,
+    })).then(({ sw, iw }) => ok(sw <= iw + 1, label + ": بدون سرریز افقی (" + sw + "≤" + iw + ")"));
+  for (const vp of [{ width: 320, height: 568 }, { width: 375, height: 667 }, { width: 430, height: 932 }]) {
+    const { ctx, p } = await page({ viewport: vp });
+    await p.goto(BASE + "/invite?name=پری&theme=mint", { waitUntil: "networkidle" });
+    await sleep(450);
+    await noOverflow(p, "intro " + vp.width);
+    await p.click("text=بزن بریم"); await p.click("#scr-build"); await sleep(120);
+    await p.click("text=خب بپرس"); await sleep(300);
+    await noOverflow(p, "question " + vp.width);
+    await p.click(".answers .yes", { force: true }); await sleep(400);
+    await p.click("#scr-yes"); await sleep(150);
+    await p.click("#yesBtnNext"); await sleep(150);
+    await p.click("text=آره، بریم"); await sleep(500);
+    await noOverflow(p, "poem " + vp.width);
+    const baytW = await p.evaluate(() => {
+      const el = document.querySelector("#scr-poem .bayt");
+      return el ? Math.round(el.getBoundingClientRect().width) : 0;
+    });
+    ok(baytW > 0 && baytW <= vp.width + 1, "بیت شعر داخل صفحه جا می‌شود (" + baytW + "px @" + vp.width + ")");
+    await p.click("text=بریم سراغ قرار"); await sleep(400);
+    await noOverflow(p, "date " + vp.width);
+    await ctx.close();
+  }
+  // مودال ساخت لینک در کوچک‌ترین عرض
+  const { ctx, p } = await page({ viewport: { width: 320, height: 568 } });
+  await p.goto(BASE + "/", { waitUntil: "networkidle" });
+  await sleep(400);
+  await p.click("text=ساخت لینک شخصی"); await sleep(400);
+  await p.fill("#builderName", "پریسا");
+  await p.click(".occ-chip >> nth=1"); await sleep(250);
+  const fits = await p.evaluate(() => {
+    const m = document.querySelector(".m-card");
+    const r = m ? m.getBoundingClientRect() : null;
+    return r ? r.left >= 0 && r.right <= window.innerWidth : false;
+  });
+  ok(fits, "مودال ساخت لینک در صفحه‌ی ۳۲۰px جا می‌شود");
+  const lnk = await p.locator(".link-txt").textContent();
+  ok(lnk.includes("occasion=marriage") && lnk.includes("پریسا"), "لینک با مناسبت + فارسی خام: " + lnk.trim().slice(-42));
   await ctx.close();
 }
 
