@@ -109,6 +109,7 @@ export default function Landing({ initialConfig }) {
 function BuilderModal({ cfg, onClose }) {
   const [name, setName] = useState("");
   const [theme, setTheme] = useState(null);
+  const [occ, setOcc] = useState(null);
   const [copied, setCopied] = useState(false);
   const link = useCallback(() => {
     const base = location.origin + "/invite";
@@ -116,8 +117,9 @@ function BuilderModal({ cfg, onClose }) {
     const nm = cleanText(name, 32);
     if (nm) q.push("name=" + nm); // فارسیِ خام — خوانا و مستقیم، بدون کدشدن
     if (theme && theme !== (cfg.theme || "romantic")) q.push("theme=" + theme);
+    if (occ && occ !== (cfg.defaultOccasion || "love")) q.push("occasion=" + occ);
     return base + (q.length ? "?" + q.join("&") : "");
-  }, [name, theme, cfg.theme])();
+  }, [name, theme, occ, cfg.theme, cfg.defaultOccasion])();
 
   const copy = async () => {
     const url = link;
@@ -172,6 +174,19 @@ function BuilderModal({ cfg, onClose }) {
               aria-label={"تم " + (themeNames[th] || th)}
               onClick={() => setTheme(th)}
             />
+          ))}
+        </div>
+        <div className="occ-row" role="group" aria-label="مناسبت دعوت">
+          {(cfg.occasions || []).map((o) => (
+            <button
+              key={o.id}
+              className={"occ-chip" + (occ === o.id ? " sel" : "")}
+              type="button"
+              aria-pressed={occ === o.id}
+              onClick={() => setOcc(occ === o.id ? null : o.id)}
+            >
+              <EmoText text={(o.emoji || "💌") + " " + o.label} />
+            </button>
           ))}
         </div>
         <div className="link-box glass">

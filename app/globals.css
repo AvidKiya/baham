@@ -538,6 +538,30 @@ body[data-mode="admin"]{overflow-y:auto}
   .adm-savebar{width:calc(100vw - 24px);justify-content:space-between}
 }
 
+/* ====================== poem screen (اشعار مناسبت) ====================== */
+.poem-card{margin:14px auto 8px;padding:26px 20px 16px;max-width:420px;width:100%;border-radius:26px;text-align:center;position:relative;overflow:hidden}
+.poem-card::before{content:"";position:absolute;inset:-45% -25%;background:radial-gradient(closest-side,rgba(var(--glow),.16),transparent 72%);pointer-events:none}
+.poem-body{display:flex;flex-direction:column;gap:16px;position:relative}
+.bayt{display:flex;flex-direction:column;gap:1px}
+.bayt span{font-size:16.5px;line-height:2.05;color:#ffeaf4;text-shadow:0 2px 18px rgba(var(--glow),.4)}
+.bayt + .bayt{border-top:1px dashed rgba(255,255,255,.16);padding-top:15px}
+.bayt.anim{opacity:0;animation:baytIn .8s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes baytIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.poem-poet{margin-top:16px;color:rgb(var(--glow));font-size:14px;font-weight:700;position:relative}
+.poem-poet::before{content:"— "}
+@media (prefers-reduced-motion: reduce){.bayt.anim{animation:none;opacity:1}}
+
+/* occasion chips (landing + admin) */
+.occ-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0 4px}
+.occ-chip{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#ffe7f2;border-radius:999px;
+  padding:8px 14px;font-size:13px;font-family:inherit;cursor:pointer;transition:all .2s}
+.occ-chip.sel{background:rgba(var(--glow),.2);border-color:rgba(var(--glow),.65);box-shadow:0 6px 18px -8px rgba(var(--glow),.55)}
+.occ-edit{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}
+.adm-chip{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#ffe7f2;border-radius:999px;
+  padding:7px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:all .2s}
+.adm-chip.sel{background:rgba(var(--glow),.22);border-color:rgba(var(--glow),.7)}
+.adm-h3{font-size:15px;margin:18px 0 2px;color:#ffd7ea;font-weight:700}
+
 /* ====================== iphone emoji ====================== */
 .emj{height:1.06em;width:1.06em;vertical-align:-0.2em;margin:0 .045em;display:inline-block;user-select:none;pointer-events:none}
 .d-emoji .emj{height:1.5em;width:1.5em;margin:0}

@@ -191,6 +191,15 @@ export default function AdminPanel() {
   const [stats, setStats] = useState(null);
   const [authEnv, setAuthEnv] = useState(true);
   const [previewName, setPreviewName] = useState("");
+  const [occSel, setOccSel] = useState("love");
+  const [linkOcc, setLinkOcc] = useState("");
+  // لینک دعوت: اسم فارسیِ خام + مناسبت اختیاری
+  const invHref = () => {
+    const q = [];
+    if (previewName.trim()) q.push("name=" + cleanName(previewName));
+    if (linkOcc) q.push("occasion=" + linkOcc);
+    return "/invite" + (q.length ? "?" + q.join("&") : "");
+  };
   const fileRef = useRef(null);
 
   const flash = (type, text) => {
@@ -441,6 +450,15 @@ export default function AdminPanel() {
               <Row label="متن اشتراک‌گذاری کارت پایانی">
                 <TextInput value={D.finalShareText} onChange={(v) => set("finalShareText", v)} />
               </Row>
+              <Row label="مناسبت پیش‌فرض دعوت" hint="شعرِ همین مناسبت وسط جریان نمایش داده می‌شود (با پارامتر occasion= در لینک عوض می‌شود)">
+                <div className="occ-edit">
+                  {(D.occasions || []).map((o) => (
+                    <button key={o.id} type="button" className={"adm-chip" + ((D.defaultOccasion || "love") === o.id ? " sel" : "")} onClick={() => set("defaultOccasion", o.id)}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </Row>
               <Row label="یوزرنیم تلگرام تو (برای دکمه‌ی «جوابم رو خودم بگم»)" hint="خالی = دکمه مخفی می‌شود. فقط حروف انگلیسی/اعداد/_">
                 <TextInput value={(D.replyTo && D.replyTo.telegram) || ""} onChange={(v) => set("replyTo.telegram", String(v).replace(/[^A-Za-z0-9_]/g, ""))} ph="AvidKiya" dir="ltr" />
               </Row>
@@ -486,6 +504,38 @@ export default function AdminPanel() {
             <>
               <section className="adm-card glass">
                 <h2>✍️ متن‌ها</h2>
+                <h3 className="adm-h3">📜 اشعار مناسبت‌ها (هر خط = یک بیت؛ مصرع‌ها را با | جدا کن)</h3>
+                <div className="occ-edit">
+                  {(D.occasions || []).map((o) => (
+                    <button key={o.id} type="button" className={"adm-chip" + (occSel === o.id ? " sel" : "")} onClick={() => setOccSel(o.id)}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                {(() => {
+                  const idx = (D.occasions || []).findIndex((o) => o.id === occSel);
+                  if (idx < 0) return null;
+                  const o = D.occasions[idx];
+                  const setOcc = (field, value) => set("occasions", D.occasions.map((x, i) => (i === idx ? { ...x, [field]: value } : x)));
+                  const txt = (o.verses || []).map((b) => (b && b[0] ? b[0] + " | " + (b[1] || "") : "")).join("\n");
+                  const onV = (v) => {
+                    const verses = v.split("\n").map((ln) => ln.split("|").map((seg) => seg.trim())).filter((pr) => pr[0]).map((pr) => [pr[0].slice(0, 160), (pr[1] || "").slice(0, 160)]).slice(0, 8);
+                    setOcc("verses", verses);
+                  };
+                  return (
+                    <>
+                      <Row label="برچسب مناسبت">
+                        <TextInput value={o.label} onChange={(v) => setOcc("label", v)} />
+                      </Row>
+                      <Row label="شاعر" hint="مثلاً: شهریار">
+                        <TextInput value={o.poet} onChange={(v) => setOcc("poet", v)} />
+                      </Row>
+                      <Row label="ابیات شعر" hint="هر خط یک بیت؛ بین دو مصرع | بگذار">
+                        <TextArea value={txt} onChange={onV} />
+                      </Row>
+                    </>
+                  );
+                })()}
                 <p className="adm-hint" style={{ marginTop: -8 }}>تقریباً هر جمله‌ی سایت اینجاست؛ تغییر بده و ذخیره کن. ایموجی‌ها آزادند 😄</p>
               </section>
               {TEXT_GROUPS.map((g) => (
@@ -623,7 +673,7 @@ export default function AdminPanel() {
               <Row label="لینک آماده">
                 <div className="link-box glass">
                   <span className="link-txt" dir="ltr">
-                    {typeof window !== "undefined" ? window.location.origin + "/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "") : "/invite"}
+                    {typeof window !== "undefined" ? window.location.origin + invHref() : "/invite"}
                   </span>
                 </div>
               </Row>
@@ -632,20 +682,27 @@ export default function AdminPanel() {
                   className="btn primary"
                   type="button"
                   onClick={() => {
-                    const url = window.location.origin + "/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "");
+                    const url = window.location.origin + invHref();
                     if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => flash("ok", "کپی شد ✨"), () => flash("err", "کپی نشد"));
                   }}
                 >
                   کپی لینک
                 </button>
-                <a className="btn ghost" href={"/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "")} target="_blank" rel="noopener">
+                <a className="btn ghost" href={invHref()} target="_blank" rel="noopener">
                   باز کردن
                 </a>
               </div>
               <p className="adm-hint">پیش‌نمایش با تنظیماتِ «ذخیره‌شده» است؛ تغییرات ذخیره‌نشده هنوز اعمال نشده‌اند.</p>
               <div className="adm-preview-frame">
+                <div className="occ-edit">
+                  {(D.occasions || []).map((o) => (
+                    <button key={o.id} type="button" className={"adm-chip" + (linkOcc === o.id ? " sel" : "")} onClick={() => setLinkOcc(linkOcc === o.id ? "" : o.id)}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
                 <iframe
-                  src={"/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "")}
+                  src={invHref()}
                   title="پیش‌نمایش دعوت‌نامه"
                   loading="lazy"
                 />

@@ -97,8 +97,17 @@ console.log("— جریان کامل دعوت‌نامه");
   await p.click("#yesBtnNext");
   await sleep(200);
   await p.click("text=آره، بریم");
+  await sleep(400);
+  ok((await active(p)) === "scr-poem", "→ صفحه‌ی شعر (بعد از آره)");
+  const bayts = await p.locator("#scr-poem .bayt").count();
+  ok(bayts >= 3, `${bayts} بیت شعر روی صفحه`);
+  ok(await p.isVisible("text=شهریار"), "شاعر پیش‌فرض: شهریار");
+  ok((await p.locator("#scr-poem .bayt .m1").first().textContent()).includes("شهریارت می‌شوم"), "بیت اولِ شهریار درست است");
+  const poemEmj = await p.evaluate(() => document.querySelectorAll("#scr-poem .emj").length);
+  ok(poemEmj >= 1, "ایموجی تصویری در صفحه‌ی شعر: " + poemEmj + " مورد");
+  await p.click("text=بریم سراغ قرار");
   await sleep(350);
-  ok((await active(p)) === "scr-date", "→ انتخاب قرار");
+  ok((await active(p)) === "scr-date", "شعر → انتخاب قرار");
   const cards = await p.locator(".dcard").count();
   ok(cards >= 10, `${cards} کارت قرار (پیشنهادهای متنوع)`);
   ok(await p.isVisible("text=آشپزی دونفره"), "گزینه‌ی آشپزی دونفره‌ی خونه‌ای هست");
@@ -198,6 +207,8 @@ console.log("— پنل مدیریت: ویرایش → ذخیره → اعمال
   await p2.click("#yesBtnNext");
   await p2.click("text=آره، بریم");
   await sleep(400);
+  await p2.click("text=بریم سراغ قرار");
+  await sleep(350);
   const firstCard = await p2.locator(".dcard .d-title >> nth=0").textContent();
   ok(firstCard.includes("کافه‌ی مورد علاقه"), "گزینه‌ی ویرایش‌شده اعمال شد: " + firstCard);
   await p2.context().close();
@@ -210,6 +221,28 @@ console.log("— پنل مدیریت: ویرایش → ذخیره → اعمال
   await sleep(800);
   const cfg = await (await fetch(BASE + "/api/config")).json();
   ok(cfg.stored === false, "بازنشانی به پیش‌فرض (cleanup)");
+  await ctx.close();
+}
+
+/* ================= 2.5) مناسبت‌ها و اشعار ================= */
+console.log("— مناسبت‌ها و اشعار");
+{
+  const { ctx, p } = await page({ viewport: { width: 390, height: 844 } });
+  await p.goto(BASE + "/invite?name=سارا&occasion=friendship", { waitUntil: "networkidle" });
+  await sleep(400);
+  await p.click("text=بزن بریم"); await p.click("#scr-build"); await sleep(120);
+  await p.click("text=خب بپرس"); await sleep(300);
+  await p.click(".answers .yes", { force: true }); await sleep(400);
+  await p.click("#scr-yes"); await sleep(150);
+  await p.click("#yesBtnNext"); await sleep(150);
+  await p.click("text=آره، بریم"); await sleep(400);
+  ok((await active(p)) === "scr-poem", "مناسبت دوستی → صفحه‌ی شعر");
+  ok(await p.isVisible("text=درختِ دوستی بنشان"), "بیت حافظ (دوستی) نمایش داده شد");
+  ok(await p.isVisible("text=حافظ و سعدی"), "شاعرهای مناسبت دوستی درج شدند");
+  const workLink = await p.evaluate(() => location.href);
+  ok(workLink.includes("occasion=friendship"), "پارامتر occasion در URL باقی است");
+  await p.click("text=بریم سراغ قرار"); await sleep(350);
+  ok((await active(p)) === "scr-date", "شعر دوستی → انتخاب قرار");
   await ctx.close();
 }
 
@@ -230,6 +263,11 @@ console.log("— لندینگ و ساخت لینک");
   const link = await p.locator(".link-txt").textContent();
   ok(link.includes("لیلا"), "لینک با اسم فارسیِ خام (بدون کد): " + link.trim().slice(-24));
   ok(!link.includes("%D9"), "لینک بدون درصد-انکودینگ فارسی");
+  await p.click(".occ-chip >> nth=2"); // دوستی
+  await sleep(250);
+  const link2 = await p.locator(".link-txt").textContent();
+  ok(link2.includes("occasion=friendship"), "چیپ مناسبت در لینک: " + link2.trim().slice(-40));
+  ok(link2.includes("لیلا"), "اسم فارسی خام هنوز در لینک است");
   await p.screenshot({ path: "docs/shots/next-landing.png" });
   await ctx.close();
 }

@@ -10,6 +10,7 @@ import { fxStart, confettiBurst, confettiCannons, confettiRain, heartsRain, chim
 import { stickerSVG, STICKER_KINDS } from "@/lib/stickers";
 import { cardBlob } from "@/lib/card";
 import { EmoText } from "@/lib/emoji";
+import { occasionOf } from "@/lib/occasion";
 import Sticker from "@/components/Sticker";
 
 /* ---------- creator credit ---------- */
@@ -419,8 +420,37 @@ function AfterScreen() {
       <p {...rise(1, "line")} >
         {E(cfg, "afterL2", "حالا بریم سراغ اولین قرار؟ 👀")}
       </p>
-      <button {...rise(2, "btn primary xl")} type="button" autoFocus  onClick={() => { buzz(8); go("date"); }}>
+      <button {...rise(2, "btn primary xl")} type="button" autoFocus  onClick={() => { buzz(8); go("poem"); }}>
         {E(cfg, "afterBtn", "آره، بریم 😌")}
+      </button>
+    </section>
+  );
+}
+
+/* ============================== poem (شعرِ مناسبت) ============================== */
+function PoemScreen() {
+  const { cfg, go } = useApp();
+  const occ = occasionOf(cfg) || { poet: "", verses: [] };
+  const verses = (occ.verses || []).slice(0, 8);
+  return (
+    <section className="screen active" id="scr-poem" aria-label="شعر برای تو">
+      <Sticker kind="letter" cls="stk stk-s" cfg={cfg} />
+      <p {...rise(0, "line big")}>
+        {E(cfg, "poemTitle", "یه چیزی برات دارم 💌")}
+      </p>
+      <div className="poem-card glass" {...rise(1, "")}>
+        <div className="poem-body">
+          {verses.map((b, i) => (
+            <div className={"bayt" + (RM ? "" : " anim")} key={i} style={RM ? undefined : { animationDelay: (i * 260 + 140) + "ms" }}>
+              <span className="m1">{b[0]}</span>
+              <span className="m2">{b[1]}</span>
+            </div>
+          ))}
+        </div>
+        {occ.poet ? <div className="poem-poet">{occ.poet}</div> : null}
+      </div>
+      <button {...rise(2, "btn primary xl")} type="button" autoFocus onClick={() => { buzz(8); go("date"); }}>
+        {E(cfg, "poemBtn", "بریم سراغ قرار ✨")}
       </button>
     </section>
   );
@@ -941,6 +971,7 @@ export default function Experience({ config, mode = "invite", initialName = "" }
     question: QuestionScreen,
     yes: YesScreen,
     after: AfterScreen,
+    poem: PoemScreen,
     date: DateScreen,
     when: WhenScreen,
     contract: ContractScreen,

@@ -111,6 +111,34 @@ export function validatePatch(patch) {
     out.replyTo = out2;
   }
 
+  // — occasions & poems (مناسبت‌ها) —
+  if (patch.defaultOccasion !== undefined) {
+    if (!String(patch.defaultOccasion || "").match(/^[a-z0-9_-]{1,24}$/)) return { err: "مناسبت نامعتبر است", path: "defaultOccasion" };
+    out.defaultOccasion = String(patch.defaultOccasion);
+  }
+  if (patch.occasions !== undefined) {
+    if (!Array.isArray(patch.occasions)) return { err: "مناسبت‌ها نامعتبر", path: "occasions" };
+    const occs = [];
+    for (const o of patch.occasions.slice(0, 6)) {
+      if (!o || typeof o !== "object" || Array.isArray(o)) continue;
+      const id = String(o.id || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 24);
+      if (!id) continue;
+      const l = str(o.label || "", 40); if (l.err) return { err: l.err, path: "occasions.label" };
+      const pt = str(o.poet || "", 60); if (pt.err) return { err: pt.err, path: "occasions.poet" };
+      let verses = [];
+      if (Array.isArray(o.verses)) {
+        for (const b of o.verses.slice(0, 8)) {
+          if (!Array.isArray(b) || !b[0]) continue;
+          const m1 = str(b[0], 160); if (m1.err) return { err: m1.err, path: "occasions.verses" };
+          const m2 = str(b[1] || "", 160); if (m2.err) return { err: m2.err, path: "occasions.verses" };
+          verses.push([clean(m1.ok), clean(m2.ok)]);
+        }
+      }
+      occs.push({ id, emoji: String(o.emoji || "").slice(0, 8), label: clean(l.ok), poet: clean(pt.ok), verses });
+    }
+    out.occasions = occs;
+  }
+
   // — creator credit —
   if (patch.creator !== undefined) {
     if (typeof patch.creator !== "object") return { err: "اطلاعات سازنده نامعتبر", path: "creator" };
