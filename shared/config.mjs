@@ -52,10 +52,13 @@ export const DEFAULT_CONFIG = {
     { id: "drive",    emoji: "🌃", label: "یه دور دور",       hint: "مقصد مهم نیست" },
     { id: "cooking",  emoji: "🍳", label: "آشپزی دونفره‌ی خونه‌ای", hint: "با هم بپزیم، با هم بخوریم" },
     { id: "calm",     emoji: "🌙", label: "یه جای آروم",     hint: "فقط آروم و قشنگ" },
+    { id: "picnic",   emoji: "🧺", label: "پیک‌نیک",           hint: "فرش، میان‌وعده و آفتاب" },
+    { id: "icecream", emoji: "🍦", label: "بستنی‌فروشی",       hint: "دونفره یه بستنی" },
+    { id: "karaoke",  emoji: "🎤", label: "کارائوکه",          hint: "بذار صدای خوشت رو نشونت بدم" },
     { id: "surprise", emoji: "🎁", label: "سورپرایز با تو",   hint: "انتخاب با خودت" },
   ],
   whenOptions: [
-    { id: "w1", label: "این هفته ⚡" },
+    { id: "w1", label: "این هفته ✨" },
     { id: "w2", label: "هفته‌ی بعد 🌱" },
     { id: "w3", label: "هر وقت تو بگی 🌷" },
   ],
@@ -103,6 +106,12 @@ export const DEFAULT_CONFIG = {
     },
   },
 
+  // ---- reply (دکمه‌ی «جوابم رو خودم بگم» در صفحه‌ی پایانی) ------------------
+  replyTo: {
+    telegram: "AvidKiya",   // یوزرنیم تلگرام خودت (خالی = دکمه مخفی می‌شود)
+    text: "سلام! جواب سؤالت رو می‌خوای بدونی؟ رسماً آره ❤️ قرارمون هم {date} ({when})",
+  },
+
   // ---- share ---------------------------------------------------------------
   finalShareText: "رسماً گفت آره ❤️",
 
@@ -128,7 +137,7 @@ export const DEFAULT_CONFIG = {
     buildL2: "فقط یه سؤال کوچیک دارم.",
     buildL3: "ولی جوابش برام خیلی مهمه ❤️",
     buildSkip: "برای رد شدن سریع، لمس کن",
-    buildBtn: "خب بپرس 😶‍🌫️",
+    buildBtn: "خب بپرس 😳",
 
     qPre: "خب…",
     yesBtn: "آره ❤️",
@@ -173,6 +182,7 @@ export const DEFAULT_CONFIG = {
     finalWhenRow: "کِی",
     finalNote: "حالا فقط مونده یه روز خوب براش پیدا کنیم 😌",
     finalSave: "این لحظه رو ذخیره کن 📸",
+    replyBtn: "جوابم رو خودم بهت بگم 💌",
     finalShare: "اشتراک‌گذاری",
     finalAgain: "از اول",
 

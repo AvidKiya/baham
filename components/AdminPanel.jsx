@@ -174,6 +174,11 @@ function deepDiff(base, edit) {
 }
 
 /* =============================== the panel =============================== */
+function cleanName(v) {
+  // فارسیِ خوانا می‌ماند؛ فقط فاصله کد می‌شود
+  return String(v || "").trim().replace(/\s+/g, "%20").slice(0, 32);
+}
+
 export default function AdminPanel() {
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState("");
@@ -184,6 +189,7 @@ export default function AdminPanel() {
   const [msg, setMsg] = useState(null); // {type:'ok'|'err', text}
   const [dirty, setDirty] = useState(false);
   const [stats, setStats] = useState(null);
+  const [authEnv, setAuthEnv] = useState(true);
   const [previewName, setPreviewName] = useState("");
   const fileRef = useRef(null);
 
@@ -201,6 +207,7 @@ export default function AdminPanel() {
       if (saved) setPassword(saved);
     } catch (e) {}
     // public config — load even before auth
+    fetch("/api/health").then((r) => r.json()).then((h) => setAuthEnv(!!h.authEnv)).catch(() => {});
     fetch("/api/config")
       .then((r) => r.json())
       .then((j) => {
@@ -240,7 +247,8 @@ export default function AdminPanel() {
         flash("err", "KV با نام CONFIG وصل نشده — اول تنظیمات Pages رو طبق README کامل کن (بخش «اتصال KV»).");
       }
       const test = await fetch("/api/config", { method: "PUT", headers: { "x-admin-key": password, "content-type": "application/json" }, body: JSON.stringify({ config: {} }) });
-      if (test.status === 401) flash("err", "رمز اشتباه است");
+      if (test.status === 429) flash("err", "تلاش زیاد؛ ۱۰ دقیقه صبر کن");
+      else if (test.status === 401) flash("err", "رمز اشتباه است");
       else if (test.status === 501) flash("err", "KV وصل نیست؛ اما رمز درست است. برای ذخیره‌سازی، KV CONFIG را وصل کن.");
       else if (test.ok) {
         setAuthed(true);
@@ -394,6 +402,12 @@ export default function AdminPanel() {
       </header>
 
       {msg ? <div className={"adm-toast " + msg.type}>{msg.text}</div> : null}
+      {!authEnv ? (
+        <div className="adm-warn">
+          ⚠️ این پنل الان با رمزِ داخل خود سایت کار می‌کند. برای اینکه <b>فقط خودت</b> دسترسی داشته باشی، در تنظیمات Pages متغیر
+          محیطی <code dir="ltr">ADMIN_PASSWORD</code> را با یک رمز قوی ست کن و دوباره deploy کن (راهنما در README). ۸ بار رمز اشتباه = قفل ۱۰ دقیقه‌ای.
+        </div>
+      ) : null}
 
       <div className="adm-body">
         <nav className="adm-tabs glass">
@@ -426,6 +440,12 @@ export default function AdminPanel() {
               </Row>
               <Row label="متن اشتراک‌گذاری کارت پایانی">
                 <TextInput value={D.finalShareText} onChange={(v) => set("finalShareText", v)} />
+              </Row>
+              <Row label="یوزرنیم تلگرام تو (برای دکمه‌ی «جوابم رو خودم بگم»)" hint="خالی = دکمه مخفی می‌شود. فقط حروف انگلیسی/اعداد/_">
+                <TextInput value={(D.replyTo && D.replyTo.telegram) || ""} onChange={(v) => set("replyTo.telegram", String(v).replace(/[^A-Za-z0-9_]/g, ""))} ph="AvidKiya" dir="ltr" />
+              </Row>
+              <Row label="متن پیش‌فرض پیام تلگرام" hint="{date} و {when} و {name} خودکار جایگزین می‌شوند">
+                <TextArea value={(D.replyTo && D.replyTo.text) || ""} onChange={(v) => set("replyTo.text", v)} />
               </Row>
               <Row label="تم پیش‌فرض" hint="با لینک ?theme= موقتاً عوض می‌شود">
                 <div className="adm-themepick">
@@ -603,7 +623,7 @@ export default function AdminPanel() {
               <Row label="لینک آماده">
                 <div className="link-box glass">
                   <span className="link-txt" dir="ltr">
-                    {typeof window !== "undefined" ? window.location.origin + "/invite" + (previewName.trim() ? "?name=" + encodeURIComponent(previewName.trim()) : "") : "/invite"}
+                    {typeof window !== "undefined" ? window.location.origin + "/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "") : "/invite"}
                   </span>
                 </div>
               </Row>
@@ -612,20 +632,20 @@ export default function AdminPanel() {
                   className="btn primary"
                   type="button"
                   onClick={() => {
-                    const url = window.location.origin + "/invite" + (previewName.trim() ? "?name=" + encodeURIComponent(previewName.trim()) : "");
+                    const url = window.location.origin + "/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "");
                     if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => flash("ok", "کپی شد ✨"), () => flash("err", "کپی نشد"));
                   }}
                 >
                   کپی لینک
                 </button>
-                <a className="btn ghost" href={"/invite" + (previewName.trim() ? "?name=" + encodeURIComponent(previewName.trim()) : "")} target="_blank" rel="noopener">
+                <a className="btn ghost" href={"/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "")} target="_blank" rel="noopener">
                   باز کردن
                 </a>
               </div>
               <p className="adm-hint">پیش‌نمایش با تنظیماتِ «ذخیره‌شده» است؛ تغییرات ذخیره‌نشده هنوز اعمال نشده‌اند.</p>
               <div className="adm-preview-frame">
                 <iframe
-                  src={"/invite" + (previewName.trim() ? "?name=" + encodeURIComponent(previewName.trim()) : "")}
+                  src={"/invite" + (previewName.trim() ? "?name=" + cleanName(previewName) : "")}
                   title="پیش‌نمایش دعوت‌نامه"
                   loading="lazy"
                 />

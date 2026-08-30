@@ -9,6 +9,7 @@ import { T, cleanText, store, loadState, INITIAL_STATE, track, toFa, applyTheme 
 import { fxStart, confettiBurst, confettiCannons, confettiRain, heartsRain, chime, buzz, RM } from "@/lib/fx";
 import { stickerSVG, STICKER_KINDS } from "@/lib/stickers";
 import { cardBlob } from "@/lib/card";
+import { EmoText } from "@/lib/emoji";
 import Sticker from "@/components/Sticker";
 
 /* ---------- creator credit ---------- */
@@ -24,7 +25,7 @@ function Credit({ cfg, compact }) {
   return (
     <span className="credit">
       <span className="credit-text">
-        {T(cfg, "madeWith", "ساخته‌شده با ❤️ و کلی جسارت")}
+        {E(cfg, "madeWith", "ساخته‌شده با ❤️ و کلی جسارت")}
         {cr.fa ? <> توسط <b className="credit-name">{cr.fa}</b></> : null}
         {cr.username ? <a className="credit-user" href={links.instagram || links.github || "#"} target="_blank" rel="noopener">{cr.username}</a> : null}
       </span>
@@ -43,6 +44,8 @@ function Credit({ cfg, compact }) {
 
 const Ctx = createContext(null);
 const useApp = () => useContext(Ctx);
+/** T() but with iPhone-style emoji images swapped in (JSX children only) */
+const E = (cfg, key, fb) => <EmoText text={T(cfg, key, fb)} />;
 export const HEART_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="lh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5c98"/><stop offset="1" stop-color="#b478ff"/></linearGradient></defs><path d="M12 21c-5.6-4.2-9-7.6-9-11.4C3 6.6 5.4 4.5 8 4.5c1.7 0 3.2.9 4 2.3.8-1.4 2.3-2.3 4-2.3 2.6 0 5 2.1 5 5.1 0 3.8-3.4 7.2-9 11.4z" fill="url(#lh)"/></svg>';
 
@@ -148,15 +151,15 @@ function IntroScreen() {
     <section className="screen active" id="scr-intro" aria-label="مقدمه">
       <div {...rise(0, "card glass")} >
         <Sticker kind="nervous" cls="stk stk-l" cfg={cfg} ariaLabel="قلب خجالتی" />
-        <p className="line big">{T(cfg, "introL1", "یه چیزی هست که مدت‌هاست می‌خوام بهت بگم…")}</p>
-        <p className="line dim">{T(cfg, "introL2", "ولی گفتم شاید اینجوری قشنگ‌تر باشه 👀")}</p>
+        <p className="line big">{E(cfg, "introL1", "یه چیزی هست که مدت‌هاست می‌خوام بهت بگم…")}</p>
+        <p className="line dim">{E(cfg, "introL2", "ولی گفتم شاید اینجوری قشنگ‌تر باشه 👀")}</p>
         <button className="btn primary xl" type="button" autoFocus onClick={start}>
-          {T(cfg, "introBtn", "بزن بریم ❤️")}
+          {E(cfg, "introBtn", "بزن بریم ❤️")}
         </button>
       </div>
       {appState.checkpoint >= 2 && appState.answer === "yes" ? (
         <button className="chip" type="button" onClick={resume}>
-          {T(cfg, "resumeChip", "ادامه از جایی که موندیم")}
+          {E(cfg, "resumeChip", "ادامه از جایی که موندیم")}
         </button>
       ) : null}
     </section>
@@ -194,18 +197,18 @@ function BuildScreen() {
     >
       <div {...rise(0, "card glass slim")} >
         <div id="buildLines">
-          <p className={"line big bl" + (step >= 1 ? " shown" : "")}>{T(cfg, "buildL1", "قول می‌دم طولانی نشه…")}</p>
+          <p className={"line big bl" + (step >= 1 ? " shown" : "")}>{E(cfg, "buildL1", "قول می‌دم طولانی نشه…")}</p>
           <p className={"line big bl" + (step >= 2 ? " shown" : "")}>
             {name ? <span className="nm">{name}، </span> : null}
-            {T(cfg, "buildL2", "فقط یه سؤال کوچیک دارم.")}
+            {E(cfg, "buildL2", "فقط یه سؤال کوچیک دارم.")}
           </p>
-          <p className={"line big bl" + (step >= 3 ? " shown" : "")}>{T(cfg, "buildL3", "ولی جوابش برام خیلی مهمه ❤️")}</p>
+          <p className={"line big bl" + (step >= 3 ? " shown" : "")}>{E(cfg, "buildL3", "ولی جوابش برام خیلی مهمه ❤️")}</p>
         </div>
         <p className={"hint" + (done ? "" : " bl")} style={done ? undefined : { opacity: step >= 1 ? 0.7 : 0 }}>
-          {T(cfg, "buildSkip", "برای رد شدن سریع، لمس کن")}
+          {E(cfg, "buildSkip", "برای رد شدن سریع، لمس کن")}
         </p>
         <button className={"btn primary xl" + (done ? "" : " bl")} type="button" onClick={() => { buzz(8); go("question"); }}>
-          {T(cfg, "buildBtn", "خب بپرس 😶‍🌫️")}
+          {E(cfg, "buildBtn", "خب بپرس 😶‍🌫️")}
         </button>
       </div>
     </section>
@@ -308,7 +311,7 @@ function QuestionScreen() {
   return (
     <section className="screen active" id="scr-question" aria-label="سؤال اصلی">
       <p {...rise(0, "q-pre line")} >
-        {T(cfg, "qPre", "خب…")}
+        {E(cfg, "qPre", "خب…")}
       </p>
       <h1 {...rise(1, "q-text pop")} >
         {cfg.question || "با من رل می‌زنی؟ ❤️"}
@@ -321,7 +324,7 @@ function QuestionScreen() {
           style={{ transform: `translate(-50%,-50%) scale(${grow})` }}
           onClick={doYes}
         >
-          {T(cfg, "yesBtn", "آره ❤️")}
+          {E(cfg, "yesBtn", "آره ❤️")}
         </button>
         <button
           id="noBtn"
@@ -357,7 +360,7 @@ function QuestionScreen() {
       <div className="taunt-wrap" hidden={!taunt}>
         <div className="stk stk-xs" aria-hidden="true" dangerouslySetInnerHTML={{ __html: stickerSVG("confused") }} />
         <p id="taunt" className="taunt pop" aria-live="polite">
-          {taunt}
+          <EmoText text={taunt} />
         </p>
       </div>
     </section>
@@ -387,9 +390,9 @@ function YesScreen() {
     >
       <Sticker kind="celebrate" cls="stk stk-l" cfg={cfg} ariaLabel="قلب جشن‌گرفته" />
       <div id="yesLines">
-        <p className={"line big yl" + (step >= 1 ? " shown" : "")}>{T(cfg, "yesL1", "جدی می‌گی؟ 😳")}</p>
-        <p className={"line big yl" + (step >= 2 ? " shown" : "")}>{T(cfg, "yesL2", "پس شد! 🥹")}</p>
-        <p className={"line yl" + (step >= 3 ? " shown" : "")}>{T(cfg, "yesL3", "از امروز رسماً باید تحملم کنی 😂❤️")}</p>
+        <p className={"line big yl" + (step >= 1 ? " shown" : "")}>{E(cfg, "yesL1", "جدی می‌گی؟ 😳")}</p>
+        <p className={"line big yl" + (step >= 2 ? " shown" : "")}>{E(cfg, "yesL2", "پس شد! 🥹")}</p>
+        <p className={"line yl" + (step >= 3 ? " shown" : "")}>{E(cfg, "yesL3", "از امروز رسماً باید تحملم کنی 😂❤️")}</p>
       </div>
       <button
         id="yesBtnNext"
@@ -398,7 +401,7 @@ function YesScreen() {
         onClick={() => go("after")}
         style={step >= total ? undefined : { pointerEvents: "none" }}
       >
-        {T(cfg, "yesBtnNext", "خب، بعدش؟ ✨")}
+        {E(cfg, "yesBtnNext", "خب، بعدش؟ ✨")}
       </button>
     </section>
   );
@@ -411,13 +414,13 @@ function AfterScreen() {
     <section className="screen active" id="scr-after" aria-label="قدم بعدی">
       <Sticker kind="letter" cls="stk stk-s" cfg={cfg} />
       <p {...rise(0, "line big")} >
-        {T(cfg, "afterL1", "خب {pet}…").replace("{pet}", cfg.petPhrase || "خانومِ من")}
+        <EmoText text={T(cfg, "afterL1", "خب {pet}…").replace("{pet}", cfg.petPhrase || "خانومِ من")} />
       </p>
       <p {...rise(1, "line")} >
-        {T(cfg, "afterL2", "حالا بریم سراغ اولین قرار؟ 👀")}
+        {E(cfg, "afterL2", "حالا بریم سراغ اولین قرار؟ 👀")}
       </p>
       <button {...rise(2, "btn primary xl")} type="button" autoFocus  onClick={() => { buzz(8); go("date"); }}>
-        {T(cfg, "afterBtn", "آره، بریم 😌")}
+        {E(cfg, "afterBtn", "آره، بریم 😌")}
       </button>
     </section>
   );
@@ -446,7 +449,7 @@ function DateScreen() {
   return (
     <section className="screen active" id="scr-date" aria-label="انتخاب قرار">
       <h2 {...rise(0, "line big")} >
-        {T(cfg, "dateTitle", "اولین قرارمون کجا باشه؟ ❤️")}
+        {E(cfg, "dateTitle", "اولین قرارمون کجا باشه؟ ❤️")}
       </h2>
       <Sticker kind="date" cls="stk stk-s" cfg={cfg} />
       <div id="dateGrid" {...rise(1, "dgrid")} role="group" aria-label="گزینه‌های قرار" >
@@ -458,14 +461,14 @@ function DateScreen() {
             aria-pressed={picked === o.id ? "true" : "false"}
             onClick={(e) => pick(e, o)}
           >
-            <span className="d-emoji">{o.emoji}</span>
-            <span className="d-title">{o.label}</span>
+            <span className="d-emoji"><EmoText text={o.emoji} /></span>
+            <span className="d-title"><EmoText text={o.label} /></span>
             <span className="d-hint">{o.hint || ""}</span>
             <span className="d-check">✓</span>
           </button>
         ))}
       </div>
-      {locked ? <span className="picked-chip">{T(cfg, "datePicked", "انتخاب شد ❤️")}</span> : null}
+      {locked ? <span className="picked-chip">{E(cfg, "datePicked", "انتخاب شد ❤️")}</span> : null}
     </section>
   );
 }
@@ -518,11 +521,11 @@ function WhenScreen() {
       </h2>
       {chipRow(whenOptions, when, setWhen, "زمان", "whenChips")}
       <p {...rise(1, "mini-label")} >
-        {T(cfg, "whenTimeLabel", "چه ساعتی؟ (اختیاری)")}
+        {E(cfg, "whenTimeLabel", "چه ساعتی؟ (اختیاری)")}
       </p>
       {chipRow(timeOptions, time, setTime, "ساعت", "timeChips")}
       <button id="whenBtn" className={"btn primary xl" + (when ? " ready" : "")} type="button" disabled={!when} onClick={submit}>
-        {T(cfg, "whenBtn", "ثبت قرار ✨")}
+        {E(cfg, "whenBtn", "ثبت قرار ✨")}
       </button>
     </section>
   );
@@ -549,7 +552,7 @@ function ContractScreen() {
   return (
     <section className="screen active" id="scr-contract" aria-label="قرارداد کوچیک">
       <div {...rise(0, "contract glass")} >
-        <h2>{T(cfg, "contractTitle", "یه قرارداد کوچیک 😂❤️")}</h2>
+        <h2>{E(cfg, "contractTitle", "یه قرارداد کوچیک 😂❤️")}</h2>
         <Sticker kind="nervous" cls="stk stk-s" cfg={cfg} />
         <ol className="clauses">
           {clauses.map((c, i) => (
@@ -559,20 +562,20 @@ function ContractScreen() {
             </li>
           ))}
         </ol>
-        <p className="fine">{T(cfg, "contractFine", "* این قرارداد با یک قلب امضا می‌شود و اعتبار عاطفی کامل دارد.")}</p>
+        <p className="fine">{E(cfg, "contractFine", "* این قرارداد با یک قلب امضا می‌شود و اعتبار عاطفی کامل دارد.")}</p>
         {lawyer ? (
           <>
-            <p className="lawyer-msg">{T(cfg, "contractLawyerMsg", "باشه… پس باید با وکیلم صحبت کنیم 😂")}</p>
+            <p className="lawyer-msg">{E(cfg, "contractLawyerMsg", "باشه… پس باید با وکیلم صحبت کنیم 😂")}</p>
             <div className="c-actions">
               <button className="btn primary" type="button" ref={okRef} autoFocus onClick={sign}>
-                {T(cfg, "contractLawyerOk", "خب ببخشید، امضا می‌کنم ❤️")}
+                {E(cfg, "contractLawyerOk", "خب ببخشید، امضا می‌کنم ❤️")}
               </button>
             </div>
           </>
         ) : (
           <div className="c-actions">
             <button className="btn primary" type="button" onClick={sign}>
-              {T(cfg, "contractSign", "امضا می‌کنم ❤️")}
+              {E(cfg, "contractSign", "امضا می‌کنم ❤️")}
             </button>
             <button
               className="btn ghost"
@@ -586,13 +589,13 @@ function ContractScreen() {
                 }, 50);
               }}
             >
-              {T(cfg, "contractLawyer", "نیاز به وکیل دارم 😂")}
+              {E(cfg, "contractLawyer", "نیاز به وکیل دارم 😂")}
             </button>
           </div>
         )}
         {stamped ? (
           <div className="stamp go" role="status">
-            {T(cfg, "contractStamp", "مُهر و امضا شد ❤️")}
+            {E(cfg, "contractStamp", "مُهر و امضا شد ❤️")}
           </div>
         ) : null}
       </div>
@@ -613,6 +616,13 @@ function FinalScreen() {
   }, []);
   const displayName = name || "تو";
   const canShare = typeof navigator !== "undefined" && (navigator.share || navigator.webkitShare);
+  const replyHref = (() => {
+    const tg = cfg.replyTo && cfg.replyTo.telegram ? String(cfg.replyTo.telegram).replace(/[^A-Za-z0-9_]/g, "") : "";
+    if (!tg) return null;
+    const tpl = (cfg.replyTo && cfg.replyTo.text) || "رسماً آره ❤️ قرارمون: {date} ({when})";
+    const msg = tpl.replace("{date}", appState.dateLabel || "-").replace("{when}", appState.whenLabel || "-").replace("{name}", displayName);
+    return "https://t.me/" + tg + "?text=" + encodeURIComponent(msg);
+  })();
 
   const saveCard = () => {
     buzz(10);
@@ -624,9 +634,9 @@ function FinalScreen() {
       const url = URL.createObjectURL(blob);
       openModal((close) => (
         <>
-          <h3 className="m-title">{T(cfg, "finalTitle", "قرارمون ثبت شد ❤️")}</h3>
+          <h3 className="m-title">{E(cfg, "finalTitle", "قرارمون ثبت شد ❤️")}</h3>
           <div className="card-frame glass">
-            <img className="card-preview" src={url} alt={T(cfg, "finalTitle", "قرارمون ثبت شد")} />
+            <img className="card-preview" src={url} alt={T(cfg, "finalTitle", "قرارمون ثبت شد ❤️").replace(" ❤️", "")} />
           </div>
           <p className="m-note">روی آیفون: روی تصویر نگه‌دار و «افزودن به عکس‌ها» 📸</p>
           <button
@@ -671,34 +681,39 @@ function FinalScreen() {
   return (
     <section className="screen active" id="scr-final" aria-label="کارت نهایی">
       <div {...rise(0, "final-card glass")} >
-        <p className="line dim">{T(cfg, "finalTitle", "قرارمون ثبت شد ❤️")}</p>
+        <p className="line dim">{E(cfg, "finalTitle", "قرارمون ثبت شد ❤️")}</p>
         <h2 className="final-name">{displayName} ❤️</h2>
-        <p className="final-said">{T(cfg, "finalSaid", "رسماً گفت آره!")}</p>
+        <p className="final-said">{E(cfg, "finalSaid", "رسماً گفت آره!")}</p>
         <div className="f-row">
-          <span className="f-lab">{T(cfg, "finalDateRow", "اولین قرارمون")}</span>
-          <span className="f-val">{appState.dateLabel || "—"}</span>
+          <span className="f-lab">{E(cfg, "finalDateRow", "اولین قرارمون")}</span>
+          <span className="f-val"><EmoText text={appState.dateLabel || "—"} /></span>
         </div>
         <div className="f-row">
-          <span className="f-lab">{T(cfg, "finalWhenRow", "کِی")}</span>
-          <span className="f-val">{(appState.whenLabel || "—") + (appState.timeLabel ? " · " + appState.timeLabel : "")}</span>
+          <span className="f-lab">{E(cfg, "finalWhenRow", "کِی")}</span>
+          <span className="f-val"><EmoText text={(appState.whenLabel || "—") + (appState.timeLabel ? " · " + appState.timeLabel : "")} /></span>
         </div>
-        <p className="final-note">{T(cfg, "finalNote", "حالا فقط مونده یه روز خوب براش پیدا کنیم 😌")}</p>
+        <p className="final-note">{E(cfg, "finalNote", "حالا فقط مونده یه روز خوب براش پیدا کنیم 😌")}</p>
         <Sticker kind="happy" cls="stk stk-m2" cfg={cfg} />
       </div>
       <div className="f-actions">
         <button id="finalSave" className="btn primary xl" type="button" onClick={saveCard}>
-          {T(cfg, "finalSave", "این لحظه رو ذخیره کن 📸")}
+          {E(cfg, "finalSave", "این لحظه رو ذخیره کن 📸")}
         </button>
         <div className="row2">
           {canShare ? (
             <button className="btn ghost" type="button" onClick={shareCard}>
-              {T(cfg, "finalShare", "اشتراک‌گذاری")}
+              {E(cfg, "finalShare", "اشتراک‌گذاری")}
             </button>
           ) : null}
           <button className="btn ghost" type="button" onClick={() => go("intro")}>
-            {T(cfg, "finalAgain", "از اول")}
+            {E(cfg, "finalAgain", "از اول")}
           </button>
         </div>
+        {replyHref ? (
+          <a className="btn reply-cta" href={replyHref} target="_blank" rel="noopener">
+            {E(cfg, "replyBtn", "جوابم رو خودم بهت بگم 💌")}
+          </a>
+        ) : null}
       </div>
     </section>
   );
@@ -711,16 +726,16 @@ function NoScreen() {
     <section className="screen active" id="scr-no" aria-label="جواب من">
       <Sticker kind="roses" cls="stk stk-s" cfg={cfg} />
       <div {...rise(0, "card glass")} >
-        <p className="line big">{T(cfg, "noTitle", "باشه ❤️")}</p>
-        <p className="line">{T(cfg, "noL1", "ممنون که صادق بودی.")}</p>
-        <p className="line">{T(cfg, "noL2", "همین که جوابم رو دادی، برام ارزش داشت.")}</p>
-        <p className="line dim">{T(cfg, "noL3", "امیدوارم همیشه خوشحال باشی 🌷")}</p>
+        <p className="line big">{E(cfg, "noTitle", "باشه ❤️")}</p>
+        <p className="line">{E(cfg, "noL1", "ممنون که صادق بودی.")}</p>
+        <p className="line">{E(cfg, "noL2", "همین که جوابم رو دادی، برام ارزش داشت.")}</p>
+        <p className="line dim">{E(cfg, "noL3", "امیدوارم همیشه خوشحال باشی 🌷")}</p>
         <div className="c-actions">
           <button className="btn ghost" type="button" onClick={() => go("question")}>
-            {T(cfg, "noAgain", "یه بار دیگه نگاه کن")}
+            {E(cfg, "noAgain", "یه بار دیگه نگاه کن")}
           </button>
           <button className="btn text" type="button" onClick={reset}>
-            {T(cfg, "noRestart", "از اول")}
+            {E(cfg, "noRestart", "از اول")}
           </button>
         </div>
       </div>
@@ -744,10 +759,10 @@ function useSecrets(cfg, appState, update, track, openModal) {
       openModal((close) => (
         <>
           <Sticker kind="sparkles" cls="stk stk-m" cfg={cfg} />
-          <h3 className="m-title">{T(cfg, "secretTitle", "خب… این یکی رو قرار نبود پیدا کنی 👀")}</h3>
-          <p className="m-msg">{(isNew ? "" : "اینو قبلاً هم پیدا کرده بودی 😂 ") + msg}</p>
+          <h3 className="m-title">{E(cfg, "secretTitle", "خب… این یکی رو قرار نبود پیدا کنی 👀")}</h3>
+          <p className="m-msg"><EmoText text={(isNew ? "" : "اینو قبلاً هم پیدا کرده بودی 😂 ") + msg} /></p>
           <button className="btn primary" type="button" onClick={close}>
-            {T(cfg, "secretClose", "باشه باشه، رفتم 😂")}
+            {E(cfg, "secretClose", "باشه باشه، رفتم 😂")}
           </button>
         </>
       ));
@@ -1002,7 +1017,7 @@ export default function Experience({ config, mode = "invite", initialName = "" }
       ) : null}
 
       <div id="toast" role="status" aria-live="polite" className={toastMsg ? "show" : ""}>
-        {toastMsg || ""}
+        <EmoText text={toastMsg || ""} />
       </div>
 
       {modal ? (

@@ -538,6 +538,23 @@ body[data-mode="admin"]{overflow-y:auto}
   .adm-savebar{width:calc(100vw - 24px);justify-content:space-between}
 }
 
+/* ====================== iphone emoji ====================== */
+.emj{height:1.06em;width:1.06em;vertical-align:-0.2em;margin:0 .045em;display:inline-block;user-select:none;pointer-events:none}
+.d-emoji .emj{height:1.5em;width:1.5em;margin:0}
+.d-emoji{display:inline-flex;align-items:center;justify-content:center}
+.f-val .emj{height:1.15em;width:1.15em}
+.q-text .emj{height:1.12em;width:1.12em}
+
+/* reply cta */
+.btn.reply-cta{border:1px solid rgba(var(--glow),.45);background:rgba(var(--glow),.09);color:#ffe3f0;
+  box-shadow:0 10px 30px -12px rgba(var(--glow),.5)}
+.btn.reply-cta:hover{background:rgba(var(--glow),.16);transform:translateY(-2px)}
+
+/* admin warning */
+.adm-warn{background:rgba(255,200,80,.07);border:1px solid rgba(255,200,80,.3);color:#ffe6b0;
+  padding:12px 16px;border-radius:16px;font-size:13px;line-height:2;margin-bottom:14px}
+.adm-warn code{background:rgba(255,255,255,.08);padding:2px 8px;border-radius:7px}
+
 /* ====================== creator credit ====================== */
 .credit{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
 .credit-text{color:var(--ink-faint);font-size:12px}

@@ -48,6 +48,8 @@ console.log("— جریان کامل دعوت‌نامه");
   await p.goto(BASE + "/invite?name=" + encodeURIComponent("سارا"), { waitUntil: "networkidle" });
   await sleep(400);
   ok((await active(p)) === "scr-intro", "boot → intro");
+  const emjIntro = await p.evaluate(() => document.querySelectorAll("#scr-intro .emj").length);
+  ok(emjIntro >= 1, "ایموجی‌های ایفونی (تصویری) در متن‌ها: " + emjIntro + " مورد");
   await audit(p, "intro");
 
   await p.click("text=بزن بریم");
@@ -71,6 +73,8 @@ console.log("— جریان کامل دعوت‌نامه");
   ok(answerState === null, "هیچ جواب «نه»ی ثبت نشده");
   const tauntVisible = await p.locator("#taunt").textContent();
   ok(tauntVisible.length > 0, "پیام tease فعال: " + tauntVisible);
+  const tauntEmj = await p.evaluate(() => document.querySelectorAll("#taunt .emj").length);
+  ok(tauntEmj >= 1, "ایموجی تصویری داخل پیام tease");
   // کلیک روی دکمه‌ی تسلیم‌شده = بله
   await p.click(".answers .no", { force: true });
   await sleep(600);
@@ -96,7 +100,7 @@ console.log("— جریان کامل دعوت‌نامه");
   await sleep(350);
   ok((await active(p)) === "scr-date", "→ انتخاب قرار");
   const cards = await p.locator(".dcard").count();
-  ok(cards >= 7, `${cards} کارت قرار`);
+  ok(cards >= 10, `${cards} کارت قرار (پیشنهادهای متنوع)`);
   ok(await p.isVisible("text=آشپزی دونفره"), "گزینه‌ی آشپزی دونفره‌ی خونه‌ای هست");
   const wide = await p.evaluate(() => {
     const el = [...document.querySelectorAll(".dcard")].find((c) => c.textContent.includes("سورپرایز"));
@@ -124,7 +128,7 @@ console.log("— جریان کامل دعوت‌نامه");
   // lawyer detour
   await p.click("text=نیاز به وکیل دارم");
   await sleep(200);
-  await p.click("text=امضا می‌کنم ❤️"); // lawyerOk button
+  await p.click("text=امضا می‌کنم"); // lawyerOk button
   await sleep(1500);
   ok((await active(p)) === "scr-final", "→ کارت پایانی");
   ok(await p.isVisible("text=رسماً گفت آره"), "کارت پایانی: رسماً گفت آره");
@@ -132,8 +136,14 @@ console.log("— جریان کامل دعوت‌نامه");
   ok(nameShown.includes("سارا"), "اسم او در کارت: " + nameShown.trim());
   await audit(p, "final");
 
+  // reply via telegram
+  const replyBtn = await p.evaluate(() => {
+    const a = document.querySelector(".reply-cta");
+    return a ? a.href : null;
+  });
+  ok(replyBtn && replyBtn.includes("t.me/AvidKiya") && replyBtn.includes("text="), "دکمه‌ی «جوابم رو خودم بگم» → تلگرام تو");
   // canvas card modal
-  await p.click("text=این لحظه رو ذخیره کن");
+  await p.click("#finalSave");
   await sleep(900);
   const imgOk = await p.evaluate(() => { const im = document.querySelector(".card-preview"); return !!im && im.naturalWidth > 100; });
   ok(imgOk, "تصویر کارت (canvas) ساخته شد");
@@ -218,7 +228,8 @@ console.log("— لندینگ و ساخت لینک");
   await p.fill("#builderName", "لیلا");
   await sleep(250);
   const link = await p.locator(".link-txt").textContent();
-  ok(link.includes(encodeURIComponent("لیلا")), "لینک با اسم انکد شده: " + link.trim().slice(-30));
+  ok(link.includes("لیلا"), "لینک با اسم فارسیِ خام (بدون کد): " + link.trim().slice(-24));
+  ok(!link.includes("%D9"), "لینک بدون درصد-انکودینگ فارسی");
   await p.screenshot({ path: "docs/shots/next-landing.png" });
   await ctx.close();
 }

@@ -1,0 +1,24 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch();
+const p = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+p.on("pageerror", (e) => console.log("PAGEERROR:", String(e && e.stack ? e.stack : e).slice(0, 700)));
+p.on("console", (m) => { const t = m.text(); if (m.type() === "error" || /error/i.test(t)) console.log("CONSOLE[" + m.type() + "]:", t.slice(0, 500)); });
+await p.goto("http://127.0.0.1:8080/invite", { waitUntil: "networkidle" });
+await p.waitForTimeout(400);
+await p.evaluate(() => {
+  window.addEventListener("error", (e) => console.log("WINDOW-ERROR:", String(e.error && e.error.stack || e.message).slice(0, 600)));
+  window.addEventListener("unhandledrejection", (e) => console.log("REJECTION:", String(e.reason && e.reason.stack || e.reason).slice(0, 600)));
+});
+await p.click("text=بزن بریم");
+await p.click("#scr-build");
+await p.click("text=خب بپرس");
+await p.waitForTimeout(250);
+await p.click(".answers .yes", { force: true });
+await p.waitForTimeout(300);
+await p.click("#scr-yes");
+await p.waitForTimeout(250);
+await p.click("#yesBtnNext");
+await p.waitForTimeout(600);
+const st = await p.evaluate(() => ({ active: document.querySelector(".screen.active")?.id || "NONE", appHtml: (document.getElementById("app")?.innerHTML || "EMPTY").slice(0, 120) }));
+console.log("state:", JSON.stringify(st));
+await browser.close();

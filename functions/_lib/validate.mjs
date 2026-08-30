@@ -99,6 +99,18 @@ export function validatePatch(patch) {
     }
   }
 
+  // — reply target —
+  if (patch.replyTo !== undefined) {
+    if (typeof patch.replyTo !== "object") return { err: "تنظیمات پاسخ نامعتبر", path: "replyTo" };
+    const out2 = {};
+    if (patch.replyTo.telegram !== undefined) {
+      const tg = String(patch.replyTo.telegram || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 32);
+      out2.telegram = tg;
+    }
+    if (patch.replyTo.text !== undefined) { const r = str(patch.replyTo.text, 200); if (r.err) return { err: r.err, path: "replyTo.text" }; out2.text = clean(r.ok); }
+    out.replyTo = out2;
+  }
+
   // — creator credit —
   if (patch.creator !== undefined) {
     if (typeof patch.creator !== "object") return { err: "اطلاعات سازنده نامعتبر", path: "creator" };

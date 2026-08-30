@@ -7,9 +7,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { DEFAULT_CONFIG } from "../shared/config.mjs";
 import { T, cleanText, fetchConfig } from "@/lib/core";
+import { EmoText } from "@/lib/emoji";
 import { RM, fxStart } from "@/lib/fx";
 import Experience, { Credit } from "@/components/Experience";
 import { HEART_SVG } from "@/components/Experience";
+
+const E2 = (cfg, key, fb) => <EmoText text={T(cfg, key, fb)} />;
 
 export default function Landing({ initialConfig }) {
   const [cfg, setCfg] = useState(initialConfig || DEFAULT_CONFIG);
@@ -58,28 +61,28 @@ export default function Landing({ initialConfig }) {
 
       <div id="home">
         <section className="hero" id="hero">
-          <span className="badge">{T(cfg, "landingBadge", "یه دعوت‌نامه‌ی کوچیک 💌")}</span>
+          <span className="badge">{E2(cfg, "landingBadge", "یه دعوت‌نامه‌ی کوچیک 💌")}</span>
           <h1 className="rise-in">
-            {T(cfg, "landingH1a", "یه سؤال رو بپرس…")}
+            {E2(cfg, "landingH1a", "یه سؤال رو بپرس…")}
             <br />
-            <span className="grad">{T(cfg, "landingH1b", "بذار بله بگه ❤️")}</span>
+            <span className="grad">{E2(cfg, "landingH1b", "بذار بله بگه ❤️")}</span>
           </h1>
           <p className="sub rise-in" style={{ animationDelay: "90ms" }}>
-            {T(cfg, "landingSub", "یه تجربه‌ی کوچیک و شخصی برای یه آدم خاص؛ لینکش رو بفرست، بقیه‌ش با دکمه‌ی «آره».")}
+            {E2(cfg, "landingSub", "یه تجربه‌ی کوچیک و شخصی برای یه آدم خاص؛ لینکش رو بفرست، بقیه‌ش با دکمه‌ی «آره».")}
           </p>
           <div className="hero-cta rise-in" style={{ animationDelay: "180ms" }}>
             <button className="btn primary xl" type="button" onClick={() => setBuilder(true)}>
-              {T(cfg, "landingCta", "ساخت لینک شخصی ✨")}
+              {E2(cfg, "landingCta", "ساخت لینک شخصی ✨")}
             </button>
             <button className="btn ghost xl" type="button" onClick={onTry}>
-              {T(cfg, "landingTry", "تجربه‌ی نمونه 👀")}
+              {E2(cfg, "landingTry", "تجربه‌ی نمونه 👀")}
             </button>
             <a className="btn ghost xl" href="/admin">
               پنل مدیریت ⚙️
             </a>
           </div>
           <p className="tiny rise-in" style={{ animationDelay: "270ms" }}>
-            {T(cfg, "landingFeatures", "بدون ثبت‌نام · بدون ردیابیِ اذیت‌کننده · فقط یه سؤال ☺️")}
+            {E2(cfg, "landingFeatures", "بدون ثبت‌نام · بدون ردیابیِ اذیت‌کننده · فقط یه سؤال ☺️")}
           </p>
           <p className="tiny credit-line rise-in" style={{ animationDelay: "360ms" }}>
             <Credit cfg={cfg} />
@@ -111,7 +114,7 @@ function BuilderModal({ cfg, onClose }) {
     const base = location.origin + "/invite";
     const q = [];
     const nm = cleanText(name, 32);
-    if (nm) q.push("name=" + encodeURIComponent(nm));
+    if (nm) q.push("name=" + nm); // فارسیِ خام — خوانا و مستقیم، بدون کدشدن
     if (theme && theme !== (cfg.theme || "romantic")) q.push("theme=" + theme);
     return base + (q.length ? "?" + q.join("&") : "");
   }, [name, theme, cfg.theme])();
@@ -145,9 +148,9 @@ function BuilderModal({ cfg, onClose }) {
   return (
     <div className="m-back in" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="m-card glass">
-        <h3 className="m-title">{T(cfg, "builderTitle", "لینک شخصی‌ات رو بساز")}</h3>
+        <h3 className="m-title">{E2(cfg, "builderTitle", "لینک شخصی‌ات رو بساز")}</h3>
         <label className="m-label" htmlFor="builderName">
-          {T(cfg, "builderNamePh", "اسمش چیه؟")}
+          {E2(cfg, "builderNamePh", "اسمش چیه؟")}
         </label>
         <input
           id="builderName"
@@ -184,11 +187,11 @@ function BuilderModal({ cfg, onClose }) {
             {copied ? "کپی شد ✨" : T(cfg, "builderCopy", "کپی لینک")}
           </button>
           <a className="btn ghost" href={link} target="_blank" rel="noopener">
-            {T(cfg, "builderOpen", "باز کردن")}
+            {E2(cfg, "builderOpen", "باز کردن")}
           </a>
           {typeof navigator !== "undefined" && (navigator.share || navigator.webkitShare) ? (
             <button className="btn ghost" type="button" onClick={share}>
-              {T(cfg, "builderShare", "فرستادن")}
+              {E2(cfg, "builderShare", "فرستادن")}
             </button>
           ) : null}
         </div>

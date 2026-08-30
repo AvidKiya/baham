@@ -29,7 +29,29 @@ function json(data, status = 200) {
 }
 
 function adminPassword(env, cfg) {
-  return (env && env.ADMIN_PASSWORD) || (cfg && cfg.stats && cfg.stats.adminKey) || "rol-admin-1234";
+  // اولویت با متغیر محیطی ADMIN_PASSWORD است (فقط از خودت!)؛ وگرنه کلید داخل پنل
+  return (env && env.ADMIN_PASSWORD) || (cfg && cfg.stats && cfg.stats.adminKey) || "";
+}
+/** محدودسازی تلاش ناموفق: ۸ بار اشتباه → قفل ۱۰ دقیقه‌ای (ضد بروت‌فورس) */
+async function authLocked(kv) {
+  if (!kv) return false;
+  try { return (await kv.get("auth:lock")) === "1"; } catch { return false; }
+}
+async function authFail(kv) {
+  if (!kv) return;
+  try {
+    const n = parseInt((await kv.get("auth:fails")) || "0", 10) + 1;
+    if (n >= 8) {
+      await kv.put("auth:lock", "1", { expirationTtl: 600 });
+      await kv.delete("auth:fails");
+    } else {
+      await kv.put("auth:fails", String(n), { expirationTtl: 600 });
+    }
+  } catch {}
+}
+async function authReset(kv) {
+  if (!kv) return;
+  try { await kv.delete("auth:fails"); } catch {}
 }
 
 function isAuthed(request, env, cfg) {
@@ -68,7 +90,7 @@ export async function onRequestGet(context) {
   const route = url.pathname.replace(/^\/api\/?/, "").split("/")[0];
 
   if (route === "health") {
-    return json({ ok: true, kv: !!(env && env.CONFIG), stats: !!(env && env.STATS) });
+    return json({ ok: true, kv: !!(env && env.CONFIG), stats: !!(env && env.STATS), authEnv: !!(env && env.ADMIN_PASSWORD) });
   }
 
   if (route === "config") {
@@ -114,7 +136,12 @@ export async function onRequestPut(context) {
   if (url.pathname.replace(/^\/api\/?/, "").split("/")[0] !== "config") return json({ ok: false, error: "not_found" }, 404);
 
   const cfg = await currentConfig(env);
-  if (!isAuthed(request, env, cfg)) return json({ ok: false, error: "unauthorized", message: "رمز اشتباه است" }, 401);
+  if (await authLocked(env && env.CONFIG)) return json({ ok: false, error: "locked", message: "تلاش زیاد؛ ۱۰ دقیقه صبر کن" }, 429);
+  if (!isAuthed(request, env, cfg)) {
+    await authFail(env && env.CONFIG);
+    return json({ ok: false, error: "unauthorized", message: "رمز اشتباه است" }, 401);
+  }
+  await authReset(env && env.CONFIG);
   if (!env || !env.CONFIG) {
     return json({ ok: false, error: "no_kv", message: "KV با نام CONFIG وصل نشده — در تنظیمات Pages یک KV binding به اسم CONFIG بساز" }, 501);
   }
@@ -146,7 +173,12 @@ export async function onRequestDelete(context) {
   const url = new URL(request.url);
   if (url.pathname.replace(/^\/api\/?/, "").split("/")[0] !== "config") return json({ ok: false, error: "not_found" }, 404);
   const cfg = await currentConfig(env);
-  if (!isAuthed(request, env, cfg)) return json({ ok: false, error: "unauthorized" }, 401);
+  if (await authLocked(env && env.CONFIG)) return json({ ok: false, error: "locked", message: "تلاش زیاد؛ ۱۰ دقیقه صبر کن" }, 429);
+  if (!isAuthed(request, env, cfg)) {
+    await authFail(env && env.CONFIG);
+    return json({ ok: false, error: "unauthorized", message: "رمز اشتباه است" }, 401);
+  }
+  await authReset(env && env.CONFIG);
   if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv", message: "KV با نام CONFIG وصل نشده" }, 501);
   try {
     await env.CONFIG.delete("config");
