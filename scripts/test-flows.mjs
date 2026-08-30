@@ -60,23 +60,21 @@ console.log("— جریان کامل دعوت‌نامه");
   ok((await active(p)) === "scr-question", "→ question");
   ok(await p.isVisible("text=با من رل می‌زنی"), "سؤال اصلی نمایان");
 
-  // playful no ×5
-  for (let i = 0; i < 5; i++) await p.click(".answers .no", { force: true });
-  await sleep(250);
-  ok(await p.isVisible("text=اگه واقعاً می‌ گی نه، اینجا بزن".replace("گی", "گی")) || (await p.locator(".realno .btn").count()) === 1, "گزینه‌ی نه واقعی ظاهر شد");
+  // playful no — رد کردن باید غیرممکن باشد
+  for (let i = 0; i < 10; i++) await p.click(".answers .no", { force: true });
+  await sleep(300);
+  ok((await active(p)) === "scr-question", "۱۰ بار «نه» → هنوز در صفحه‌ی سؤال (رد کردن غیرممکن)");
+  ok((await p.locator(".realno .btn").count()) === 0, "هیچ دکمه‌ی «نه واقعی» در صفحه وجود ندارد");
+  const noTxt = (await p.locator(".answers .no .nlabel").textContent()).trim();
+  ok(noTxt.includes("آره"), "دکمه‌ی نه تسلیم شد و خودش «آره» شد: " + noTxt);
+  const answerState = await p.evaluate(() => window.__app.state.answer);
+  ok(answerState === null, "هیچ جواب «نه»ی ثبت نشده");
   const tauntVisible = await p.locator("#taunt").textContent();
   ok(tauntVisible.length > 0, "پیام tease فعال: " + tauntVisible);
-
-  // real no → graceful
-  await p.click(".realno .btn");
-  await sleep(250);
-  ok((await active(p)) === "scr-no", "→ صفحه‌ی نه محترمانه");
-
-  // back and YES
-  await p.click("text=یه بار دیگه نگاه کن");
-  await sleep(250);
-  await p.click(".answers .yes");
+  // کلیک روی دکمه‌ی تسلیم‌شده = بله
+  await p.click(".answers .no", { force: true });
   await sleep(600);
+  ok((await active(p)) === "scr-yes", "کلیک روی دکمه‌ی تسلیم‌شده → جشن بله");
   ok((await active(p)) === "scr-yes", "→ جشن بله");
   const won = await p.evaluate(() => document.body.classList.contains("won"));
   ok(won, "حالت جشن (won) فعال");
@@ -99,6 +97,14 @@ console.log("— جریان کامل دعوت‌نامه");
   ok((await active(p)) === "scr-date", "→ انتخاب قرار");
   const cards = await p.locator(".dcard").count();
   ok(cards >= 7, `${cards} کارت قرار`);
+  ok(await p.isVisible("text=آشپزی دونفره"), "گزینه‌ی آشپزی دونفره‌ی خونه‌ای هست");
+  const wide = await p.evaluate(() => {
+    const el = [...document.querySelectorAll(".dcard")].find((c) => c.textContent.includes("سورپرایز"));
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return el.classList.contains("wide") && r.width > 300;
+  });
+  ok(wide, "کارت سورپرایز کشیده و تمام‌عرض است");
   await audit(p, "date");
 
   await p.click(".dcard >> nth=2");
@@ -268,14 +274,13 @@ console.log("— موزیک و تم");
   await p.click("text=بزن بریم");
   await p.click("#scr-build");
   await p.click("text=خب بپرس");
-  for (let i = 0; i < 5; i++) await p.click(".answers .no", { force: true });
-  await p.click(".realno .btn");
+  await p.evaluate(() => window.__app.go("no"));
   await sleep(400);
   const roses = await p.evaluate(() => {
     const st = document.querySelector("#scr-no .stk img");
     return !!st && st.src.includes("roses");
   });
-  ok(roses, "استیکر رز در صفحه‌ی نه");
+  ok(roses, "استیکر رز در صفحه‌ی خروج (فقط از پنل دمو در دسترس)");
   await ctx.close();
 }
 

@@ -29,7 +29,7 @@ const TEXT_GROUPS = [
   { title: "صفحه‌ی اول (لندینگ)", keys: ["landingBadge", "landingH1a", "landingH1b", "landingSub", "landingCta", "landingTry", "landingFeatures"] },
   { title: "مقدمه", keys: ["introL1", "introL2", "introBtn", "resumeChip"] },
   { title: "قبل از سؤال", keys: ["buildL1", "buildL2", "buildL3", "buildSkip", "buildBtn"] },
-  { title: "سؤال اصلی", keys: ["qPre", "yesBtn", "noBtn", "noReal", "noRealNote"] },
+  { title: "سؤال اصلی", keys: ["qPre", "yesBtn", "noBtn", "noGiveUp"] },
   { title: "بعد از بله", keys: ["yesL1", "yesL2", "yesL3", "yesBtnNext", "afterL1", "afterL2", "afterBtn"] },
   { title: "انتخاب قرار", keys: ["dateTitle", "datePicked", "whenTitle", "whenTimeLabel", "whenBtn"] },
   { title: "قرارداد", keys: ["contractTitle", "contractFine", "contractSign", "contractLawyer", "contractLawyerMsg", "contractLawyerOk", "contractStamp"] },

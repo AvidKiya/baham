@@ -217,13 +217,12 @@ function QuestionScreen() {
   const { cfg, name, appState, update, go, track } = useApp();
   const [attempts, setAttempts] = useState(0);
   const [taunt, setTaunt] = useState("");
-  const [realNo, setRealNo] = useState(false);
   const [noLabel, setNoLabel] = useState(null); // null → default label
+  const [givenUp, setGivenUp] = useState(false); // بعد از چند تلاش، «نه» تسلیم می‌شود و «آره» می‌شود
   const [grow, setGrow] = useState(1);
   const zoneRef = useRef(null);
   const noRef = useRef(null);
-  const realNoRef = useRef(null);
-  const NO_MAX = 5;
+  const GIVE_UP = 10;
   const taunts = (cfg.text && cfg.text.noTaunts && cfg.text.noTaunts.length ? cfg.text.noTaunts : null) || [
     "عه؟ 😐 مطمئنی؟",
     "یه بار دیگه فکر کن 😂",
@@ -269,21 +268,24 @@ function QuestionScreen() {
     (fromPointer) => {
       const next = attempts + 1;
       setAttempts(next);
-      setTaunt(taunts[Math.min(next - 1, taunts.length - 1)]);
-      if (next >= 3) setNoLabel(T(cfg, "noTauntsLabel", "نه نگو دیگه 🥺") === "noTauntsLabel" ? "نه نگو دیگه 🥺" : "نه نگو دیگه 🥺");
-      if (next < NO_MAX && fromPointer) dodge();
-      setGrow(1 + Math.min(next, 5) * 0.055);
-      if (next >= NO_MAX) {
-        setRealNo(true);
-        setTimeout(() => {
-          try {
-            realNoRef.current && realNoRef.current.focus({ preventScroll: false });
-          } catch (e) {}
-        }, 60);
+      // پیام‌های بی‌پایان: لیست که تموم شد، تصادفی ادامه می‌دهیم
+      const msg = next <= taunts.length ? taunts[next - 1] : taunts[Math.floor(Math.random() * taunts.length)];
+      setTaunt(msg);
+      if (next >= 3 && next < GIVE_UP) setNoLabel("نه نگو دیگه 🥺");
+      if (next >= GIVE_UP && !givenUp) {
+        // دکمه‌ی «نه» رسماً تسلیم می‌شود و خودش «آره» می‌شود
+        setGivenUp(true);
+        setNoLabel(T(cfg, "noGiveUp", "خب باشه، آره ❤️"));
+        setTaunt("دکمه‌ی نه رسماً تسلیم شد؛ فقط «آره» مونده ❤️");
+        setGrow(1.35);
+        buzz([12, 40, 18]);
+      } else if (next < GIVE_UP) {
+        if (fromPointer) dodge();
+        setGrow(1 + Math.min(next, 8) * 0.05);
+        buzz(6);
       }
-      buzz(6);
     },
-    [attempts, dodge, taunts, cfg]
+    [attempts, dodge, taunts, cfg, givenUp]
   );
 
   const doYes = () => {
@@ -324,23 +326,28 @@ function QuestionScreen() {
         <button
           id="noBtn"
           ref={noRef}
-          className={"btn ghost big no" + (realNo ? " tired" : "")}
+          className={"btn big no " + (givenUp ? "primary givenup" : "ghost")}
           type="button"
+          aria-label={givenUp ? "خب باشه، آره" : "نه"}
           onPointerEnter={(e) => {
-            if (e.pointerType === "mouse" && attempts >= 1 && attempts < NO_MAX) dodge();
+            if (e.pointerType === "mouse" && !givenUp && attempts >= 1) dodge();
           }}
           onClick={(e) => {
-            if (!realNo) {
-              e.preventDefault();
-              attempt(true);
+            e.preventDefault();
+            if (givenUp) {
+              doYes();
+              return;
             }
+            attempt(true);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
-              if (!realNo) {
-                e.preventDefault();
-                attempt(false);
+              e.preventDefault();
+              if (givenUp) {
+                doYes();
+                return;
               }
+              attempt(false);
             }
           }}
         >
@@ -353,14 +360,6 @@ function QuestionScreen() {
           {taunt}
         </p>
       </div>
-      {realNo ? (
-        <div className="realno">
-          <button id="realNoBtn" ref={realNoRef} className="btn text" type="button" onClick={doNo}>
-            {T(cfg, "noReal", "اگه واقعاً می‌گی نه، اینجا بزن")}
-          </button>
-          <p className="realno-note">{T(cfg, "noRealNote", "قول می‌دم ناراحت نمی‌شم ❤️")}</p>
-        </div>
-      ) : null}
     </section>
   );
 }
@@ -454,7 +453,7 @@ function DateScreen() {
         {options.map((o) => (
           <button
             key={o.id}
-            className={"dcard glass" + (picked === o.id ? " picked" : picked ? " dim" : "")}
+            className={"dcard glass" + (o.id === "surprise" ? " wide surprise" : "") + (picked === o.id ? " picked" : picked ? " dim" : "")}
             type="button"
             aria-pressed={picked === o.id ? "true" : "false"}
             onClick={(e) => pick(e, o)}

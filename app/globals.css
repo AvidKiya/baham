@@ -237,7 +237,7 @@ body[data-mode="invite"] .home-bar{display:none}
 .answers{position:relative;width:min(430px,100%);height:236px;margin-top:6px}
 .answers .yes{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(var(--grow,1));
   transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.answers .no{position:absolute;left:50%;top:80%;transform:translate(-50%,-50%);
+.answers .no{position:absolute;z-index:7;left:50%;top:80%;transform:translate(-50%,-50%);
   transition:left .34s cubic-bezier(.3,.9,.35,1.25),top .34s cubic-bezier(.3,.9,.35,1.25),transform .34s cubic-bezier(.3,.9,.35,1.25)}
 .no.tired{animation:tired 2.6s ease-in-out infinite}
 @keyframes tired{0%,100%{opacity:.92}50%{opacity:.55}}
@@ -269,6 +269,21 @@ body[data-mode="invite"] .home-bar{display:none}
 .dcard.picked{border-color:rgba(var(--glow),.55);transform:scale(1.04);
   box-shadow:0 0 0 1px rgba(var(--glow),.45),0 14px 38px -10px rgba(var(--glow),.4)}
 .dcard.picked .d-check{opacity:1;transform:scale(1)}
+.no.givenup{animation:tired 2.2s ease-in-out infinite}
+.dcard.wide{grid-column:1/-1;flex-direction:row;min-height:92px;gap:16px;padding:18px 24px;
+  background:linear-gradient(135deg,rgba(var(--glow),.18),rgba(150,90,255,.13));
+  border-color:rgba(var(--glow),.4);overflow:hidden}
+.dcard.wide::after{content:"";position:absolute;top:-70%;bottom:-70%;width:34%;right:-50%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.22),transparent);
+  transform:skewX(-18deg);animation:sweep 3.4s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{0%,55%{right:-50%}90%,100%{right:130%}}
+.dcard.wide .d-emoji{font-size:34px}
+.dcard.wide .d-title{font-size:16.5px;white-space:nowrap}
+.dcard.wide .d-hint{flex:1;margin-inline-start:auto;text-align:left;font-size:12.5px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.dcard.wide.picked{transform:scale(1.03)}
+@media(hover:hover){.dcard.wide:hover{transform:translateY(-2px);border-color:rgba(var(--glow),.6)}}
+@media(max-width:400px){.dcard.wide .d-hint{display:none}}
 .dcard.dim{opacity:.32;filter:saturate(.5)}
 @media(hover:hover){.dcard:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22)}
   .dcard.picked:hover{transform:scale(1.04)}}
