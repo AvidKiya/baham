@@ -52,9 +52,6 @@ export const DEFAULT_CONFIG = {
     { id: "drive",    emoji: "🌃", label: "یه دور دور",       hint: "مقصد مهم نیست" },
     { id: "cooking",  emoji: "🍳", label: "آشپزی دونفره‌ی خونه‌ای", hint: "با هم بپزیم، با هم بخوریم" },
     { id: "calm",     emoji: "🌙", label: "یه جای آروم",     hint: "فقط آروم و قشنگ" },
-    { id: "picnic",   emoji: "🧺", label: "پیک‌نیک",           hint: "فرش، میان‌وعده و آفتاب" },
-    { id: "icecream", emoji: "🍦", label: "بستنی‌فروشی",       hint: "دونفره یه بستنی" },
-    { id: "karaoke",  emoji: "🎤", label: "کارائوکه",          hint: "بذار صدای خوشت رو نشونت بدم" },
     { id: "surprise", emoji: "🎁", label: "سورپرایز با تو",   hint: "انتخاب با خودت" },
   ],
   whenOptions: [

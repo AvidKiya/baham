@@ -109,7 +109,7 @@ console.log("— جریان کامل دعوت‌نامه");
   await sleep(350);
   ok((await active(p)) === "scr-date", "شعر → انتخاب قرار");
   const cards = await p.locator(".dcard").count();
-  ok(cards >= 10, `${cards} کارت قرار (پیشنهادهای متنوع)`);
+  ok(cards >= 7, `${cards} کارت قرار`);
   ok(await p.isVisible("text=آشپزی دونفره"), "گزینه‌ی آشپزی دونفره‌ی خونه‌ای هست");
   const wide = await p.evaluate(() => {
     const el = [...document.querySelectorAll(".dcard")].find((c) => c.textContent.includes("سورپرایز"));
