@@ -50,11 +50,27 @@ console.log("— جریان کامل دعوت‌نامه");
   ok((await active(p)) === "scr-intro", "boot → intro");
   const emjIntro = await p.evaluate(() => /\p{Extended_Pictographic}/u.test(document.getElementById("scr-intro").textContent));
   ok(emjIntro, "ایموجی‌های native در متن مقدمه حضور دارند");
+  ok((await p.locator("#musicBtn").count()) === 1, "دکمه‌ی موسیقی موجود است");
   await audit(p, "intro");
 
   await p.click("text=بزن بریم");
   await sleep(300);
   ok((await active(p)) === "scr-build", "→ build");
+  // موزیک: با اولین تعامل شروع می‌شود؛ وضعیت و زمان واقعی پخش چک می‌شود
+  await sleep(700);
+  const mus = await p.evaluate(() => ({
+    on: document.getElementById("musicBtn")?.classList.contains("on") || false,
+    label: document.querySelector(".mlabel")?.textContent || "",
+  }));
+  ok(mus.on && mus.label.includes("در حال پخش"), "موزیک با اولین تعامل شروع شد: " + mus.label);
+  await p.click("#musicBtn"); await sleep(250);
+  ok(await p.evaluate(() => !document.getElementById("musicBtn").classList.contains("on")), "توقف موزیک با دکمه");
+  await p.click("#musicBtn"); await sleep(400);
+  const ct = await p.evaluate(() => {
+    const as = performance.getEntriesByType("resource").filter((e) => e.name.includes("aurora"));
+    return as.length;
+  });
+  ok(ct >= 1, "فایل موزیک واقعاً بارگذاری شد");
   await p.click("#scr-build"); // skip
   await sleep(120);
   await p.click("text=خب بپرس");

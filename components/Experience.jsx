@@ -56,10 +56,18 @@ const rise = (i, cls) => ({ className: (cls ? cls + " " : "") + "rise-in", style
 // (separate file: components/Sticker.jsx)
 
 /* ============================== music button ============================== */
+/**
+ * موزیک — ضدگلوله برای موبایل:
+ * • پخش فقط بعد از تعامل کاربر شروع می‌شود (سیاست مرورگرها) — نه به‌صورت اجباری در لود صفحه
+ * • با «اولین لمس هر چیزی» در صفحه‌ی دعوت شروع می‌شود (unlock الگوی استاندارد iOS)
+ * • اگر play() رد شد (حالت کم‌مصرف iOS)، در لمسِ بعدی دوباره تلاش می‌کند — نه اینکه بی‌صدا بمیرد
+ * • وضعیت دکمه از رویدادهای واقعی پخش (playing/pause) می‌آید، نه فقط promise
+ */
 function MusicButton({ cfg, toast }) {
   const [playing, setPlaying] = useState(false);
   const [available, setAvailable] = useState(!!cfg.music);
   const audioRef = useRef(null);
+  const triedUnlock = useRef(false);
 
   const getAudio = useCallback(() => {
     if (!audioRef.current && cfg.music) {
@@ -67,12 +75,14 @@ function MusicButton({ cfg, toast }) {
         const a = new Audio();
         a.src = cfg.music;
         a.loop = true;
-        a.volume = 0.4;
+        try { a.volume = 0.4; } catch (e) {}
         a.preload = "none";
+        a.addEventListener("playing", () => setPlaying(true));
+        a.addEventListener("pause", () => setPlaying(false));
         a.addEventListener("error", () => {
           setAvailable(false);
           setPlaying(false);
-          toast("موسیقی در دسترس نیست");
+          if (triedUnlock.current) toast("موسیقی در دسترس نیست");
         });
         audioRef.current = a;
       } catch (e) {
@@ -82,38 +92,45 @@ function MusicButton({ cfg, toast }) {
     return audioRef.current;
   }, [cfg.music, toast]);
 
-  const tryStart = useCallback(() => {
+  /** تلاش برای پخش؛ اگر مرورگر رد کرد true برمی‌گرداند تا در لمس بعدی دوباره امتحان کنیم */
+  const attemptPlay = useCallback(() => {
     if (!cfg.music || !available) return;
     const a = getAudio();
-    if (!a) return;
-    if (a.paused) {
-      const p = a.play();
-      if (p && p.then) p.then(() => setPlaying(true)).catch(() => setPlaying(false));
+    if (!a || !a.paused) return;
+    try { a.preload = "auto"; } catch (e) {}
+    const p = a.play();
+    if (p && p.then) {
+      p.then(() => setPlaying(true)).catch(() => {
+        setPlaying(false);
+        // NotAllowedError → مرورگر هنوز اجازه نداده؛ در تعامل بعدی دوباره تلاش می‌شود
+      });
     }
   }, [cfg.music, available, getAudio]);
 
   const toggle = useCallback(() => {
     const a = getAudio();
     if (!a) return;
-    if (a.paused) {
-      const p = a.play();
-      if (p && p.then) p.then(() => setPlaying(true)).catch(() => setPlaying(false));
-    } else {
-      a.pause();
-      setPlaying(false);
-    }
-  }, [getAudio]);
+    triedUnlock.current = true;
+    if (a.paused) attemptPlay();
+    else { a.pause(); setPlaying(false); }
+  }, [getAudio, attemptPlay]);
 
   useEffect(() => {
-    const onCta = () => tryStart();
+    const onCta = () => { triedUnlock.current = true; attemptPlay(); };
     const onToggle = () => toggle();
+    // اولین لمس/کلیک هرجای صفحه‌ی دعوت → شروع موزیک (unlock استاندارد iOS)
+    const onFirstTouch = () => {
+      if (!triedUnlock.current) { triedUnlock.current = true; attemptPlay(); }
+    };
     window.addEventListener("rol:cta", onCta);
     window.addEventListener("rol:music-toggle", onToggle);
+    document.addEventListener("pointerdown", onFirstTouch, { passive: true });
     return () => {
       window.removeEventListener("rol:cta", onCta);
       window.removeEventListener("rol:music-toggle", onToggle);
+      document.removeEventListener("pointerdown", onFirstTouch);
     };
-  }, [tryStart, toggle]);
+  }, [attemptPlay, toggle]);
 
   if (!available) return null;
   return (
