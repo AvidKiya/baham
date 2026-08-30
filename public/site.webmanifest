@@ -1,0 +1,15 @@
+{
+  "name": "رُل — دعوت‌نامه‌ی عاشقانه",
+  "short_name": "رُل",
+  "description": "یه دعوت‌نامه‌ی تعاملی و عاشقانه برای رل زدن",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0715",
+  "theme_color": "#ff4f8b",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

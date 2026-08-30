@@ -5,7 +5,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 export const metadata = {
   title: DEFAULT_CONFIG.text.siteTitle,
   description: DEFAULT_CONFIG.text.siteDesc,
-  robots: { index: false, follow: false },
+  robots: { index: true, follow: true },
+  manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
     title: DEFAULT_CONFIG.text.siteTitle,

@@ -188,12 +188,27 @@ export async function onRequestDelete(context) {
   return json({ ok: true, reset: true, config: DEFAULT_CONFIG });
 }
 
+/** محدودسازی سبک ضد اسپم: حداکثر ۶۰ ایونت در دقیقه برای هر IP (best-effort per isolate) */
+const RL = new Map();
+function rateLimited(request) {
+  const ip = (request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local").split(",")[0].trim();
+  const now = Date.now();
+  const rec = RL.get(ip);
+  if (!rec || now - rec.t > 60_000) {
+    RL.set(ip, { t: now, n: 1 });
+    return false;
+  }
+  rec.n += 1;
+  return rec.n > 60;
+}
+
 export async function onRequestPost(context) {
   const { request, env, waitUntil } = context;
   const url = new URL(request.url);
   const route = url.pathname.replace(/^\/api\/?/, "").split("/")[0];
 
   if (route !== "event") return json({ ok: false, error: "not_found" }, 404);
+  if (rateLimited(request)) return json({ ok: false, error: "rate_limited" }, 429);
   if (!env || !env.STATS) return json({ ok: true, stored: false }, 202);
 
   let payload = null;

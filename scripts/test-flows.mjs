@@ -145,6 +145,10 @@ console.log("— جریان کامل دعوت‌نامه");
   ok(nameShown.includes("سارا"), "اسم او در کارت: " + nameShown.trim());
   await audit(p, "final");
 
+  const hasShare = await p.evaluate(() => !!(navigator.share || navigator.webkitShare));
+  if (!hasShare) {
+    ok(await p.isVisible(".copy-link"), "بدون Web Share → دکمه‌ی «کپی لینک دعوت» جایگزین شد");
+  }
   // reply via telegram
   const replyBtn = await p.evaluate(() => {
     const a = document.querySelector(".reply-cta");

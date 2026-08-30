@@ -734,7 +734,29 @@ function FinalScreen() {
             <button className="btn ghost" type="button" onClick={shareCard}>
               {E(cfg, "finalShare", "اشتراک‌گذاری")}
             </button>
-          ) : null}
+          ) : (
+            <button
+              className="btn ghost copy-link"
+              type="button"
+              onClick={async () => {
+                try {
+                  const url = location.origin + "/invite" + (name ? "?name=" + name : "");
+                  if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(url);
+                  else {
+                    const ta = document.createElement("textarea");
+                    ta.value = url;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    ta.remove();
+                  }
+                  toast("لینک کپی شد ✨");
+                } catch (e) { toast("کپی نشد؛ لینک رو دستی کپی کن"); }
+              }}
+            >
+              کپی لینک دعوت 🔗
+            </button>
+          )}
           <button className="btn ghost" type="button" onClick={() => go("intro")}>
             {E(cfg, "finalAgain", "از اول")}
           </button>
