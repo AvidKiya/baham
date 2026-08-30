@@ -117,7 +117,8 @@ body.won .b2{opacity:.75}
 .stk .stk-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .5s}
 .stk.ok .stk-img{opacity:1}
 .stk.ok .stk-fb{opacity:0}
-.stk-l{height:150px;width:150px;animation:bob 3.6s ease-in-out infinite}
+.stk-l{height:150px;width:150px;animation:bob 3.6s ease-in-out infinite;filter:drop-shadow(0 14px 24px rgba(0,0,0,.35)) drop-shadow(0 0 26px rgba(var(--glow),.28))}
+.poem-stk{filter:drop-shadow(0 12px 22px rgba(0,0,0,.4)) drop-shadow(0 0 30px rgba(var(--glow),.35))}
 .stk-m{height:112px;width:112px;animation:bob 3.2s ease-in-out infinite}
 .stk-s{height:88px;width:88px;animation:bob 3.4s ease-in-out infinite}
 .stk-xs{height:54px;width:54px}
@@ -272,7 +273,7 @@ body[data-mode="invite"] .home-bar{display:none}
 .no.givenup{animation:tired 2.2s ease-in-out infinite}
 .dcard.wide{grid-column:1/-1;flex-direction:row;min-height:92px;gap:16px;padding:18px 24px;
   background:linear-gradient(135deg,rgba(var(--glow),.18),rgba(150,90,255,.13));
-  border-color:rgba(var(--glow),.4);overflow:hidden}
+  border-color:rgba(var(--glow),.4);overflow:visible}
 .dcard.wide::after{content:"";position:absolute;top:-70%;bottom:-70%;width:34%;right:-50%;
   background:linear-gradient(105deg,transparent,rgba(255,255,255,.22),transparent);
   transform:skewX(-18deg);animation:sweep 3.4s ease-in-out infinite;pointer-events:none}
@@ -303,7 +304,7 @@ body[data-mode="invite"] .home-bar{display:none}
 #whenBtn.ready{opacity:1}
 
 /* contract */
-.contract{position:relative;width:100%;max-width:470px;padding:24px 22px 22px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.contract{position:relative;width:100%;max-width:470px;padding:28px 22px 22px;display:flex;flex-direction:column;gap:6px;overflow:visible}
 .contract h2{margin:0;font-size:21px;font-weight:800;text-align:center}
 .contract .stk-s{margin:4px auto 2px}
 .clauses{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:13px}
@@ -537,6 +538,25 @@ body[data-mode="admin"]{overflow-y:auto}
   .adm-preview-frame iframe{height:520px}
   .adm-savebar{width:calc(100vw - 24px);justify-content:space-between}
 }
+
+/* ====================== v3.4 graphics: aurora + grain + shine ====================== */
+.bg::before,.bg::after{content:"";position:absolute;width:64vmax;height:64vmax;border-radius:50%;filter:blur(80px);
+  opacity:.55;mix-blend-mode:screen;animation:drift 26s ease-in-out infinite alternate;will-change:transform}
+.bg::before{background:radial-gradient(circle,rgba(var(--glow),.5),transparent 64%);top:-20vmax;right:-16vmax}
+.bg::after{background:radial-gradient(circle,rgba(140,92,255,.42),transparent 64%);bottom:-18vmax;left:-14vmax;animation-delay:-13s}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-7vmax,5vmax,0) scale(1.18)}}
+#app::after{content:"";position:absolute;inset:0;z-index:40;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E")}
+.btn.primary{position:relative;overflow:hidden}
+.btn.primary>.btn-shine,.btn.primary>span{position:relative;z-index:2}
+.btn.primary::before{content:"";position:absolute;top:-2px;bottom:-2px;width:34%;left:-70%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-18deg);
+  animation:shine 4.6s ease-in-out infinite}
+@keyframes shine{0%,58%{left:-70%}78%,100%{left:140%}}
+.q-glow{position:relative}
+.q-glow::after{content:"";position:absolute;inset:-14% -8%;z-index:-1;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(var(--glow),.22),transparent 72%);filter:blur(10px)}
+@media (prefers-reduced-motion:reduce){.bg::before,.bg::after{animation:none}.btn.primary::before{display:none}}
 
 /* ====================== poem screen (اشعار مناسبت) ====================== */
 .poem-card{margin:14px auto 8px;padding:26px 20px 16px;max-width:420px;width:100%;border-radius:26px;text-align:center;position:relative;overflow:hidden}

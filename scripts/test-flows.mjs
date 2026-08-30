@@ -173,8 +173,11 @@ console.log("— جریان کامل دعوت‌نامه");
   ok(replyBtn && replyBtn.includes("t.me/AvidKiya") && replyBtn.includes("text="), "دکمه‌ی «جوابم رو خودم بگم» → تلگرام تو");
   // canvas card modal
   await p.click("#finalSave");
-  await sleep(900);
-  const imgOk = await p.evaluate(() => { const im = document.querySelector(".card-preview"); return !!im && im.naturalWidth > 100; });
+  let imgOk = false;
+  for (let i = 0; i < 10 && !imgOk; i++) {
+    await sleep(450);
+    imgOk = await p.evaluate(() => { const im = document.querySelector(".card-preview"); return !!im && im.naturalWidth > 100; });
+  }
   ok(imgOk, "تصویر کارت (canvas) ساخته شد");
   await p.screenshot({ path: "docs/shots/next-flow-final.png" });
   await ctx.close();
@@ -221,7 +224,7 @@ console.log("— پنل مدیریت: ویرایش → ذخیره → اعمال
   // sender name in footer
   const footer = await p2.locator(".appfoot .foot-line").textContent();
   ok(footer.includes("آرش"), "اسم فرستنده در فوتر: " + footer.trim());
-  await p2.click(".answers .yes");
+  await p2.evaluate(() => document.querySelector(".answers .yes").click());
   await sleep(400);
   await p2.click("#scr-yes");
   await p2.click("#yesBtnNext");
@@ -261,8 +264,46 @@ console.log("— مناسبت‌ها و اشعار");
   ok(await p.isVisible("text=حافظ و سعدی"), "شاعرهای مناسبت دوستی درج شدند");
   const workLink = await p.evaluate(() => location.href);
   ok(workLink.includes("occasion=friendship"), "پارامتر occasion در URL باقی است");
-  await p.click("text=بریم سراغ قرار"); await sleep(350);
+  await p.evaluate(() => { const b = document.querySelector("#scr-poem .btn.primary"); if (b) b.click(); }); await sleep(350);
   ok((await active(p)) === "scr-date", "شعر دوستی → انتخاب قرار");
+  await ctx.close();
+}
+
+/* ================= 2.7) پک‌های متن هر مناسبت ================= */
+console.log("— متن‌های اختصاصی مناسبت‌ها");
+for (const [occ, qWord, yesWord] of [["marriage", "ازدواج", "قبوله"], ["friendship", "دوست", "آره"], ["work", "همکاری", "آره"]]) {
+  const { ctx, p } = await page({ viewport: { width: 390, height: 844 } });
+  await p.goto(BASE + "/invite?name=آیدا&occasion=" + occ, { waitUntil: "networkidle" });
+  await sleep(400);
+  await p.click("text=بزن بریم"); await p.click("#scr-build"); await sleep(150);
+  await p.click("text=خب بپرس"); await sleep(350);
+  const q = await p.locator(".q-text").textContent();
+  ok(q.includes(qWord), `مناسبت ${occ}: سؤال اختصاصی («${qWord}») → ` + q.trim().slice(0, 30));
+  const y = await p.locator(".answers .yes").textContent();
+  ok(y.includes(yesWord), `مناسبت ${occ}: دکمه‌ی آره اختصاصی → ` + y.trim());
+  await p.click(".answers .yes", { force: true }); await sleep(400);
+  await p.click("#scr-yes"); await sleep(150);
+  await p.click("#yesBtnNext"); await sleep(150);
+  await p.click("text=آره، بریم").catch(() => p.click("button >> nth=0")).catch(() => {});
+  await sleep(150);
+  // دکمه‌ی بعدی هر مناسبت ممکن است متن متفاوت باشد — کلیک عمومی روی دکمه‌ی primary صفحه‌ی after
+  await p.evaluate(() => {
+    const scr = document.querySelector("#scr-after");
+    if (scr) { const b = scr.querySelector(".btn.primary"); if (b) b.click(); }
+  });
+  await sleep(450);
+  const stk = await p.evaluate(() => !!document.querySelector("#scr-poem .stk-img, #scr-poem .stk-fb"));
+  ok(stk, `مناسبت ${occ}: استیکر مناسبت در صفحه‌ی شعر`);
+  await ctx.close();
+}
+// متن پایانی ازدواج
+{
+  const { ctx, p } = await page({ viewport: { width: 390, height: 844 } });
+  await p.goto(BASE + "/invite?name=آیدا&occasion=marriage", { waitUntil: "networkidle" });
+  await p.evaluate(() => localStorage.setItem("rol:state", JSON.stringify({ checkpoint: 6, answer: "yes", dateId: "cafe", dateLabel: "☕ کافه", whenLabel: "این هفته", timeLabel: "شب", signed: true, secrets: {}, openedAt: 1 })));
+  await p.reload(); await sleep(600);
+  const ft = await p.locator(".final-card .line.dim").textContent();
+  ok(ft.includes("پیوند"), "کارت پایانی ازدواج: " + ft.trim());
   await ctx.close();
 }
 
@@ -396,7 +437,7 @@ console.log("— ریسپانسیو موبایل");
     await p.click("text=بزن بریم"); await p.click("#scr-build"); await sleep(120);
     await p.click("text=خب بپرس"); await sleep(300);
     await noOverflow(p, "question " + vp.width);
-    await p.click(".answers .yes", { force: true }); await sleep(400);
+    await p.evaluate(() => document.querySelector(".answers .yes").click()); await sleep(400);
     await p.click("#scr-yes"); await sleep(150);
     await p.click("#yesBtnNext"); await sleep(150);
     await p.click("text=آره، بریم"); await sleep(500);

@@ -345,7 +345,7 @@ function QuestionScreen() {
         {E(cfg, "qPre", "خب…")}
       </p>
       <h1 {...rise(1, "q-text pop")} >
-        {cfg.question || "با من رل می‌زنی؟ ❤️"}
+        {T(cfg, "question", cfg.question || "با من رل می‌زنی؟ ❤️")}
       </h1>
       <div {...rise(2, "answers")} id="answers" ref={zoneRef} >
         <button
@@ -464,7 +464,7 @@ function PoemScreen() {
   const verses = (occ.verses || []).slice(0, 8);
   return (
     <section className="screen active" id="scr-poem" aria-label="شعر برای تو">
-      <Sticker kind="letter" cls="stk stk-s" cfg={cfg} />
+      <Sticker kind={occ.sticker || "letter"} cls="stk stk-m poem-stk" cfg={cfg} />
       <p {...rise(0, "line big")}>
         {E(cfg, "poemTitle", "یه چیزی برات دارم 💌")}
       </p>

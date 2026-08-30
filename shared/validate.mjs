@@ -135,7 +135,16 @@ export function validatePatch(patch) {
           verses.push([clean(m1.ok), clean(m2.ok)]);
         }
       }
-      occs.push({ id, emoji: String(o.emoji || "").slice(0, 8), label: clean(l.ok), poet: clean(pt.ok), verses });
+      let pack = {};
+      if (o.pack && typeof o.pack === "object" && !Array.isArray(o.pack)) {
+        for (const [pk, pv] of Object.entries(o.pack).slice(0, 40)) {
+          if (!/^[a-zA-Z0-9_]{1,40}$/.test(pk)) continue;
+          const pr = str(pv === undefined || pv === null ? "" : pv, 200);
+          if (pr.err) return { err: pr.err, path: "occasions.pack." + pk };
+          if (pr.ok) pack[pk] = clean(pr.ok);
+        }
+      }
+      occs.push({ id, emoji: String(o.emoji || "").slice(0, 8), label: clean(l.ok), poet: clean(pt.ok), sticker: String(o.sticker || "").replace(/[^a-z]/g, "").slice(0, 16), pack, verses });
     }
     out.occasions = occs;
   }
