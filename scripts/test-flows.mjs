@@ -174,7 +174,7 @@ console.log("— پنل مدیریت: ویرایش → ذخیره → اعمال
   const qShown = await p2.locator(".q-text").textContent();
   ok(qShown.includes("قهوه"), "سؤال جدید از KV روی سایت اعمال شد: " + qShown.trim());
   // sender name in footer
-  const footer = await p2.locator(".appfoot span").textContent();
+  const footer = await p2.locator(".appfoot .foot-line").textContent();
   ok(footer.includes("آرش"), "اسم فرستنده در فوتر: " + footer.trim());
   await p2.click(".answers .yes");
   await sleep(400);
@@ -234,6 +234,48 @@ console.log("— حالت دمو");
   await p.click(".dp-btn >> nth=4"); // کانفتی
   await sleep(400);
   ok(true, "کانفتی بدون خطا");
+  await ctx.close();
+}
+
+/* ================= 4.5) music (bundled) + theme param ================= */
+console.log("— موزیک و تم");
+{
+  const { ctx, p } = await page();
+  await p.goto(BASE + "/invite", { waitUntil: "networkidle" });
+  await sleep(500);
+  ok(await p.isVisible("#musicBtn"), "دکمه‌ی موزیک با فایل پیش‌فرض نمایان است");
+  await p.click("text=بزن بریم");
+  await sleep(1400);
+  const on = await p.evaluate(() => document.getElementById("musicBtn").classList.contains("on"));
+  ok(on, "موزیک بعد از اولین لمس شروع شد (بدون autoplay اجباری)");
+  await p.click("#musicBtn");
+  await sleep(300);
+  const off = await p.evaluate(() => !document.getElementById("musicBtn").classList.contains("on"));
+  ok(off, "توقف موزیک با دکمه");
+  await ctx.close();
+}
+{
+  const { ctx, p } = await page();
+  await p.goto(BASE + "/invite?theme=candy", { waitUntil: "networkidle" });
+  await sleep(400);
+  const acc = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--acc").trim());
+  ok(acc === "#ff6fb5", "تم آب‌نباتی از URL اعمال شد: " + acc);
+  await ctx.close();
+}
+{
+  const { ctx, p } = await page();
+  await p.goto(BASE + "/invite", { waitUntil: "networkidle" });
+  await p.click("text=بزن بریم");
+  await p.click("#scr-build");
+  await p.click("text=خب بپرس");
+  for (let i = 0; i < 5; i++) await p.click(".answers .no", { force: true });
+  await p.click(".realno .btn");
+  await sleep(400);
+  const roses = await p.evaluate(() => {
+    const st = document.querySelector("#scr-no .stk img");
+    return !!st && st.src.includes("roses");
+  });
+  ok(roses, "استیکر رز در صفحه‌ی نه");
   await ctx.close();
 }
 

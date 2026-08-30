@@ -9,7 +9,8 @@ const MAX = { short: 60, name: 32, text: 600, url: 400, list: 12, clauses: 10 };
 const URL_RE = /^https?:\/\/[^\s"'<>]{3,}$/i;
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const THEME_KEYS = ["bg", "bg2", "acc", "acc2"]; // glow is derived from acc
-const ASSET_KEYS = ["nervous", "happy", "celebrate", "confused", "date", "sparkles"];
+const ASSET_KEYS = ["nervous", "happy", "celebrate", "confused", "date", "sparkles", "letter", "roses"];
+const CREATOR_LINK_KEYS = ["instagram", "telegram", "x", "github"];
 
 function str(v, max) {
   if (typeof v !== "string") return { err: "باید متن باشد" };
@@ -96,6 +97,29 @@ export function validatePatch(patch) {
       if (r.ok && !URL_RE.test(r.ok)) return { err: "آدرس استیکر باید با http/https شروع شود", path: "assets." + ak };
       out.assets[ak] = r.ok.trim();
     }
+  }
+
+  // — creator credit —
+  if (patch.creator !== undefined) {
+    if (typeof patch.creator !== "object") return { err: "اطلاعات سازنده نامعتبر", path: "creator" };
+    const cr = patch.creator;
+    const out2 = {};
+    for (const k of ["name", "fa", "username"]) {
+      if (cr[k] === undefined) continue;
+      const r = str(cr[k], 40);
+      if (r.err) return { err: r.err, path: "creator." + k };
+      out2[k] = clean(r.ok);
+    }
+    if (cr.links !== undefined && typeof cr.links === "object") {
+      out2.links = {};
+      for (const lk of CREATOR_LINK_KEYS) {
+        if (cr.links[lk] === undefined) continue;
+        const r = str(cr.links[lk], MAX.url);
+        if (r.err || (r.ok && !URL_RE.test(r.ok))) return { err: "لینک " + lk + " معتبر نیست", path: "creator.links." + lk };
+        if (r.ok) out2.links[lk] = r.ok.trim();
+      }
+    }
+    out.creator = out2;
   }
 
   // — option lists —

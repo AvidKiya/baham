@@ -11,6 +11,36 @@ import { stickerSVG, STICKER_KINDS } from "@/lib/stickers";
 import { cardBlob } from "@/lib/card";
 import Sticker from "@/components/Sticker";
 
+/* ---------- creator credit ---------- */
+const SOCIAL_ICONS = {
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor" stroke="none"/></svg>',
+  telegram: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.4 19 19.2c-.2 1-.8 1.2-1.6.8l-4.5-3.3-2.2 2.1c-.2.2-.4.4-.9.4l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.5 13.2 3 11.8c-1-.3-1-1 .2-1.5l17.3-6.7c.8-.3 1.5.2 1.4 1.1z"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.7 3H21l-7.3 8.3L22.2 21h-6.7l-5.2-6.2L4.3 21H1l7.8-8.9L1.8 3h6.9l4.7 5.7L17.7 3zm-1.2 16h1.9L6.2 4.9H4.2L16.5 19z"/></svg>',
+  github: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.7a10.3 10.3 0 0 0-3.3 20.1c.5.1.7-.2.7-.5v-1.9c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.2-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.4.1 2.6.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10.3 10.3 0 0 0 12 1.7z"/></svg>',
+};
+function Credit({ cfg, compact }) {
+  const cr = (cfg && cfg.creator) || {};
+  const links = cr.links || {};
+  return (
+    <span className="credit">
+      <span className="credit-text">
+        {T(cfg, "madeWith", "ساخته‌شده با ❤️ و کلی جسارت")}
+        {cr.fa ? <> توسط <b className="credit-name">{cr.fa}</b></> : null}
+        {cr.username ? <a className="credit-user" href={links.instagram || links.github || "#"} target="_blank" rel="noopener">{cr.username}</a> : null}
+      </span>
+      {!compact ? (
+        <span className="credit-icons">
+          {Object.entries(SOCIAL_ICONS).map(([k, svg]) =>
+            links[k] ? (
+              <a key={k} href={links[k]} target="_blank" rel="noopener" aria-label={k} dangerouslySetInnerHTML={{ __html: svg }} />
+            ) : null
+          )}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 const Ctx = createContext(null);
 const useApp = () => useContext(Ctx);
 export const HEART_SVG =
@@ -92,6 +122,7 @@ function MusicButton({ cfg, toast }) {
       onClick={toggle}
     >
       <span className="mi" aria-hidden="true">♪</span>
+      <span className="eq" aria-hidden="true"><i></i><i></i><i></i></span>
       <span className="mlabel">{playing ? "در حال پخش" : T(cfg, "musicLabel", "موسیقی")}</span>
     </button>
   );
@@ -379,6 +410,7 @@ function AfterScreen() {
   const { cfg, go } = useApp();
   return (
     <section className="screen active" id="scr-after" aria-label="قدم بعدی">
+      <Sticker kind="letter" cls="stk stk-s" cfg={cfg} />
       <p {...rise(0, "line big")} >
         {T(cfg, "afterL1", "خب {pet}…").replace("{pet}", cfg.petPhrase || "خانومِ من")}
       </p>
@@ -593,8 +625,11 @@ function FinalScreen() {
       const url = URL.createObjectURL(blob);
       openModal((close) => (
         <>
-          <img className="card-preview" src={url} alt={T(cfg, "finalTitle", "قرارمون ثبت شد")} />
-          <p className="m-note">برای نگه‌داشتن: دانلود کن یا روی تصویر نگه‌دار 📸</p>
+          <h3 className="m-title">{T(cfg, "finalTitle", "قرارمون ثبت شد ❤️")}</h3>
+          <div className="card-frame glass">
+            <img className="card-preview" src={url} alt={T(cfg, "finalTitle", "قرارمون ثبت شد")} />
+          </div>
+          <p className="m-note">روی آیفون: روی تصویر نگه‌دار و «افزودن به عکس‌ها» 📸</p>
           <button
             className="btn primary"
             type="button"
@@ -652,7 +687,7 @@ function FinalScreen() {
         <Sticker kind="happy" cls="stk stk-m2" cfg={cfg} />
       </div>
       <div className="f-actions">
-        <button className="btn primary xl" type="button" onClick={saveCard}>
+        <button id="finalSave" className="btn primary xl" type="button" onClick={saveCard}>
           {T(cfg, "finalSave", "این لحظه رو ذخیره کن 📸")}
         </button>
         <div className="row2">
@@ -675,6 +710,7 @@ function NoScreen() {
   const { cfg, go, reset } = useApp();
   return (
     <section className="screen active" id="scr-no" aria-label="جواب من">
+      <Sticker kind="roses" cls="stk stk-s" cfg={cfg} />
       <div {...rise(0, "card glass")} >
         <p className="line big">{T(cfg, "noTitle", "باشه ❤️")}</p>
         <p className="line">{T(cfg, "noL1", "ممنون که صادق بودی.")}</p>
@@ -723,6 +759,8 @@ function useSecrets(cfg, appState, update, track, openModal) {
 }
 
 /* ============================== the app shell ============================== */
+export { Credit };
+
 export default function Experience({ config, mode = "invite", initialName = "" }) {
   const cfg = config || DEFAULT_CONFIG;
   const [name, setName] = useState(initialName || cfg.recipientName || "");
@@ -783,9 +821,11 @@ export default function Experience({ config, mode = "invite", initialName = "" }
 
   /* boot: theme, particles, URL name, stored state, initial screen */
   useEffect(() => {
-    applyTheme(cfg.themes, cfg.theme || "romantic");
-    fxStart();
     const params = new URLSearchParams(location.search);
+    const themeParam = (params.get("theme") || "").toLowerCase().trim();
+    const themeKeys = Object.keys(cfg.themes || {});
+    applyTheme(cfg.themes, themeKeys.includes(themeParam) ? themeParam : cfg.theme || "romantic");
+    fxStart();
     const urlName = cleanText(params.get("name") || "", 32);
     if (urlName) setName(urlName);
     else if (cfg.recipientName) setName(cleanText(cfg.recipientName, 32));
@@ -943,9 +983,9 @@ export default function Experience({ config, mode = "invite", initialName = "" }
           >
             ♥
           </button>
-          <span>
-            {T(cfg, "madeWith", "ساخته‌شده با ❤️ و کمی جسارت")}
-            {cfg.senderName ? " — " + cfg.senderName : ""}
+          <span className="foot-line">
+            <Credit cfg={cfg} />
+            {cfg.senderName ? <span className="foot-sender"> · {cfg.senderName}</span> : null}
           </span>
         </footer>
       </div>

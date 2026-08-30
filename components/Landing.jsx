@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import { DEFAULT_CONFIG } from "../shared/config.mjs";
 import { T, cleanText, fetchConfig } from "@/lib/core";
 import { RM, fxStart } from "@/lib/fx";
-import Experience from "@/components/Experience";
+import Experience, { Credit } from "@/components/Experience";
 import { HEART_SVG } from "@/components/Experience";
 
 export default function Landing({ initialConfig }) {
@@ -47,6 +47,8 @@ export default function Landing({ initialConfig }) {
   return (
     <>
       <div className="bg" aria-hidden="true">
+        <div className="aurora a1"></div>
+        <div className="aurora a2"></div>
         <div className="blob b1"></div>
         <div className="blob b2"></div>
         <div className="blob b3"></div>
@@ -79,12 +81,16 @@ export default function Landing({ initialConfig }) {
           <p className="tiny rise-in" style={{ animationDelay: "270ms" }}>
             {T(cfg, "landingFeatures", "بدون ثبت‌نام · بدون ردیابیِ اذیت‌کننده · فقط یه سؤال ☺️")}
           </p>
+          <p className="tiny credit-line rise-in" style={{ animationDelay: "360ms" }}>
+            <Credit cfg={cfg} />
+          </p>
         </section>
 
         <div className="phone-col">
           <div id="phoneShell" className="phone-shell">
             <div className="phone">
               <div className="island" aria-hidden="true"></div>
+              <div className="home-bar" aria-hidden="true"></div>
               <div className="screen-glow" aria-hidden="true"></div>
               <Experience config={cfg} mode={mode} />
             </div>
@@ -134,7 +140,7 @@ function BuilderModal({ cfg, onClose }) {
     } catch (e) {}
   };
   const themes = Object.keys(cfg.themes || DEFAULT_CONFIG.themes);
-  const themeNames = { romantic: "روتیک صورتی", violet: "بنفش", wine: "شرابی" };
+  const themeNames = { romantic: "روتیک صورتی", violet: "بنفش", wine: "شرابی", candy: "آب‌نباتی", sunset: "غروب", mint: "نعنایی" };
 
   return (
     <div className="m-back in" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && onClose()}>

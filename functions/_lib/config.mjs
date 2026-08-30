@@ -20,12 +20,16 @@ export const DEFAULT_CONFIG = {
     romantic: { bg: "#0b0715", bg2: "#180c2e", acc: "#ff4f8b", acc2: "#c96bff", glow: "255,79,139" },
     violet:   { bg: "#0a0819", bg2: "#181040", acc: "#a06bff", acc2: "#ff5ec4", glow: "160,107,255" },
     wine:     { bg: "#130610", bg2: "#2b0c22", acc: "#ff3d71", acc2: "#c22e8f", glow: "255,61,113" },
+    candy:    { bg: "#12081f", bg2: "#261045", acc: "#ff6fb5", acc2: "#5fd4ff", glow: "255,111,181" },
+    sunset:   { bg: "#160a14", bg2: "#361229", acc: "#ff8a5c", acc2: "#d96bff", glow: "255,138,92" },
+    mint:     { bg: "#071310", bg2: "#0e2620", acc: "#3fe0b0", acc2: "#8fb0ff", glow: "63,224,176" },
   },
 
   // ---- music (optional) ----------------------------------------------------
-  // یک آدرس مستقیم mp3/ogg بذار (مثلاً داخل یک bucket یا هر CDN معتبر).
-  // خالی بذاری، دکمه‌ی موسیقی کلاً مخفی می‌شود.
-  music: "",
+  // موزیک پیش‌فرض: یک قطعه‌ی اورجینال رمانتیک که همراه پروژه است.
+  // اگر آهنگ خاصی می‌خواهی (مثلاً بیلی آیلیش/ویکند)، فقط لینک مستقیم mp3 را
+  // در پنل مدیریت بچسبان — بدون هیچ تغییر کدی.
+  music: "/assets/music/aurora-love.mp3",
 
   // ---- optional stickers (leave "" to use the built-in ones) ---------------
   // اگر خواستی استیکر دلخواه بذاری، آدرس تصویر (webp/png/gif) رو اینجا بذار.
@@ -36,6 +40,8 @@ export const DEFAULT_CONFIG = {
     confused: "",   // قلبِ گیج — کنار جواب‌های «نه»
     date:     "",   // قرار اول
     sparkles: "",   // پیام‌های مخفی
+    letter:   "",   // نامه‌ی عشق 💌
+    roses:    "",   // رز 🌹
   },
 
   // ---- date options --------------------------------------------------------
@@ -82,6 +88,19 @@ export const DEFAULT_CONFIG = {
     enabled: true,
     storeName: false,
     adminKey: "rol-admin-1234",   // ← حتماً عوضش کن! /api/stats?key=...
+  },
+
+  // ---- creator credit (همیشه پایین سایت و روی کارت نهایی) ------------------
+  creator: {
+    name: "Avid Kiya",
+    fa: "اَوید کیا",
+    username: "@AvidKiya",
+    links: {
+      instagram: "https://instagram.com/AvidKiya",
+      telegram: "https://t.me/AvidKiya",
+      x: "https://x.com/AvidKiya",
+      github: "https://github.com/AvidKiya",
+    },
   },
 
   // ---- share ---------------------------------------------------------------

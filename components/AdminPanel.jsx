@@ -38,6 +38,8 @@ const TEXT_GROUPS = [
   { title: "متفرقه", keys: ["secretTitle", "secretClose", "musicLabel", "madeWith", "builderTitle", "builderNamePh", "builderCopy", "builderOpen", "builderShare", "copied"] },
 ];
 
+const THEME_NAMES = { romantic: "روتیک صورتی", violet: "بنفش", wine: "شرابی", candy: "آب‌نباتی 🍬", sunset: "غروب 🌅", mint: "نعنایی 🌿" };
+
 const LONG_TEXTS = new Set(["introL1", "introL2", "buildL1", "buildL2", "buildL3", "landingSub", "noL2", "finalNote"]);
 
 /* ---------- tiny field components ---------- */
@@ -379,7 +381,7 @@ export default function AdminPanel() {
         <div className="adm-top-title">
           <span className="adm-logo sm">❤️</span>
           <div>
-            <strong>پنل مدیریت</strong>
+            <strong>پنل مدیریت</strong> <span className="adm-hint">· ساخته‌شده توسط اَوید کیا (@AvidKiya)</span>
             <span className="adm-hint"> {stored ? "· تنظیمات ذخیره‌شده فعال است" : "· حالت پیش‌فرض"}</span>
           </div>
         </div>
@@ -429,7 +431,7 @@ export default function AdminPanel() {
                 <div className="adm-themepick">
                   {themeKeys.map((tk) => (
                     <button key={tk} className={"adm-theme-opt" + (D.theme === tk ? " sel" : "")} type="button" onClick={() => set("theme", tk)}>
-                      <span className={"adm-mini-dot " + tk} /> {tk === "romantic" ? "روتیک صورتی" : tk === "violet" ? "بنفش" : "شرابی"}
+                      <span className={"adm-mini-dot " + tk} /> {THEME_NAMES[tk] || tk}
                     </button>
                   ))}
                 </div>
@@ -444,7 +446,7 @@ export default function AdminPanel() {
               <p className="adm-hint" style={{ marginTop: -8 }}>گلو (هاله‌ی نور) خودکار از رنگ اصلی ساخته می‌شود.</p>
               {themeKeys.map((tk) => (
                 <div key={tk} className="adm-theme-block">
-                  <h3>{tk === "romantic" ? "روتیک صورتی" : tk === "violet" ? "بنفش" : "شرابی"}</h3>
+                  <h3>{THEME_NAMES[tk] || tk}</h3>
                   <div className="adm-colors">
                     <Row label="پس‌زمینه (بالا)"><ColorInput value={D.themes[tk].bg} onChange={(v) => set("themes." + tk + ".bg", v)} label="bg" /></Row>
                     <Row label="پس‌زمینه (پایین)"><ColorInput value={D.themes[tk].bg2} onChange={(v) => set("themes." + tk + ".bg2", v)} label="bg2" /></Row>
@@ -538,6 +540,7 @@ export default function AdminPanel() {
               </section>
               <section className="adm-card glass">
                 <h2>🖼️ استیکرها</h2>
+              <p className="adm-hint" style={{ margin: "0 0 6px" }}>همه‌ی استیکرها انیمیشن‌دار هستند (webp متحرک).</p>
                 <p className="adm-hint" style={{ marginTop: -8 }}>آدرس خالی = استیکر اختصاصی همین پروژه. آدرس بده = عکس دلخواه تو (webp/png/gif متحرک).</p>
                 {STICKER_KINDS.map((k) => (
                   <Row key={k} label={k} hint={"پیش‌فرض: /assets/stickers/" + k + ".webp"}>
