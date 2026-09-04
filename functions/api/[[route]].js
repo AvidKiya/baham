@@ -338,10 +338,37 @@ async function getInvIdx(env, uid) {
 async function putInvIdx(env, uid, list) {
   await env.CONFIG.put("invidx:" + uid, JSON.stringify(list.slice(0, 20)));
 }
+/* ---------- کشف/کرش‌یابی (opt-in) ---------- */
+async function getDisc(env, uid) {
+  try { return JSON.parse((await env.CONFIG.get("disc:" + uid)) || "null"); } catch { return null; }
+}
+async function getDiscIdx(env) {
+  try { return JSON.parse((await env.CONFIG.get("discidx") || "null")) || []; } catch { return []; }
+}
+async function putDiscIdx(env, arr) {
+  await env.CONFIG.put("discidx", JSON.stringify(arr.slice(0, 500)));
+}
+async function getLikes(env, uid) {
+  try { return JSON.parse((await env.CONFIG.get("dlike:" + uid)) || "null") || {}; } catch { return {}; }
+}
+async function getRoomIdx(env, uid) {
+  try { return JSON.parse((await env.CONFIG.get("rooms:" + uid)) || "null") || []; } catch { return []; }
+}
+async function getRoom(env, id) {
+  try { return JSON.parse((await env.CONFIG.get("room:" + id)) || "null"); } catch { return null; }
+}
+function kmBetween(a, b) {
+  if (!a || !b || !isFinite(a.lat) || !isFinite(b.lat)) return -1;
+  const R = 6371, dLa = (b.lat - a.lat) * Math.PI / 180, dLo = (b.lng - a.lng) * Math.PI / 180;
+  const x = Math.sin(dLa / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLo / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)));
+}
+const isAdultBy = (by) => { const y = new Date().getFullYear(); return by && y - by >= 18 && y - by < 100; };
+
 const INV_THEMES = new Set(["romantic", "violet", "wine", "candy", "sunset", "mint"]);
 const INV_OCCS = new Set(["love", "marriage", "friendship", "business"]);
 function invPublic(inv) {
-  return { name: inv.name, theme: inv.theme, occasion: inv.occasion, music: inv.music, qText: inv.qText || "", letter: inv.letter || "" };
+  return { name: inv.name, theme: inv.theme, occasion: inv.occasion, music: inv.music, qText: inv.qText || "", letter: inv.letter || "", tg: inv.tg || "" };
 }
 function invText(v, n) {
   return String(v || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, n || 140);
@@ -364,7 +391,58 @@ export async function onRequestGet(context) {
     if (!/^[a-z0-9-]{4,20}$/.test(slug)) return json({ ok: false, error: "bad_slug" }, 400);
     const inv = await getInvite(env, slug);
     if (!inv) return json({ ok: false, error: "not_found" }, 404);
+    if (seg[2] === "msgs") {
+      return json({ ok: true, msgs: (inv.msgs || []).slice(0, 30).map((m) => ({ id: m.id, ts: m.ts, text: m.text, reply: m.reply || "", tsReply: m.tsReply || 0 })) });
+    }
     return json({ ok: true, invite: invPublic(inv) });
+  }
+
+  /* ---------- کشف: کارت من + کاندیدها + چت‌ها ---------- */
+  if (seg[0] === "discover") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!(u.user.profile && u.user.profile.adult)) return json({ ok: false, error: "adult_only", message: "کشف فقط برای بزرگسداده؛ اول سنت رو تأیید کن" }, 403);
+    const me = await getDisc(env, u.user.id);
+    const myLikes = await getLikes(env, u.user.id);
+    const idx = await getDiscIdx(env);
+    const cands = [];
+    let likesGot = 0;
+    for (const uid of idx.slice(0, 60)) {
+      if (uid === u.user.id) continue;
+      const c = await getDisc(env, uid);
+      if (!c) continue;
+      const theirLikes = await getLikes(env, uid);
+      if (theirLikes[u.user.id] === 1) likesGot++;
+      if (myLikes[uid]) continue;
+      if (!isAdultBy(c.by)) continue;
+      const km = kmBetween(me, c);
+      cands.push({ uid, name: c.name || c.username, age: new Date().getFullYear() - c.by, city: c.city, bio: c.bio || "", km, ts: c.ts });
+    }
+    cands.sort((x, y) => (x.km < 0 ? 999 : x.km) - (y.km < 0 ? 999 : y.km));
+    const roomIdx = await getRoomIdx(env, u.user.id);
+    const rooms = [];
+    for (const rid of roomIdx) {
+      const r = await getRoom(env, rid);
+      if (!r) continue;
+      const peerId = r.a === u.user.id ? r.b : r.a;
+      const pc = await getDisc(env, peerId);
+      const last = r.msgs && r.msgs.length ? r.msgs[r.msgs.length - 1] : null;
+      rooms.push({ id: r.id, peer: (pc && pc.name) || "؟", last: last ? last.text.slice(0, 40) : "", ts: last ? last.ts : r.created });
+    }
+    rooms.sort((x, y) => (y.ts || 0) - (x.ts || 0));
+    return json({ ok: true, on: !!me, card: me ? { city: me.city, bio: me.bio || "", lat: me.lat || 0, lng: me.lng || 0 } : null, candidates: cands.slice(0, 30), likesGot, rooms });
+  }
+
+  /* ---------- اتاق چت دونفره ---------- */
+  if (seg[0] === "room" && seg[1]) {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const r = await getRoom(env, String(seg[1]));
+    if (!r || (r.a !== u.user.id && r.b !== u.user.id)) return json({ ok: false, error: "not_found" }, 404);
+    const since = Number(url.searchParams.get("since") || 0) || 0;
+    const peerId = r.a === u.user.id ? r.b : r.a;
+    const pc = await getDisc(env, peerId);
+    return json({ ok: true, peer: (pc && pc.name) || "؟", msgs: (r.msgs || []).filter((m) => m.ts > since).slice(-60) });
   }
 
   /* ---------- دعوت‌نامه‌های من: لیست/جزئیات ---------- */
@@ -516,7 +594,37 @@ export async function onRequestPut(context) {
     return json({ ok: true, saved: true, config: mergeConfig(DEFAULT_CONFIG, res.ok) });
   }
 
-    /* ---------- دعوت‌نامه‌ی شخصی: ویرایش / جواب پیام ---------- */
+    /* ---------- کشف: ذخیره‌ی کارت من ---------- */
+  if (seg[0] === "discover") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!(u.user.profile && u.user.profile.adult)) return json({ ok: false, error: "adult_only", message: "کشف فقط برای بزرگسداده؛ اول سنت رو تأیید کن" }, 403);
+    if (rateLimited(request, "discput", 30)) return json({ ok: false, error: "rate_limited" }, 429);
+    const r = await readBody(request, 4096);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const b = r.body;
+    const uid = u.user.id;
+    const idx = await getDiscIdx(env);
+    if (b.on === false) {
+      try {
+        await env.CONFIG.delete("disc:" + uid);
+        await putDiscIdx(env, idx.filter((x) => x !== uid));
+      } catch {}
+      return json({ ok: true, on: false });
+    }
+    const city = invText(b.city, 40);
+    if (!city) return json({ ok: false, error: "bad_city", message: "شهرت رو بنویس" }, 400);
+    const lat = isFinite(Number(b.lat)) ? Math.round(Number(b.lat) * 100) / 100 : 0;
+    const lng = isFinite(Number(b.lng)) ? Math.round(Number(b.lng) * 100) / 100 : 0;
+    const card = { uid, username: u.user.username, name: (u.user.profile && u.user.profile.name) || u.user.username, by: u.user.profile.birthYear || 0, city, bio: invText(b.bio, 200), lat, lng, ts: Date.now() };
+    try {
+      await env.CONFIG.put("disc:" + uid, JSON.stringify(card));
+      if (!idx.includes(uid)) await putDiscIdx(env, [uid].concat(idx));
+    } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+    return json({ ok: true, on: true });
+  }
+
+  /* ---------- دعوت‌نامه‌ی شخصی: ویرایش / جواب پیام ---------- */
   if (seg[0] === "invites") {
     const u = await requireUser(request, env);
     if (u.err) return u.err;
@@ -536,6 +644,7 @@ export async function onRequestPut(context) {
       if (iv.occasion !== undefined && INV_OCCS.has(iv.occasion)) inv.occasion = iv.occasion;
       if (iv.theme !== undefined && INV_THEMES.has(iv.theme)) inv.theme = iv.theme;
       if (iv.music !== undefined) inv.music = iv.music === "none" ? "none" : "";
+      if (iv.tg !== undefined) inv.tg = /^[A-Za-z0-9_]{4,32}$/.test(String(iv.tg || "")) ? String(iv.tg) : "";
       if (iv.qText !== undefined) inv.qText = invText(iv.qText, 140);
       if (iv.letter !== undefined) inv.letter = invText(iv.letter, 400);
     }
@@ -822,6 +931,53 @@ export async function onRequestPost(context) {
     return json({ ok: false, error: "not_found" }, 404);
   }
 
+  /* ---------- کشف: لایک/رد ---------- */
+  if (seg[0] === "discover" && seg[1] === "like") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!(u.user.profile && u.user.profile.adult)) return json({ ok: false, error: "adult_only" }, 403);
+    if (rateLimited(request, "dlike", 120)) return json({ ok: false, error: "rate_limited" }, 429);
+    const r = await readBody(request, 2048);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const target = String(r.body.target || "");
+    if (!/^[a-f0-9]{4,24}$/.test(target) || target === u.user.id) return json({ ok: false, error: "bad_target" }, 400);
+    const tc = await getDisc(env, target);
+    if (!tc) return json({ ok: false, error: "not_found" }, 404);
+    const myLikes = await getLikes(env, u.user.id);
+    myLikes[target] = r.body.like ? 1 : -1;
+    await env.CONFIG.put("dlike:" + u.user.id, JSON.stringify(myLikes));
+    if (r.body.like) {
+      const theirLikes = await getLikes(env, target);
+      if (theirLikes[u.user.id] === 1) {
+        const id = randHex(6);
+        const room = { id, a: u.user.id, b: target, msgs: [], created: Date.now() };
+        await env.CONFIG.put("room:" + id, JSON.stringify(room));
+        for (const p of [u.user.id, target]) {
+          const ri = await getRoomIdx(env, p);
+          if (!ri.includes(id)) await env.CONFIG.put("rooms:" + p, JSON.stringify([id].concat(ri).slice(0, 50)));
+        }
+        return json({ ok: true, matched: true, room: id, peer: tc.name || tc.username });
+      }
+    }
+    return json({ ok: true, matched: false });
+  }
+
+  /* ---------- اتاق چت: پیام جدید ---------- */
+  if (seg[0] === "room" && seg[2] === "msg") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (rateLimited(request, "rmsg", 30)) return json({ ok: false, error: "rate_limited", message: "یه کم آروم‌تر" }, 429);
+    const r = await readBody(request, 4096);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const text = invText(r.body.text, 500);
+    if (!text) return json({ ok: false, error: "empty" }, 400);
+    const room = await getRoom(env, String(seg[1]));
+    if (!room || (room.a !== u.user.id && room.b !== u.user.id)) return json({ ok: false, error: "not_found" }, 404);
+    room.msgs = (room.msgs || []).concat([{ uid: u.user.id, ts: Date.now(), text }]).slice(-200);
+    try { await env.CONFIG.put("room:" + room.id, JSON.stringify(room)); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+    return json({ ok: true });
+  }
+
   /* ---------- ساخت دعوت‌نامه‌ی شخصی ---------- */
   if (seg[0] === "invites") {
     const u = await requireUser(request, env);
@@ -835,8 +991,9 @@ export async function onRequestPost(context) {
     const occasion = INV_OCCS.has(b.occasion) ? b.occasion : "love";
     const theme = INV_THEMES.has(b.theme) ? b.theme : "romantic";
     const music = b.music === "none" ? "none" : "";
+    const tg = /^[A-Za-z0-9_]{4,32}$/.test(String(b.tg || "")) ? String(b.tg) : "";
     const slug = randHex(4) + "-" + Date.now().toString(36).slice(-4);
-    const inv = { id: slug, uid: u.user.id, name, occasion, theme, music, qText: invText(b.qText, 140), letter: invText(b.letter, 400), created: Date.now(), views: 0, msgs: [] };
+    const inv = { id: slug, uid: u.user.id, name, occasion, theme, music, tg, qText: invText(b.qText, 140), letter: invText(b.letter, 400), created: Date.now(), views: 0, msgs: [] };
     const idx = await getInvIdx(env, u.user.id);
     if (idx.length >= 20) {
       const drop = idx.splice(20 - 1);

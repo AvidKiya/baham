@@ -113,6 +113,7 @@ function NewInvite({ onDone }) {
   const [music, setMusic] = useState("");
   const [qText, setQText] = useState("");
   const [letter, setLetter] = useState("");
+  const [tg, setTg] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -120,7 +121,7 @@ function NewInvite({ onDone }) {
     if (busy) return;
     if (!name.trim()) { setErr("اسم طرف رو بنویس"); return; }
     setBusy(true); setErr("");
-    const r = await api("/api/invites", { method: "POST", body: { name: name.trim(), occasion: occ, theme, music, qText: qText.trim(), letter: letter.trim() } });
+    const r = await api("/api/invites", { method: "POST", body: { name: name.trim(), occasion: occ, theme, music, tg: tg.trim(), qText: qText.trim(), letter: letter.trim() } });
     setBusy(false);
     if (r.ok && r.data && r.data.invite) { try { buzz(10); } catch {} onDone(r.data.invite.id); }
     else setErr((r.data && r.data.message) || "ساخته نشد؛ دوباره امتحان کن");
@@ -148,6 +149,8 @@ function NewInvite({ onDone }) {
           <button key={m.id} type="button" className={"occ-chip" + (music === m.id ? " sel" : "")} onClick={() => setMusic(m.id)}>{m.t}</button>
         ))}
       </div>
+      <p className="flbl">یوزرنیم تلگرام تو (برای دکمه‌ی جواب)</p>
+      <input className="inp" dir="ltr" placeholder="myusername" maxLength={32} value={tg} onChange={(e) => setTg(e.target.value.replace(/[^A-Za-z0-9_]/g, ""))} />
       <p className="flbl">متن سوال (خالی یعنی پیش‌فرض)</p>
       <input className="inp" dir="rtl" maxLength={140} placeholder="مثلاً: فردا کافه‌ی همیشگی، میای؟" value={qText} onChange={(e) => setQText(e.target.value)} />
       <p className="flbl">حرف آخر صفحه‌ی پایانی (اختیاری)</p>
@@ -165,13 +168,14 @@ function EditInvite({ inv, onSaved, onMsgs, onDeleted }) {
   const [music, setMusic] = useState(inv.music);
   const [qText, setQText] = useState(inv.qText || "");
   const [letter, setLetter] = useState(inv.letter || "");
+  const [tg, setTg] = useState(inv.tg || "");
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
   const [arm, setArm] = useState(false);
   const link = typeof location !== "undefined" ? location.origin + "/invite?i=" + inv.id : "/invite?i=" + inv.id;
 
   const save = async () => {
-    const r = await api("/api/invites", { method: "PUT", body: { invite: { id: inv.id, name: name.trim(), occasion: occ, theme, music, qText: qText.trim(), letter: letter.trim() } } });
+    const r = await api("/api/invites", { method: "PUT", body: { invite: { id: inv.id, name: name.trim(), occasion: occ, theme, music, tg: tg.trim(), qText: qText.trim(), letter: letter.trim() } } });
     setMsg(r.ok ? "سیو شد" : "سیو نشد؛ دوباره امتحان کن");
     setTimeout(() => setMsg(""), 2000);
     if (r.ok) onSaved();
@@ -214,6 +218,8 @@ function EditInvite({ inv, onSaved, onMsgs, onDeleted }) {
         <div className="theme-row">{THEMES.map((t) => <button key={t.id} type="button" title={t.t} aria-label={"تم " + t.t} className={"swatch " + t.id + (theme === t.id ? " sel" : "")} style={{ background: t.c }} onClick={() => setTheme(t.id)} />)}</div>
         <p className="flbl">موزیک</p>
         <div className="occ-row">{MUSICS.map((m) => <button key={m.id} type="button" className={"occ-chip" + (music === m.id ? " sel" : "")} onClick={() => setMusic(m.id)}>{m.t}</button>)}</div>
+        <p className="flbl">یوزرنیم تلگرام تو</p>
+        <input className="inp" dir="ltr" placeholder="myusername" maxLength={32} value={tg} onChange={(e) => setTg(e.target.value.replace(/[^A-Za-z0-9_]/g, ""))} />
         <p className="flbl">متن سوال</p>
         <input className="inp" dir="rtl" maxLength={140} value={qText} onChange={(e) => setQText(e.target.value)} />
         <p className="flbl">حرف آخر</p>

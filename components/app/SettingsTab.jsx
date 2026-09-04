@@ -349,7 +349,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
 
       <section className="card setsec aboutsec">
         <h3><Ic n="info" s={17} /> درباره</h3>
-        <p className="dim small">مخ‌یار · نسخه ۵٫۳ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
+        <p className="dim small">مخ‌یار · نسخه ۵٫۴ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
         <p className="dim tiny">پاسخ‌ها با اکانت/کلید خودت ساخته می‌شوند؛ هیچ کلیدی هیچ‌جا جز سرور خودت ذخیره نمی‌شه.</p>
         <div className="m-row">
           <a className="btn ghost sm" href="/legal"><Ic n="shield" s={15} /> قوانین و حریم خصوصی</a>

@@ -30,6 +30,7 @@ export default function InvitePage({ mode = "invite" }) {
           if (j && j.ok && j.invite) {
             const inv = j.invite;
             base = { ...base };
+            if (inv.tg) base.replyTo = { ...(base.replyTo || {}), telegram: inv.tg };
             if (inv.name) base.recipientName = inv.name;
             if (inv.theme) base.theme = inv.theme;
             if (inv.music === "none") base.music = "";
@@ -65,6 +66,11 @@ export default function InvitePage({ mode = "invite" }) {
             fetch("/api/i/" + slug2 + "/view", { method: "POST" }).catch(() => {});
           }
         }
+      } catch {}
+      // آیدی تلگرامِ سازنده‌ی لینک (لینک سریع): ?reply=username
+      try {
+        const rp = (new URLSearchParams(location.search).get("reply") || "").trim();
+        if (rp && /^[A-Za-z0-9_]{4,32}$/.test(rp)) base = { ...base, replyTo: { ...(base.replyTo || {}), telegram: rp } };
       } catch {}
       setCfg(base);
     };

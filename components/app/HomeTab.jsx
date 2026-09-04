@@ -4,12 +4,15 @@
 // ---------------------------------------------------------------------------
 import { Ic } from "@/lib/icons";
 import { levelOf, xp, streak } from "@/lib/rizz";
+import { useState } from "react";
+import Games from "./Games";
 
 const CELLS = [
   { ic: "chatSpark", t: "پاسخ هوشمند", d: "پیامش رو بده، سه تا جوابِ آماده‌ی ارسال بگیر", go: "chat", wide: true },
   { ic: "scan", t: "بینایی استوری", d: "اسکرین‌شات چت یا استوری‌ش رو بفرست، خودش تحلیل می‌کنه", go: "chat" },
   { ic: "sparkles", t: "۹ لحن + شبیه‌ساز", d: "از بامزه تا جسور؛ حتی تمرین زنده در نقش کرشت", go: "chat" },
   { ic: "shield", t: "فضای +۱۸", d: "لحن‌های بزرگسال با تأیید سن", go: "settings", lock: true },
+  { ic: "sparkles", t: "کشف نزدیک‌ها", d: "با حوالیات آشنا شو؛ لایک بده، چت باز شه", go: "discover" },
   { ic: "invite", t: "دعوت‌نامه‌ی تعاملی", d: "لینکی که «نه» نداره؛ مخ زدن کلاسیک", go: "create" },
   { ic: "clock", t: "تاریخ‌واره شمسی", d: "گپ‌ها و دعوت‌نامه‌هات یادشون نمی‌ره", go: "history" },
   { ic: "download", t: "سبک و آفلاین", d: "PWA — نصب می‌شه و آفلاین هم باز می‌مونه", go: null },
@@ -23,6 +26,7 @@ const STEPS = [
 
 export default function HomeTab({ go, user, installEvt, install }) {
   const adult = !!(user && user.profile && user.profile.adult);
+  const [gamesOpen, setGamesOpen] = useState(false);
   const x = xp();
   const lv = levelOf(x);
   const st = streak();
@@ -75,7 +79,14 @@ export default function HomeTab({ go, user, installEvt, install }) {
             <span className="bd">{c.d}</span>
           </button>
         ))}
+        <button type="button" className="bcard card wide games-card" onClick={() => { setGamesOpen(true); }}>
+          <span className="btile"><Ic n="smile" s={20} /></span>
+          <span className="bt">بازی و سرگرمی</span>
+          <span className="bd">دوز قلبی، حدس کلمه و طالع‌بینی — با امتیاز رِز</span>
+        </button>
       </section>
+
+      {gamesOpen ? <Games onClose={() => setGamesOpen(false)} /> : null}
 
       <section className="card howto">
         <h3><Ic n="wand" s={18} /> چطور کار می‌کند؟</h3>

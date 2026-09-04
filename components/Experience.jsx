@@ -802,15 +802,33 @@ function FinalScreen() {
   );
 }
 
-/* ============================== جعبه‌ی جواب (دعوت‌نامه‌ی شخصی) ============================== */
+/* ============================== چت دونفره‌ی دعوت‌نامه (کرش ↔ سازنده) ============================== */
 function AnswerBox({ slug, name, dateLabel, whenLabel }) {
   const [txt, setTxt] = useState("");
-  const [state, setState] = useState("idle"); // idle | sent | err
+  const [thread, setThread] = useState(null); // null = لود نشده
+  const [sentFlash, setSentFlash] = useState(false);
+  const [err, setErr] = useState(false);
+  const boxRef = useRef(null);
   const chips = ["آره، میام", "هنوز دارم فکر می‌کنم…", "سورپرایز شد!", "خودم بهت می‌گم"];
+
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch("/api/i/" + slug + "/msgs", { headers: { "cache-control": "no-cache" } });
+      const j = await r.json().catch(() => null);
+      if (j && j.ok) setThread(j.msgs || []);
+    } catch {}
+  }, [slug]);
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, [load]);
+  useEffect(() => { if (boxRef.current) boxRef.current.scrollTop = boxRef.current.scrollHeight; }, [thread]);
+
   const send = async (t) => {
     const text = String(t || txt).trim();
     if (!text) return;
-    setState("idle");
+    setErr(false);
     try {
       const r = await fetch("/api/i/" + slug + "/msg", {
         method: "POST",
@@ -818,22 +836,27 @@ function AnswerBox({ slug, name, dateLabel, whenLabel }) {
         body: JSON.stringify({ text: text + (dateLabel ? " (قرار: " + dateLabel + (whenLabel ? " · " + whenLabel : "") + ")" : "") }),
       });
       const j = await r.json().catch(() => null);
-      if (j && j.ok) { setState("sent"); setTxt(""); }
-      else setState("err");
-    } catch { setState("err"); }
+      if (j && j.ok) { setTxt(""); setSentFlash(true); setTimeout(() => setSentFlash(false), 1800); load(); }
+      else setErr(true);
+    } catch { setErr(true); }
   };
-  if (state === "sent") {
-    return (
-      <div className="ansbox glass" role="status">
-        <b>رسید!</b>
-        <p>جوابت رفت سمت سازنده‌ی این دعوت‌نامه؛ حالا دلخور نشو جوابش رو منتظر باش.</p>
-      </div>
-    );
-  }
+
+  const msgs = thread || [];
   return (
     <div className="ansbox glass">
-      <b>یه حرفی داری؟ همینجا بگو</b>
-      <p className="ansdim">هرچی بنویسی مستقیم می‌رسه به سازنده‌اش.</p>
+      <b>گفتگو با سازنده‌ی این دعوت‌نامه</b>
+      <p className="ansdim">هرچی بنویسی مستقیم می‌رسه به خودش؛ جوابش رو هم همین‌جا می‌بینی.</p>
+      {msgs.length ? (
+        <div className="ansthread" ref={boxRef}>
+          {msgs.map((m) => (
+            <div key={m.id} className="ansgroup">
+              <div className="ansmine">{m.text}</div>
+              {m.reply ? <div className="anstheir"><span>سازنده:</span> {m.reply}</div> : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {sentFlash ? <p className="ansok">رسید ✓</p> : null}
       <div className="anschips">
         {chips.map((c) => (
           <button key={c} type="button" className="anschip" onClick={() => send(c)}>{c}</button>
@@ -843,7 +866,7 @@ function AnswerBox({ slug, name, dateLabel, whenLabel }) {
         <input className="ansinp" value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={500} placeholder="بنویس…" onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
         <button className="btn primary" type="button" onClick={() => send()} disabled={!txt.trim()}>بفرست</button>
       </div>
-      {state === "err" ? <p className="anserr">نفرستاده شد؛ یه بار دیگه امتحان کن</p> : null}
+      {err ? <p className="anserr">نفرستاده شد؛ یه بار دیگه امتحان کن</p> : null}
     </div>
   );
 }

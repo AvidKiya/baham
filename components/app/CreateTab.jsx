@@ -17,6 +17,7 @@ export default function CreateTab({ cfg: cfgProp, user, go, onUnreplied }) {
   const [theme, setTheme] = useState(null);
   const [occ, setOcc] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [tg, setTg] = useState("");
 
   useEffect(() => {
     if (cfg) return;
@@ -33,8 +34,9 @@ export default function CreateTab({ cfg: cfgProp, user, go, onUnreplied }) {
     if (nm) q.push("name=" + nm.replace(/ /g, "%20"));
     if (theme && theme !== ((cfg && cfg.theme) || "romantic")) q.push("theme=" + theme);
     if (occ && occ !== defOcc) q.push("occasion=" + occ);
+    if (tg && /^[A-Za-z0-9_]{4,32}$/.test(tg)) q.push("reply=" + tg);
     return "/invite" + (q.length ? "?" + q.join("&") : "");
-  }, [name, theme, occ, cfg, defOcc])();
+  }, [name, theme, occ, tg, cfg, defOcc])();
 
   const fullLink = typeof location !== "undefined" ? location.origin + link : link;
   const [savedMsg, setSavedMsg] = useState("");
@@ -88,6 +90,13 @@ export default function CreateTab({ cfg: cfgProp, user, go, onUnreplied }) {
         <label className="field">
           <span className="flbl"><Ic n="user" s={15} /> اسم طرف</span>
           <input className="inp" dir="rtl" maxLength={32} placeholder="مثلاً: سارا" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+
+        <label className="field">
+          <span className="flbl"><Ic n="send" s={15} /> یوزرنیم تلگرام تو (اختیاری)</span>
+          <input className="inp" dir="ltr" placeholder="myusername" maxLength={32} value={tg}
+            onChange={(e) => setTg(e.target.value.replace(/[^A-Za-z0-9_]/g, ""))} />
+          <span className="tiny">اگه بذاری، دکمه‌ی «جوابم رو خودم بگم» مخفی دعوت‌نامه باز می‌شه به تلگرامِ خودت، نه چیز دیگه</span>
         </label>
 
         <div className="flbl"><Ic n="palette" s={15} /> تم رنگی</div>

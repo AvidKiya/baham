@@ -12,12 +12,14 @@ import AuthView from "./AuthView";
 import HomeTab from "./HomeTab";
 import ChatTab from "./ChatTab";
 import CreateTab from "./CreateTab";
+import DiscoverTab from "./DiscoverTab";
 import HistoryTab from "./HistoryTab";
 import SettingsTab from "./SettingsTab";
 
 const TABS = [
   { id: "home", ic: "home", label: "خانه" },
   { id: "chat", ic: "chatSpark", label: "چت‌یار" },
+  { id: "discover", ic: "sparkles", label: "کشف" },
   { id: "create", ic: "invite", label: "ساخت درخواست" },
   { id: "history", ic: "clock", label: "تاریخچه" },
   { id: "settings", ic: "gear", label: "تنظیمات" },
@@ -179,6 +181,7 @@ export default function AppShell() {
         {tab === "home" ? <HomeTab go={go} user={user} installEvt={installEvt} install={install} /> : null}
         {tab === "chat" ? (user ? <ChatTab user={user} go={go} onUser={saveUser} /> : <Gate />) : null}
         {tab === "create" ? <CreateTab user={user} go={go} cfg={null} onUnreplied={setUnreplied} /> : null}
+      {tab === "discover" ? (user ? <DiscoverTab user={user} go={go} /> : <Gate />) : null}
         {tab === "history" ? (user ? <HistoryTab user={user} /> : <Gate />) : null}
         {tab === "settings" ? (user ? <SettingsTab user={user} onUser={saveUser} logout={logout} installEvt={installEvt} install={install} acc={acc} setAcc={setAccent} theme={theme} setTheme={setThemeMode} /> : <Gate />) : null}
       </main>
