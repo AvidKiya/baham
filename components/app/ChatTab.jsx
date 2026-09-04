@@ -23,7 +23,7 @@ const MODES = [
 const DECKS = [
   { id: "ice", t: "یخ‌شکن", ic: "snow", cards: ["یک راز کوچک بگو که اینجا هیچ‌کس نمی‌داند", "بدترین قرار خواب‌آلود زندگی‌ات را تعریف کن", "آخرین بار کی برای کسی قلبت تند زد؟", "یک عادت مسخره‌ی خودت را اعتراف کن", "اگر الان اجازه داشته باشی به یکی پیام بدهی، به کی چه می‌گویی؟"] },
   { id: "love", t: "عاشقانه", ic: "invite", cards: ["سه چیزی که دوست داری درباره‌ی من بدانی بگو", "اولین برداشتت از من چه بود؟", "یک خاطره از ما که هنوز به آن می‌خندی", "اگر الان جلوی من بودی، چه می‌کردی؟", "کدام ویژگی‌ام بیشتر از همه دلت را می‌گیرد؟"] },
-  { id: "bold", t: "جسورانه", ic: "flame", cards: ["جرأت داری صورت‌اشتغال عاطفت را با من شفاف کنی؟", "یک جسارت: الان بگو از چه چیزی در من حسودی می‌شود", "بگو کدام پیامم را ده بار خوانده‌ای", "جرأت داری بگویی چند بار اسمت را سر زبان آورده‌ام؟"] },
+  { id: "bold", t: "جسورانه", ic: "flame", cards: ["جرأت داری حرف دلت رو با من رک بگی؟", "یه جسورت: بگو کِی از طرفم حسودیت شده", "بگو کدوم پیامم رو ده بار خوندی", "جرأت داری بگی چند بار اسمت رو آورده‌م زبونم؟"] },
   { id: "adult", t: "بزرگسال", ic: "crown", adult: true, cards: ["یک مرز نرمِ امشب را با یک کلمه تعیین کن", "بگو کدام نقش امشب مالِ توست", "یک خیال ناگفته را تنها با یک جمله بگو — بدون جزئیات", "جرأت داری امن‌واژه‌ی امشب را انتخاب کنی؟", "یک چیز کوچک که بعد از بازی به‌ترتیبت می‌آید بگو"] },
 ];
 
@@ -67,7 +67,7 @@ export default function ChatTab({ user, go, onUser }) {
   /* میکروفون (Web Speech فارسی) */
   const mic = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setErr("مرورگرت ورودی صوتی را پشتیبانی نمی‌کند"); return; }
+    if (!SR) { setErr("مرورگرت میکروفون رو قبول نمی‌کنه"); return; }
     if (rec) { try { rec.stop && 0; } catch {} return; }
     const r = new SR();
     r.lang = "fa-IR";
@@ -77,7 +77,7 @@ export default function ChatTab({ user, go, onUser }) {
       if (t) setText((p) => (p ? p + " " : "") + t);
     };
     r.onend = () => setRec(false);
-    r.onerror = () => { setRec(false); setErr("صدایی شنیده نشد؛ دوباره تلاش کن"); };
+    r.onerror = () => { setRec(false); setErr("صدایی نشنیدم؛ یه بار دیگه بگو"); };
     setRec(true);
     try { r.start(); } catch { setRec(false); }
   };
@@ -85,8 +85,8 @@ export default function ChatTab({ user, go, onUser }) {
   const addImgs = (files) => {
     const list = [...(files || [])].filter((f) => f && f.type && f.type.startsWith("image/"));
     for (const f of list) {
-      if (imgs.length >= 2) { setErr("حداکثر ۲ تصویر"); return; }
-      if (f.size > 2 * 1024 * 1024) { setErr("هر تصویر حداکثر ۲ مگابایت"); return; }
+      if (imgs.length >= 2) { setErr("بیشتر از ۲ تا عکس نمی‌شه"); return; }
+      if (f.size > 2 * 1024 * 1024) { setErr("هر عکس حداکثر ۲ مگ"); return; }
       const r = new FileReader();
       r.onload = () => setImgs((p) => (p.length >= 2 ? p : [...p, String(r.result)]));
       r.readAsDataURL(f);
@@ -109,7 +109,7 @@ export default function ChatTab({ user, go, onUser }) {
   };
 
   const finish = (raw) => {
-    if (!raw) { setErr("پاسخی دریافت نشد؛ دوباره امتحان کن"); setBusy(false); return; }
+    if (!raw) { setErr("جوابی نیومد؛ یه بار دیگه امتحان کن"); setBusy(false); return; }
     if (mode === "sim") {
       setSimMsg(raw.trim());
       setThread((p) => [...p, { q: text.trim(), a: raw.trim().split("\n")[0].slice(0, 300) }].slice(-6));
@@ -126,9 +126,9 @@ export default function ChatTab({ user, go, onUser }) {
 
   const send = async (again) => {
     const t = text.trim();
-    if (!t && imgs.length === 0) { setErr("اول متن را بنویس یا تصویر بگذار"); return; }
+    if (!t && imgs.length === 0) { setErr("اول یه چیزی بنویس یا عکس بذار"); return; }
     if (!hasKey) { go("settings"); return; }
-    if (TONES.find((x) => x.id === tone && x.adult) && !adult) { setErr("این لحن فقط برای حساب‌های بزرگسال فعال است"); return; }
+    if (TONES.find((x) => x.id === tone && x.adult) && !adult) { setErr("این لحن فقط واسه بزرگسالا باز می‌شه؛ سنت رو تو تنظیمات تأیید کن"); return; }
     setBusy(true); setErr(""); setCopiedIdx(-1); setSugs([]); setSimMsg(""); setLive("");
     const hist = thread.flatMap((x) => [{ role: "user", content: x.q }, { role: "assistant", content: x.a }]).slice(-12);
     try {
@@ -168,7 +168,7 @@ export default function ChatTab({ user, go, onUser }) {
       const j = await res.json().catch(() => null);
       if (j && j.ok && j.reply) { finish(j.reply); return; }
       if (res.status === 401) { try { localStorage.removeItem("mk:token"); localStorage.removeItem("mk:user"); } catch {} go("settings"); setBusy(false); return; }
-      setErr((j && j.message) || "چیزی برنگشت؛ دوباره امتحان کن");
+      setErr((j && j.message) || "چیزی برنگشت؛ دوباره بزن");
       setBusy(false);
     } catch { setErr("ارتباط برقرار نشد"); setBusy(false); }
   };
@@ -199,7 +199,7 @@ export default function ChatTab({ user, go, onUser }) {
     <div className="chattab">
       <header className="tabhead">
         <h2><Ic n="chatSpark" s={20} /> چت‌یار</h2>
-        <p>ابزارِ همه‌ی پیام‌هایت؛ با لحنِ خودت</p>
+        <p>هر پیامی لازم داری، با لحن خودت</p>
       </header>
 
       {!hasKey ? (
@@ -215,7 +215,7 @@ export default function ChatTab({ user, go, onUser }) {
 
       <div className="crushrow card">
         <Ic n="invite" s={17} />
-        <input className="cinp" placeholder="اسم کرشت چیست؟ (اختیاری)" value={crush}
+        <input className="cinp" placeholder="کرشت کیه؟ (اختیاری)" value={crush}
           onChange={(e) => setCrush(e.target.value)} onBlur={saveCrush} maxLength={32} />
         <button type="button" className="c-addcrush" aria-label="افزودن به لیست" onClick={addCrushToList}><Ic n="plus" s={15} /></button>
       </div>
@@ -235,7 +235,7 @@ export default function ChatTab({ user, go, onUser }) {
           return (
             <button key={m.id} type="button" role="tab" aria-selected={mode === m.id}
               className={"mode-chip" + (mode === m.id ? " on" : "") + (locked ? " locked" : "")}
-              onClick={() => (locked ? (setMode("reply"), setErr("این ابزار فقط برای حساب‌های بزرگسال (با تأیید سن) باز می‌شود"), go("settings")) : setMode(m.id))}>
+              onClick={() => (locked ? (setMode("reply"), setErr("این یکی فقط واسه بزرگسالا باز می‌شه؛ سنت رو تأیید کن"), go("settings")) : setMode(m.id))}>
               <Ic n={locked ? "lock" : m.ic} s={16} /> {m.t}{m.adult ? <em style={{ fontStyle: "normal", fontSize: 9, marginInlineStart: 4, opacity: .8 }}>۱۸+</em> : null}
             </button>
           );
@@ -248,7 +248,7 @@ export default function ChatTab({ user, go, onUser }) {
           return (
             <button key={t.id} type="button"
               className={"tone-chip" + (t.id === tone ? " on" : "") + (t.adult ? " adult" : "") + (locked ? " locked" : "")}
-              onClick={() => (locked ? (setTone("funny"), setErr("لحن‌های +۱۸ بعد از تأیید سن در تنظیمات باز می‌شوند"), go("settings")) : setTone(t.id))}>
+              onClick={() => (locked ? (setTone("funny"), setErr("لحن‌های +۱۸ با تأیید سن تو تنظیمات باز می‌شن"), go("settings")) : setTone(t.id))}>
               <Ic n={locked ? "lock" : t.ic} s={15} /> {t.t}
               {t.adult ? <em>۱۸+</em> : null}
             </button>
@@ -271,7 +271,7 @@ export default function ChatTab({ user, go, onUser }) {
               const locked = d.adult && !adult;
               return (
                 <button key={d.id} type="button" className={"mode-chip" + (deck === d.id ? " on" : "") + (locked ? " locked" : "")}
-                  onClick={() => { if (locked) { setErr("این دسته فقط برای حساب‌های بزرگسال باز می‌شود"); go("settings"); return; } setDeck(d.id); setDeckCard(null); }}>
+                  onClick={() => { if (locked) { setErr("این دسته فقط واسه بزرگسالا باز می‌شه"); go("settings"); return; } setDeck(d.id); setDeckCard(null); }}>
                   <Ic n={locked ? "lock" : d.ic} s={16} /> {d.t}{d.adult ? <em style={{ fontStyle: "normal", fontSize: 9, marginInlineStart: 4, opacity: .8 }}>۱۸+</em> : null}
                 </button>
               );
@@ -307,7 +307,7 @@ export default function ChatTab({ user, go, onUser }) {
       {thread.length ? (
         <div className="memstrip glass">
           <Ic n="clock" s={14} />
-          <span>حافظه‌ی گفتگو: {thread.length} رفت‌وبرگشت در همین نشست</span>
+          <span>حافظه‌ی گپ: {thread.length} رفت‌وبرگشت تا الان</span>
           <button type="button" aria-label="پاک کردن حافظه" onClick={() => setThread([])}><Ic n="x" s={13} /></button>
         </div>
       ) : null}
@@ -351,7 +351,7 @@ export default function ChatTab({ user, go, onUser }) {
       {busy && live ? (
         <div className="sim-bubble live card"><p>{live}<span className="caret" /></p></div>
       ) : busy ? (
-        <div className="thinking card"><span className="tdots"><i /><i /><i /></span> مخ‌یار دارد فکر می‌کند…</div>
+        <div className="thinking card"><span className="tdots"><i /><i /><i /></span> مخ‌یار داره فکر می‌کنه…</div>
       ) : null}
 
       {simMsg ? (

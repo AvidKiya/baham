@@ -34,6 +34,7 @@ export default function AppShell() {
   const [booted, setBooted] = useState(false);
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState("home");
+  const [unreplied, setUnreplied] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [installEvt, setInstallEvt] = useState(null);
   const [acc, setAcc] = useState("rose");
@@ -67,8 +68,8 @@ export default function AppShell() {
     window.addEventListener("beforeinstallprompt", bip);
     try {
       const q = new URLSearchParams(location.search);
-      if (q.get("connected") === "1") { setToast("اتصال انجام شد؛ چت‌یار روشن است"); setTimeout(() => api("/api/me").then((r) => { if (r.ok && r.data && r.data.user) saveUserRef(r.data.user); }), 400); }
-      else if (q.get("connect")) setToast("اتصال انجام نشد؛ دوباره تلاش کن");
+      if (q.get("connected") === "1") { setToast("وصل شد؛ چت‌یار روشنه ✨"); setTimeout(() => api("/api/me").then((r) => { if (r.ok && r.data && r.data.user) saveUserRef(r.data.user); }), 400); }
+      else if (q.get("connect")) setToast("وصل نشد؛ یه بار دیگه امتحان کن");
       if (q.get("connected") || q.get("connect")) history.replaceState({}, "", "/");
     } catch {}
     setBooted(true);
@@ -143,7 +144,7 @@ export default function AppShell() {
         <Onboarding onDone={(style) => {
           setQuiz(false);
           if (style) api("/api/me").then((r) => { if (r.ok && r.data && r.data.user) saveUser(r.data.user); });
-          setToast("خوش آمدی؛ پروفایلت آماده شد");
+          setToast("خوش اومدی؛ پروفایلت آماده‌ست ✨");
         }} />
       ) : null}
 
@@ -177,7 +178,7 @@ export default function AppShell() {
       <main className="appcol tabpane" key={tab}>
         {tab === "home" ? <HomeTab go={go} user={user} installEvt={installEvt} install={install} /> : null}
         {tab === "chat" ? (user ? <ChatTab user={user} go={go} onUser={saveUser} /> : <Gate />) : null}
-        {tab === "create" ? <CreateTab user={user} go={go} cfg={null} /> : null}
+        {tab === "create" ? <CreateTab user={user} go={go} cfg={null} onUnreplied={setUnreplied} /> : null}
         {tab === "history" ? (user ? <HistoryTab user={user} /> : <Gate />) : null}
         {tab === "settings" ? (user ? <SettingsTab user={user} onUser={saveUser} logout={logout} installEvt={installEvt} install={install} acc={acc} setAcc={setAccent} theme={theme} setTheme={setThemeMode} /> : <Gate />) : null}
       </main>
@@ -193,7 +194,7 @@ export default function AppShell() {
           <div className="recmodal card" onClick={(e) => e.stopPropagation()}>
             <span className="btile"><Ic n="key" s={20} /></span>
             <h3>کد بازیابی حسابت</h3>
-            <p>اگر روزی رمزت را فراموش کردی، با این کد می‌توانی حسابت را پس بگیری. <b>فقط همین یک‌بار نشان داده می‌شود.</b></p>
+            <p>اگه یه روزی رمزت یادت رفت، با این کد حسابت رو برمی‌گردونی. <b>فقط همین یه بار نشونش می‌دیم، یه جا یادداشتش کن.</b></p>
             <button type="button" className="recode" onClick={() => { try { navigator.clipboard.writeText(recCode); } catch {} }}>{recCode}</button>
             <button type="button" className="btn primary big rec-ok" onClick={() => setRecCode("")}>نوشتمش، بزن بریم</button>
           </div>
@@ -206,6 +207,7 @@ export default function AppShell() {
             className={"tab" + (tab === t.id ? " on" : "")} onClick={() => go(t.id)}>
             <span className="tico"><Ic n={t.ic} s={22} /></span>
             <span className="tlbl">{t.label}</span>
+            {t.id === "create" && unreplied > 0 ? <span className="tabdot">{unreplied > 9 ? "۹+" : unreplied.toLocaleString("fa-IR")}</span> : null}
           </button>
         ))}
       </nav>

@@ -325,6 +325,28 @@ async function putHist(env, uid, h) {
   await env.CONFIG.put("hist:" + uid, JSON.stringify(h));
 }
 
+/* ---------- دعوت‌نامه‌های شخصی (حساب‌محور) ---------- */
+async function getInvite(env, slug) {
+  try { return JSON.parse((await env.CONFIG.get("inv:" + slug)) || "null"); } catch { return null; }
+}
+async function putInvite(env, inv) {
+  await env.CONFIG.put("inv:" + inv.id, JSON.stringify(inv));
+}
+async function getInvIdx(env, uid) {
+  try { return JSON.parse((await env.CONFIG.get("invidx:" + uid)) || "[]"); } catch { return []; }
+}
+async function putInvIdx(env, uid, list) {
+  await env.CONFIG.put("invidx:" + uid, JSON.stringify(list.slice(0, 20)));
+}
+const INV_THEMES = new Set(["romantic", "violet", "wine", "candy", "sunset", "mint"]);
+const INV_OCCS = new Set(["love", "marriage", "friendship", "business"]);
+function invPublic(inv) {
+  return { name: inv.name, theme: inv.theme, occasion: inv.occasion, music: inv.music, qText: inv.qText || "", letter: inv.letter || "" };
+}
+function invText(v, n) {
+  return String(v || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, n || 140);
+}
+
 /* ============================ GET ============================ */
 
 export async function onRequestGet(context) {
@@ -334,6 +356,35 @@ export async function onRequestGet(context) {
 
   if (seg[0] === "health") {
     return json({ ok: true, kv: !!(env && env.CONFIG), stats: !!(env && env.STATS), authEnv: !!(env && env.ADMIN_PASSWORD) });
+  }
+
+  /* ---------- دعوت‌نامه‌ی شخصی: کانفیگ عمومی ---------- */
+  if (seg[0] === "i" && seg[1] && env && env.CONFIG) {
+    const slug = String(seg[1]);
+    if (!/^[a-z0-9-]{4,20}$/.test(slug)) return json({ ok: false, error: "bad_slug" }, 400);
+    const inv = await getInvite(env, slug);
+    if (!inv) return json({ ok: false, error: "not_found" }, 404);
+    return json({ ok: true, invite: invPublic(inv) });
+  }
+
+  /* ---------- دعوت‌نامه‌های من: لیست/جزئیات ---------- */
+  if (seg[0] === "invites") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const oneId = url.searchParams.get("id") || "";
+    if (oneId) {
+      if (!/^[a-z0-9-]{4,20}$/.test(oneId)) return json({ ok: false, error: "bad_slug" }, 400);
+      const inv = await getInvite(env, oneId);
+      if (!inv || inv.uid !== u.user.id) return json({ ok: false, error: "not_found" }, 404);
+      return json({ ok: true, invite: { id: inv.id, ...invPublic(inv), views: inv.views || 0, lastView: inv.lastView || 0, created: inv.created, msgsList: inv.msgs || [] } });
+    }
+    const idx = await getInvIdx(env, u.user.id);
+    const out = [];
+    for (const slug of idx) {
+      const inv = await getInvite(env, slug);
+      if (inv) out.push({ id: inv.id, name: inv.name, occasion: inv.occasion, theme: inv.theme, music: inv.music, qText: inv.qText || "", letter: inv.letter || "", views: inv.views || 0, lastView: inv.lastView || 0, msgs: (inv.msgs || []).length, unreplied: (inv.msgs || []).filter((m) => !m.reply).length, created: inv.created });
+    }
+    return json({ ok: true, invites: out });
   }
 
   /* ---------- اتصال با اکانت (OpenRouter PKCE) ---------- */
@@ -465,7 +516,34 @@ export async function onRequestPut(context) {
     return json({ ok: true, saved: true, config: mergeConfig(DEFAULT_CONFIG, res.ok) });
   }
 
-  if (seg[0] === "me") {
+    /* ---------- دعوت‌نامه‌ی شخصی: ویرایش / جواب پیام ---------- */
+  if (seg[0] === "invites") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const r = await readBody(request, 8192);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const iv = r.body.invite || {};
+    if (!/^[a-z0-9-]{4,20}$/.test(String(iv.id || ""))) return json({ ok: false, error: "bad_slug" }, 400);
+    const inv = await getInvite(env, iv.id);
+    if (!inv || inv.uid !== u.user.id) return json({ ok: false, error: "not_found" }, 404);
+    if (iv.replyTo !== undefined) {
+      const m = (inv.msgs || []).find((x) => x.id === iv.replyTo);
+      if (!m) return json({ ok: false, error: "bad_msg" }, 404);
+      m.reply = invText(iv.reply, 300);
+      m.tsReply = Date.now();
+    } else {
+      if (iv.name !== undefined) { const n = sanitizeName(String(iv.name)); if (n) inv.name = n; }
+      if (iv.occasion !== undefined && INV_OCCS.has(iv.occasion)) inv.occasion = iv.occasion;
+      if (iv.theme !== undefined && INV_THEMES.has(iv.theme)) inv.theme = iv.theme;
+      if (iv.music !== undefined) inv.music = iv.music === "none" ? "none" : "";
+      if (iv.qText !== undefined) inv.qText = invText(iv.qText, 140);
+      if (iv.letter !== undefined) inv.letter = invText(iv.letter, 400);
+    }
+    try { await putInvite(env, inv); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+    return json({ ok: true, invite: { id: inv.id, ...invPublic(inv), views: inv.views || 0, lastView: inv.lastView || 0, msgs: (inv.msgs || []).length, unreplied: (inv.msgs || []).filter((m) => !m.reply).length, created: inv.created, msgsList: inv.msgs || [] } });
+  }
+
+if (seg[0] === "me") {
     const u = await requireUser(request, env);
     if (u.err) return u.err;
     const user = u.user;
@@ -560,6 +638,22 @@ export async function onRequestDelete(context) {
     h[t] = (h[t] || []).filter((x) => x && x.id !== id);
     try { await putHist(env, u.user.id, h); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
     return json({ ok: true, history: h });
+  }
+
+  /* ---------- حذف دعوت‌نامه‌ی شخصی ---------- */
+  if (seg[0] === "invites") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const id = url.searchParams.get("id") || "";
+    if (!/^[a-z0-9-]{4,20}$/.test(id)) return json({ ok: false, error: "bad_slug" }, 400);
+    const inv = await getInvite(env, id);
+    if (!inv || inv.uid !== u.user.id) return json({ ok: false, error: "not_found" }, 404);
+    try {
+      await env.CONFIG.delete("inv:" + id);
+      const idx = await getInvIdx(env, u.user.id);
+      await putInvIdx(env, u.user.id, idx.filter((x) => x !== id));
+    } catch { return json({ ok: false, error: "kv_delete_failed" }, 500); }
+    return json({ ok: true });
   }
 
   /* ---------- حذف کامل حساب ---------- */
@@ -697,6 +791,62 @@ export async function onRequestPost(context) {
       return json({ ok: true, reply: res.text.slice(0, 40) });
     }
     return json({ ok: false, error: "not_found" }, 404);
+  }
+
+  /* ---------- دعوت‌نامه‌ی شخصی: بازدید و پیام (عمومی) ---------- */
+  if (seg[0] === "i" && seg[1] && env && env.CONFIG) {
+    const slug = String(seg[1]);
+    if (!/^[a-z0-9-]{4,20}$/.test(slug)) return json({ ok: false, error: "bad_slug" }, 400);
+    const inv = await getInvite(env, slug);
+    if (!inv) return json({ ok: false, error: "not_found" }, 404);
+
+    if (seg[2] === "view") {
+      if (rateLimited(request, "iview", 60)) return json({ ok: true, throttled: true });
+      inv.views = (inv.views || 0) + 1;
+      inv.lastView = Date.now();
+      try { await putInvite(env, inv); } catch {}
+      return json({ ok: true, views: inv.views });
+    }
+
+    if (seg[2] === "msg") {
+      if (rateLimited(request, "imsg", 10)) return json({ ok: false, error: "rate_limited", message: "یه کم آروم‌تر؛ الان دوباره امتحان کن" }, 429);
+      const r = await readBody(request, 4096);
+      if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+      const text = invText(r.body.text, 500);
+      if (!text) return json({ ok: false, error: "empty", message: "یه چیزی بنویس بفرست" }, 400);
+      inv.msgs = [{ id: randHex(4) + "-" + Date.now().toString(36), ts: Date.now(), text, reply: "" }].concat(inv.msgs || []).slice(0, 50);
+      try { await putInvite(env, inv); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+      return json({ ok: true, msgs: inv.msgs.length });
+    }
+
+    return json({ ok: false, error: "not_found" }, 404);
+  }
+
+  /* ---------- ساخت دعوت‌نامه‌ی شخصی ---------- */
+  if (seg[0] === "invites") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (rateLimited(request, "invcreate", 20)) return json({ ok: false, error: "rate_limited" }, 429);
+    const r = await readBody(request, 8192);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const b = r.body;
+    const name = sanitizeName(String(b.name || ""));
+    if (!name) return json({ ok: false, error: "bad_name", message: "اسم طرف رو بنویس" }, 400);
+    const occasion = INV_OCCS.has(b.occasion) ? b.occasion : "love";
+    const theme = INV_THEMES.has(b.theme) ? b.theme : "romantic";
+    const music = b.music === "none" ? "none" : "";
+    const slug = randHex(4) + "-" + Date.now().toString(36).slice(-4);
+    const inv = { id: slug, uid: u.user.id, name, occasion, theme, music, qText: invText(b.qText, 140), letter: invText(b.letter, 400), created: Date.now(), views: 0, msgs: [] };
+    const idx = await getInvIdx(env, u.user.id);
+    if (idx.length >= 20) {
+      const drop = idx.splice(20 - 1);
+      for (const d of drop) { try { await env.CONFIG.delete("inv:" + d); } catch {} }
+    }
+    try {
+      await putInvite(env, inv);
+      await putInvIdx(env, u.user.id, [slug].concat(idx).slice(0, 20));
+    } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+    return json({ ok: true, invite: { id: slug, ...invPublic(inv), views: 0, msgs: 0, unreplied: 0, created: inv.created } });
   }
 
   /* ---------- چت یار ---------- */

@@ -21,7 +21,7 @@ export default function AuthView({ onAuthed, compact }) {
     setErr("");
     const u = username.trim().toLowerCase();
     if (!/^[a-z0-9_]{3,20}$/.test(u)) { setErr("یوزرنیم: ۳ تا ۲۰ حرف انگلیسی، عدد یا _"); return; }
-    if (view !== "recover" && password.length < 6) { setErr("رمز حداقل ۶ کاراکتر باشد"); return; }
+    if (view !== "recover" && password.length < 6) { setErr("رمزت حداقل ۶ کاراکتر باشه"); return; }
     if (view === "recover" && password.length < 6) { setErr("رمز جدید حداقل ۶ کاراکتر باشد"); return; }
     setBusy(true);
     try {
@@ -41,9 +41,9 @@ export default function AuthView({ onAuthed, compact }) {
         if (view === "register") { try { confettiBurst({ x: window.innerWidth / 2, y: window.innerHeight * 0.3, n: 90, spread: 6 }); } catch {} }
         onAuthed(r.token, r.user, r.recoveryCode);
       } else {
-        setErr((r && r.message) || "خطایی پیش آمد");
+        setErr((r && r.message) || "یه چیزی شد؛ دوباره امتحان کن");
       }
-    } catch { setErr("ارتباط برقرار نشد"); }
+    } catch { setErr("اینترنتت وصل نیست به نظرم"); }
     setBusy(false);
   };
 
@@ -53,8 +53,8 @@ export default function AuthView({ onAuthed, compact }) {
         <div className="authhead">
           <Logo s={44} />
           <div>
-            <h2>{view === "register" ? "حساب مخ‌یار بساز" : view === "recover" ? "بازیابی حساب" : "خوش برگشتی"}</h2>
-            <p>{view === "register" ? "ده ثانیه بیشتر طول نمی‌کشد" : view === "recover" ? "با کد بازیابی، رمز نو بگذار" : "وارد حسابت شو"}</p>
+            <h2>{view === "register" ? "بریم یه حساب بسازیم" : view === "recover" ? "بازیابی حساب" : "خوش برگشتی"}</h2>
+            <p>{view === "register" ? "ده ثانیه‌ی حداکثر، قول" : view === "recover" ? "با کد بازیابی، رمز نو بذار" : "بزن تو حسابت"}</p>
           </div>
         </div>
         <form onSubmit={submit} className="authform">
@@ -70,27 +70,27 @@ export default function AuthView({ onAuthed, compact }) {
           </label>
           {view === "recover" ? (
             <label className="field">
-              <span className="flbl"><Ic n="key" s={15} /> کد بازیابی (موقع ثبت‌نام گرفتی)</span>
+              <span className="flbl"><Ic n="key" s={15} /> کد بازیابی (اون موقع موقع ثبت‌نام دادیم بهت)</span>
               <input className="inp" dir="ltr" placeholder="ABCD234567" value={code} onChange={(e) => setCode(e.target.value)} maxLength={12} />
             </label>
           ) : null}
           <label className="field">
             <span className="flbl"><Ic n="lock" s={15} /> {view === "recover" ? "رمز جدید" : "رمز"}</span>
-            <input className="inp" type="password" autocomplete={view === "login" ? "current-password" : "new-password"} placeholder={view === "recover" ? "رمز نو، حداقل ۶ کاراکتر" : "حداقل ۶ کاراکتر"} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input className="inp" type="password" autocomplete={view === "login" ? "current-password" : "new-password"} placeholder={view === "recover" ? "رمز نو، حداقل ۶ تا کاراکتر" : "حداقل ۶ کاراکتر"} value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
           {err ? <div className="auth-err" role="alert"><Ic n="alert" s={16} /> {err}</div> : null}
           <button className="btn primary" type="submit" disabled={busy}>
-            {busy ? "صبر کن…" : view === "register" ? "ثبت‌نام و شروع" : view === "recover" ? "رمز نو و ورود" : "ورود"}
+            {busy ? "صبر کن…" : view === "register" ? "ثبت‌نام کن، بزن بریم" : view === "recover" ? "رمز نو بذار و برو تو" : "ورود"}
           </button>
         </form>
         <div className="authlinks">
           {view === "login" ? (
             <>
-              <button type="button" className="auth-switch" onClick={() => { setView("register"); setErr(""); }}>حساب نداری؟ رایگان ثبت‌نام کن</button>
-              <button type="button" className="auth-forgot" onClick={() => { setView("recover"); setErr(""); }}>رمزت را فراموش کردی؟</button>
+              <button type="button" className="auth-switch" onClick={() => { setView("register"); setErr(""); }}>حساب نداری؟ یه دقیقه‌ی حسابت رو بساز</button>
+              <button type="button" className="auth-forgot" onClick={() => { setView("recover"); setErr(""); }}>رمزت یادت رفته؟</button>
             </>
           ) : (
-            <button type="button" className="auth-switch" onClick={() => { setView("login"); setErr(""); }}>برگشت به ورود</button>
+            <button type="button" className="auth-switch" onClick={() => { setView("login"); setErr(""); }}>برگرد عقب</button>
           )}
         </div>
       </div>

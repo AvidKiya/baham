@@ -345,10 +345,10 @@ console.log("— اپ مخ‌یار v5");
   // ۳.۲ ثبت‌نام
   await p.click('.tab:has-text("تنظیمات")'); await sleep(400);
   ok(await p.isVisible(".authcard"), "تب نیاز به حساب → فرم ورود/ثبت‌نام");
-  await p.click('button:has-text("حساب نداری؟ رایگان ثبت‌نام کن")'); await sleep(250);
+  await p.click('button:has-text("حساب نداری؟")'); await sleep(250);
   await p.fill('input[autocomplete="username"]', uniq);
   await p.fill('input[type="password"]', "test1234");
-  await p.click('button:has-text("ثبت‌نام و شروع")'); await sleep(900);
+  await p.click('button:has-text("ثبت‌نام کن")'); await sleep(900);
   ok(await p.isVisible(".recmodal"), "کد بازیابی بعد از ثبت‌نام نشان داده شد");
   const recTxt = ((await p.locator(".recode").textContent()) || "").trim();
   ok(/^[A-Z0-9]{10}$/.test(recTxt), "شکل کد بازیابی درست است: " + recTxt);
@@ -358,15 +358,15 @@ console.log("— اپ مخ‌یار v5");
   await sleep(300);
   const qres = ((await p.locator(".qres h3").textContent()) || "").trim();
   ok(qres.includes("شخصیت مخ‌زن"), "نتیجه‌ی آزمون نشان داده شد: " + qres.slice(0, 34));
-  await p.click('button:has-text("بله، ذخیره کن")'); await sleep(700);
+  await p.click('button:has-text("آره، ذخیره کن")'); await sleep(700);
   ok(!(await p.isVisible(".qscrim")), "آزمون بسته شد");
   ok(await p.isVisible(".settingstab"), "ثبت‌نام موفق → تنظیمات باز شد");
   ok(((await p.locator(".topuser").textContent()) || "").trim().length > 0, "نام کاربری در نوار بالا");
 
   // ۳.۳ ذخیره‌ی پروفایل
   await p.fill('input[placeholder="مثلاً: سارا"]', "سارا");
-  await p.click('button:has-text("ذخیره پروفایل")'); await sleep(700);
-  ok(await p.isVisible("text=پروفایل ذخیره شد"), "پروفایل ذخیره شد");
+  await p.click('button:has-text("پروفایلم رو سیو کن")'); await sleep(700);
+  ok(await p.isVisible("text=پروفایلت سیو شد"), "پروفایل ذخیره شد");
 
   // ۳.۴ چت‌یار: ابزارها، لحن‌ها، قفل +۱۸
   await p.click('.tab:has-text("چت‌یار")'); await sleep(500);
@@ -408,23 +408,23 @@ console.log("— اپ مخ‌یار v5");
   ok(await p.isVisible('button:has-text("اتصال با اکانت")'), "دکمه‌ی «اتصال با اکانت» حاضر است");
   await p.click(".adv summary"); await sleep(300);
   await p.fill('input[placeholder="sk-…"]', "sk-test00000000");
-  await p.click('button:has-text("ذخیره و تست اتصال")'); await sleep(3000);
+  await p.click('button:has-text("سیو و تست کن")'); await sleep(3000);
   const aiMsg = await p.evaluate(() => { const els = document.querySelectorAll(".mini-ok, .mini-err"); return els.length ? els[els.length - 1].innerText : ""; });
   ok(/کلید|اتصال|نامعتبر/.test(aiMsg || ""), "تست اتصال پاسخ داد: " + String(aiMsg).slice(0, 40));
 
   // ۳.۶ دروازه‌ی +۱۸: سال زیر ۱۸ رد، سال درست فعال
   await p.fill('input[placeholder="1376 یا 1998"]', "1390");
-  await p.click('button:has-text("تأیید سن و فعال‌سازی")'); await sleep(700);
+  await p.click('button:has-text("سنم رو تأیید کن")'); await sleep(700);
   ok(await p.isVisible("text=کافی نیست"), "سال ۱۳۹۰ → رد شد (زیر ۱۸)");
   await p.fill('input[placeholder="1376 یا 1998"]', "1376");
-  await p.click('button:has-text("تأیید سن و فعال‌سازی")'); await sleep(700);
+  await p.click('button:has-text("سنم رو تأیید کن")'); await sleep(700);
   ok(await p.isVisible(".adult-on"), "سال ۱۳۷۶ → فضای بزرگسال فعال");
   const ints = await p.locator(".int-chip").count();
   ok(ints === 14, `۱۴ علاقه‌مندی (۴ عمومی + ۱۰ بزرگسال) (${ints})`);
   await p.click('.int-chip:has-text("رابطه جدی")');
   await p.click('.int-chip:has-text("بانداج")'); await sleep(200);
-  await p.click('button:has-text("ذخیره علاقه‌مندی‌ها")'); await sleep(700);
-  ok(await p.isVisible("text=علاقه‌مندی‌ها ذخیره شد"), "علاقه‌مندی‌ها ذخیره شد");
+  await p.click('button:has-text("سلیقه‌هام رو سیو کن")'); await sleep(700);
+  ok(await p.isVisible("text=سلیقه‌هات سیو شد"), "علاقه‌مندی‌ها ذخیره شد");
 
   // ۳.۷ لحن‌های +۱۸ باز شد
   const locked2 = await p.locator(".tone-chip.locked").count();
@@ -459,7 +459,7 @@ console.log("— اپ مخ‌یار v5");
 
   // ۳.۹ب خروجی داده و کارت سطح
   await p.click('.tab:has-text("تنظیمات")'); await sleep(500);
-  ok(await p.isVisible('button:has-text("خروجی داده‌های من")'), "دکمه‌ی خروجی JSON هست");
+  ok(await p.isVisible('button:has-text("داده‌هام رو بده")'), "دکمه‌ی خروجی JSON هست");
   await p.click('.tab:has-text("خانه")'); await sleep(500);
   ok(await p.isVisible(".levelcard"), "کارت سطح/استریک در خانه");
   ok(await p.isVisible(".lvlbar"), "نوار پیشرفت سطح");

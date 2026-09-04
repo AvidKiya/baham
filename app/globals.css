@@ -1030,3 +1030,62 @@ html,body{height:100%}
 @media (prefers-reduced-motion:reduce){
   .appwrap *,.appwrap{animation:none!important;transition:none!important}
 }
+
+/* ================= v5.3 — پنل دعوت‌نامه‌های شخصی ================= */
+.invpanel{display:flex;flex-direction:column}
+.ip-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.ip-head h3{display:flex;align-items:center;gap:7px;font-size:15.5px;font-weight:800}
+.iplist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ipitem{padding:0!important;overflow:hidden}
+.ipitem.open{border-color:color-mix(in srgb,var(--acc) 45%,transparent)}
+.ipitem .hi-row{padding:11px}
+.ipitem .hi-chev{transform:rotate(0deg)}
+.ipitem.open .hi-chev{transform:rotate(180deg)}
+.newdot{font-style:normal;font-size:10px;font-weight:800;color:#fff;background:var(--acc);border-radius:8px;padding:2px 7px;margin-right:6px;animation:popIn .3s ease}
+
+.newinv{display:flex;flex-direction:column;gap:8px;padding:4px 0 2px}
+.occ-row{display:flex;gap:7px;flex-wrap:wrap}
+.occ-chip{min-height:38px;padding:0 14px;border-radius:13px;border:1.5px solid var(--line);background:var(--card2);color:var(--dim);font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
+.occ-chip.sel{color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;box-shadow:0 4px 14px -4px color-mix(in srgb,var(--acc) 55%,transparent)}
+.theme-row{display:flex;gap:9px;flex-wrap:wrap;padding:2px 0}
+
+.statrow{display:flex;gap:8px;margin:12px 0}
+.stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px 6px}
+.stat svg{color:var(--acc)}
+.stat b{font-size:15px;font-weight:800}
+.stat span{font-size:10px;color:var(--dim2);font-weight:700}
+
+.link-box{direction:ltr;background:var(--card2);border:1.5px dashed var(--line2);border-radius:13px;padding:10px 13px;margin:4px 0 10px;overflow-x:auto;scrollbar-width:none}
+.link-box::-webkit-scrollbar{display:none}
+.link-txt{font-size:12px;color:var(--dim);white-space:nowrap;font-family:ui-monospace,monospace}
+
+.msglist{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.imsg{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.imsg.new .im-bubble{border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+.im-bubble{max-width:100%;background:var(--accsoft);border:1.5px solid var(--line);border-radius:16px 16px 16px 5px;padding:9px 13px;font-size:13.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
+.im-time{font-size:10px;color:var(--dim2)}
+.im-reply{font-size:12.5px;color:var(--dim);background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:7px 11px;line-height:1.8}
+.im-row{display:flex;gap:7px;width:100%}
+.im-row .inp{min-height:41px;font-size:13px}
+.im-row .btn{flex:none}
+
+.btn.danger{color:var(--warn)}
+.btn.danger.arm{background:color-mix(in srgb,var(--warn) 14%,transparent);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+
+/* نشان پیام جدید روی تب */
+.tab{position:relative}
+.tabdot{position:absolute;top:-2px;left:calc(50% - 17px);min-width:17px;height:17px;border-radius:9px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-size:9.5px;font-weight:800;display:grid;place-items:center;padding:0 4px;border:2px solid var(--bg);animation:popIn .3s ease}
+
+/* ===== جعبه‌ی جواب دعوت‌نامه (سمت کرش) ===== */
+.ansbox{margin:16px 0 4px;padding:16px 16px 14px;text-align:right;animation:riseIn .5s ease both .15s}
+.ansbox b{display:block;font-size:15px;margin-bottom:3px}
+.ansdim{margin:0 0 10px;font-size:12px;color:var(--ink-dim)}
+.anschips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.anschip{min-height:34px;padding:0 12px;border-radius:11px;border:1.5px solid rgba(255,255,255,.22);background:rgba(255,255,255,.09);color:var(--ink);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:.2s}
+.anschip:hover{border-color:var(--acc);transform:translateY(-1px)}
+.ansrow{display:flex;gap:8px}
+.ansinp{flex:1;min-height:44px;border-radius:13px;border:1.5px solid rgba(255,255,255,.22);background:rgba(255,255,255,.09);color:var(--ink);padding:0 13px;font:inherit;font-size:13.5px}
+.ansinp:focus{outline:0;border-color:var(--acc)}
+.anserr{margin:8px 0 0;font-size:11.5px;color:#ffb4c6}
+.ansbox[role="status"]{border-color:rgba(134,239,172,.35)}
+.ansbox[role="status"] b{color:#86efac}

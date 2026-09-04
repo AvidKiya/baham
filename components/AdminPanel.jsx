@@ -432,10 +432,10 @@ export default function AdminPanel() {
           {tab === "general" ? (
             <section className="adm-card glass">
               <h2>⚙️ عمومی</h2>
-              <Row label="اسم خودت (فرستنده)" hint="پایین صفحه و کارت پایانی نشان داده می‌شود">
+              <Row label="اسم خودت (فرستنده)" hint="پایین صفحه و کارت آخر نشون داده می‌شه">
                 <TextInput value={D.senderName} onChange={(v) => set("senderName", v)} />
               </Row>
-              <Row label="اسم او (پیش‌فرض)" hint="وقتی لینک name نداشته باشد استفاده می‌شود؛ لینک همیشه قوی‌تر است">
+              <Row label="اسم او (پیش‌فرض)" hint="وقتی لینک name نداشته باشه همین می‌شه؛ ولی لینک همیشه قوی‌تره">
                 <TextInput value={D.recipientName} onChange={(v) => set("recipientName", v)} />
               </Row>
               <Row label="اسم نمونه در /demo">
@@ -450,7 +450,7 @@ export default function AdminPanel() {
               <Row label="متن اشتراک‌گذاری کارت پایانی">
                 <TextInput value={D.finalShareText} onChange={(v) => set("finalShareText", v)} />
               </Row>
-              <Row label="مناسبت پیش‌فرض دعوت" hint="شعرِ همین مناسبت وسط جریان نمایش داده می‌شود (با پارامتر occasion= در لینک عوض می‌شود)">
+              <Row label="مناسبت پیش‌فرض دعوت" hint="شعرِ همین مناسبت وسط جریان می‌افته (با occasion= تو لینک عوض می‌شه)">
                 <div className="occ-edit">
                   {(D.occasions || []).map((o) => (
                     <button key={o.id} type="button" className={"adm-chip" + ((D.defaultOccasion || "love") === o.id ? " sel" : "")} onClick={() => set("defaultOccasion", o.id)}>
@@ -459,13 +459,13 @@ export default function AdminPanel() {
                   ))}
                 </div>
               </Row>
-              <Row label="یوزرنیم تلگرام تو (برای دکمه‌ی «جوابم رو خودم بگم»)" hint="خالی = دکمه مخفی می‌شود. فقط حروف انگلیسی/اعداد/_">
+              <Row label="یوزرنیم تلگرام تو (برای دکمه‌ی «جوابم رو خودم بگم»)" hint="خالی بذاری دکمه مخفی می‌شه. فقط حروف انگلیسی/عدد/_">
                 <TextInput value={(D.replyTo && D.replyTo.telegram) || ""} onChange={(v) => set("replyTo.telegram", String(v).replace(/[^A-Za-z0-9_]/g, ""))} ph="AvidKiya" dir="ltr" />
               </Row>
               <Row label="متن پیش‌فرض پیام تلگرام" hint="{date} و {when} و {name} خودکار جایگزین می‌شوند">
                 <TextArea value={(D.replyTo && D.replyTo.text) || ""} onChange={(v) => set("replyTo.text", v)} />
               </Row>
-              <Row label="تم پیش‌فرض" hint="با لینک ?theme= موقتاً عوض می‌شود">
+              <Row label="تم پیش‌فرض" hint="با لینک ?theme= موقتی عوض می‌شه">
                 <div className="adm-themepick">
                   {themeKeys.map((tk) => (
                     <button key={tk} className={"adm-theme-opt" + (D.theme === tk ? " sel" : "")} type="button" onClick={() => set("theme", tk)}>
@@ -599,7 +599,7 @@ export default function AdminPanel() {
             <>
               <section className="adm-card glass">
                 <h2>🎵 موسیقی</h2>
-                <Row label="آدرس فایل موسیقی" hint="mp3/ogg مستقیم؛ خالی = دکمه‌ی موسیقی مخفی می‌شود">
+                <Row label="آدرس فایل موسیقی" hint="لینک مستقیم mp3/ogg؛ خالی بذاری دکمه‌ی موزیک مخفی می‌شه">
                   <div className="adm-audio">
                     <TextInput value={D.music} onChange={(v) => set("music", v)} ph="https://example.com/song.mp3 یا /assets/music/ahang.mp3" dir="ltr" />
                     {D.music ? (
@@ -628,7 +628,7 @@ export default function AdminPanel() {
           {tab === "stats" ? (
             <section className="adm-card glass">
               <h2>📊 آمار جواب‌ها</h2>
-              <Toggle label="آمار فعال باشد" hint="فقط تعداد رویدادها ذخیره می‌شود (بله/نه/قرار/…) — بدون IP و کوکی" value={D.stats.enabled} onChange={(v) => set("stats.enabled", v)} />
+              <Toggle label="آمار فعال باشد" hint="فقط تعداد رویدادها ذخیره می‌شه (بله/نه/قرار/…) — بدون IP و کوکی" value={D.stats.enabled} onChange={(v) => set("stats.enabled", v)} />
               <Toggle label="نمایش اسم در آمار" hint="خاموش = اسم‌ها هش می‌شوند (خصوصی‌تر)" value={D.stats.storeName} onChange={(v) => set("stats.storeName", v)} />
               <Row label="کلید آمار" hint="برای دیدن آمار از /api/stats?key=…">
                 <TextInput value={D.stats.adminKey} onChange={(v) => set("stats.adminKey", v)} dir="ltr" />

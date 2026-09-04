@@ -54,7 +54,7 @@ export default function HistoryTab({ user }) {
     <div className="histtab">
       <header className="tabhead">
         <h2><Ic n="clock" s={20} /> تاریخچه</h2>
-        <p>هرچه ساختی و پرسیدی، اینجاست</p>
+        <p>هر چی پرسیدی و ساختی، همینه</p>
       </header>
 
       <div className="seg glass" role="tablist" aria-label="نوع تاریخچه">
@@ -68,17 +68,17 @@ export default function HistoryTab({ user }) {
 
       <label className="hsearch card">
         <Ic n="search" s={17} />
-        <input placeholder="جست‌وجو در تاریخچه…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input placeholder="دنبال چی می‌گردی؟" value={q} onChange={(e) => setQ(e.target.value)} />
         {q ? <button type="button" aria-label="پاک کردن" onClick={() => setQ("")}><Ic n="x" s={14} /></button> : null}
       </label>
 
       {loading ? (
-        <div className="empty card"><b>در حال بارگذاری…</b></div>
+        <div className="empty card"><b>یه لحظه…</b></div>
       ) : list.length === 0 ? (
         <div className="empty card">
           <span className="eico"><Ic n={seg === "chats" ? "chatSpark" : "invite"} s={26} /></span>
-          <b>{q ? "چیزی پیدا نشد" : seg === "chats" ? "هنوز چتی نکرده‌ای" : "هنوز دعوت‌نامه‌ای نساخته‌ای"}</b>
-          <p>{q ? "عبارت دیگری را امتحان کن." : "اولینش را از تب چت‌یار یا ساخت درخواست شروع کن."}</p>
+          <b>{q ? "چیزی پیدا نشد" : seg === "chats" ? "هنوز گپی نزدی" : "هنوز چیزی نساختی"}</b>
+          <p>{q ? "یه چیز دیگه امتحان کن." : "اولیش رو از چت‌یار یا ساخت درخواست شروع کن."}</p>
         </div>
       ) : (
         <div className="histlist">

@@ -48,7 +48,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
 
   const saveProfile = async () => {
     const r = await api("/api/me", { method: "PUT", body: { name: name.trim(), crush: crush.trim(), gender, style } });
-    if (r.ok && r.data && r.data.user) { onUser(r.data.user); flash("پروفایل ذخیره شد"); }
+    if (r.ok && r.data && r.data.user) { onUser(r.data.user); flash("پروفایلت سیو شد"); }
     else flash((r.data && r.data.message) || "ذخیره نشد");
   };
 
@@ -93,14 +93,14 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
     if (r.ok && r.data && r.data.user) {
       onUser(r.data.user);
       if (r.data.user.profile && r.data.user.profile.adult) setGateMsg("فضای بزرگسال فعال شد");
-      else setGateMsg((r.data && r.data.message) || "سن شما برای این بخش کافی نیست");
+      else setGateMsg((r.data && r.data.message) || "سنت برای این بخش کافی نیست");
     } else setGateMsg((r.data && r.data.message) || "فعال نشد");
   };
 
   const toggleInt = (t) => setInts((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : prev.length >= 8 ? prev : [...prev, t]));
   const saveInts = async () => {
     const r = await api("/api/me", { method: "PUT", body: { interests: ints } });
-    if (r.ok && r.data && r.data.user) { onUser(r.data.user); setGateMsg("علاقه‌مندی‌ها ذخیره شد"); }
+    if (r.ok && r.data && r.data.user) { onUser(r.data.user); setGateMsg("سلیقه‌هات سیو شد"); }
     else setGateMsg((r.data && r.data.message) || "ذخیره نشد");
     setTimeout(() => setGateMsg(""), 2200);
   };
@@ -135,8 +135,8 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
       document.body.appendChild(a);
       a.click();
       a.remove();
-      flash("فایل پشتیبان دانلود شد");
-    } catch { flash("خروجی گرفتن ممکن نشد"); }
+      flash("فایل پشتیبانت اومد پایین");
+    } catch { flash("داده‌هات رو نداد؛ دوباره امتحان کن"); }
   };
 
   const delAccount = async () => {
@@ -155,7 +155,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
     <div className="settingstab">
       <header className="tabhead">
         <h2><Ic n="gear" s={20} /> تنظیمات</h2>
-        <p>حساب، هوش مصنوعی و سلیقه‌هایت</p>
+        <p>حسابت، هوش مصنوعیت و سلیقه‌ت</p>
       </header>
 
       {msg ? <div className="mini-ok big"><Ic n="check" s={15} /> {msg}</div> : null}
@@ -167,14 +167,14 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
             <span className="conn-dot" />
             <div>
               <b>متصل با اکانت OpenRouter</b>
-              <p>پاسخ‌ها از حساب خودت می‌آیند؛ مصرفش را در OpenRouter می‌بینی.</p>
+              <p>جواب‌ها از حساب خودت میان؛ مصرفش رو هم تو OpenRouter می‌بینی.</p>
             </div>
           </div>
         ) : (
           <>
-            <p className="dim small">بدون کلید و دردسر: دکمه را بزن، با گوگل یا ایمیل لاگین کن، اجازه بده — تمام. مدل‌های رایگان هم دارد.</p>
+            <p className="dim small">دکمه رو بزن، با گوگل لاگین کن، تأیید کن — تمام. مدلای رایگان هم داره.</p>
             <button className="btn primary big" type="button" onClick={connect} disabled={connBusy}>
-              <Ic n={connBusy ? "refresh" : "shieldPlain"} s={17} /> {connBusy ? "در حال باز کردن صفحه‌ی لاگین…" : "اتصال با اکانت (OpenRouter)"}
+              <Ic n={connBusy ? "refresh" : "shieldPlain"} s={17} /> {connBusy ? "دارم صفحه‌ی لاگین رو باز می‌کنم…" : "اتصال با اکانت (OpenRouter)"}
             </button>
           </>
         )}
@@ -183,19 +183,19 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
             <span className="flbl">مدل</span>
             <input className="inp" dir="ltr" placeholder={orConnected ? "openai/gpt-4o-mini" : "gpt-4o-mini"} value={model} onChange={(e) => setModel(e.target.value)} maxLength={60} />
           </label>
-          <button className="btn ghost" type="button" style={{ alignSelf: "end" }} onClick={saveModel}><Ic n="check" s={16} /> ذخیره مدل</button>
+          <button className="btn ghost" type="button" style={{ alignSelf: "end" }} onClick={saveModel}><Ic n="check" s={16} /> مدل رو سیو کن</button>
         </div>
         {orConnected ? (
           <div className="m-row">
             <a className="btn ghost sm" href="https://openrouter.ai/keys" target="_blank" rel="noopener"><Ic n="eye" s={15} /> کلیدهای من در OpenRouter</a>
-            <button className="btn ghost sm danger" type="button" onClick={disconnect}><Ic n="x" s={15} /> قطع اتصال</button>
+            <button className="btn ghost sm danger" type="button" onClick={disconnect}><Ic n="x" s={15} /> قطعش کن</button>
           </div>
         ) : null}
         {aiMsg ? <div className={/موفق|روشن/.test(aiMsg) ? "mini-ok big" : "mini-err big"}>{aiMsg}</div> : null}
         <details className="adv">
-          <summary><Ic n="key" s={15} /> اتصال دستی با کلید (ChatGPT، OpenAI و…)</summary>
+          <summary><Ic n="key" s={15} /> راه دستی با کلید (ChatGPT، OpenAI و…)</summary>
           <div className="advbody">
-            <p className="dim small">کلید خودت را می‌گذاری؛ فقط روی سرورِ خودت ذخیره می‌شود و صرفاً برای همین اپ مصرف می‌شود.</p>
+            <p className="dim small">کلیدت رو اینجا می‌ذاری؛ فقط روی سرور خودت می‌مونه و فقط واسه همین اپ مصرف می‌شه.</p>
             <label className="field">
               <span className="flbl">کلید API {ai.hasKey && !orConnected ? <em className="haskey">متصل است — برای تعویض، جدید را بنویس</em> : null}</span>
               <div className="keyrow">
@@ -208,7 +208,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
               <input className="inp" dir="ltr" placeholder="api.openai.com/v1" value={base} onChange={(e) => setBase(e.target.value)} maxLength={120} />
             </label>
             <button className="btn ghost" type="button" onClick={saveAi} disabled={aiBusy}>
-              <Ic n={aiBusy ? "refresh" : "check"} s={16} /> ذخیره و تست اتصال
+              <Ic n={aiBusy ? "refresh" : "check"} s={16} /> سیو و تست کن
             </button>
           </div>
         </details>
@@ -226,7 +226,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
             <button key={g.id} type="button" className={gender === g.id ? "on" : ""} onClick={() => setGender(g.id)}>{g.t}</button>
           ))}
         </div>
-        <div className="flbl">لحن پیش‌فرض چت‌یار</div>
+        <div className="flbl">لحن پیش‌فرضت</div>
         <div className="tones">
           {TONES.map((t) => {
             const locked = t.adult && !adult;
@@ -238,12 +238,12 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
             );
           })}
         </div>
-        <button className="btn primary" type="button" onClick={saveProfile}><Ic n="check" s={16} /> ذخیره پروفایل</button>
+        <button className="btn primary" type="button" onClick={saveProfile}><Ic n="check" s={16} /> پروفایلم رو سیو کن</button>
       </section>
 
       <section className="card setsec">
         <h3><Ic n="invite" s={17} /> کرش‌های من</h3>
-        <p className="dim small">تا ۵ نفر؛ در چت‌یار با یک لمس بین‌شان جابه‌جا شو.</p>
+        <p className="dim small">تا ۵ نفر؛ تو چت‌یار با یه لمس بین‌شون بپر.</p>
         {p.crushes && p.crushes.length ? (
           <div className="crushlist">
             {p.crushes.map((c) => (
@@ -253,7 +253,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
               </span>
             ))}
           </div>
-        ) : <p className="dim tiny">هنوز کسی اضافه نکرده‌ای.</p>}
+        ) : <p className="dim tiny">هنوز کسی رو اضافه نکردی.</p>}
         <div className="two">
           <input className="inp" dir="rtl" placeholder="اسم جدید…" value={newCrush} onChange={(e) => setNewCrush(e.target.value)} maxLength={32} />
           <button className="btn ghost" type="button" onClick={addCrush}><Ic n="plus" s={16} /> افزودن</button>
@@ -275,7 +275,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
         </div>
         {winTotal ? (
           <div className="winstat">
-            <div className="flbl" style={{ marginTop: "10px" }}><Ic n="target" s={15} /> آمار رِز تو (در همین دستگاه)</div>
+            <div className="flbl" style={{ marginTop: "10px" }}><Ic n="target" s={15} /> آمار رِزت (روی همین گوشی)</div>
             <p className="dim small">{winTotal} پیشنهاد کپی شده</p>
             {winRows.map(([id, n]) => (
               <div key={id} className="winrow"><span>{toneLabel(id)}</span><b>{n}</b></div>
@@ -294,14 +294,14 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
                 <span className="flbl">سال تولد (شمسی یا میلادی)</span>
                 <input className="inp" dir="ltr" inputMode="numeric" placeholder="1376 یا 1998" value={byear} onChange={(e) => setByear(e.target.value)} maxLength={4} />
               </label>
-              <button className="btn primary" type="button" onClick={unlockAdult}><Ic n="shieldPlain" s={16} /> تأیید سن و فعال‌سازی</button>
+              <button className="btn primary" type="button" onClick={unlockAdult}><Ic n="shieldPlain" s={16} /> سنم رو تأیید کن، بازش کن</button>
             </div>
             {gateMsg ? <div className={/فعال شد/.test(gateMsg) ? "mini-ok big" : "mini-err big"}>{gateMsg}</div> : null}
             <p className="consent"><Ic n="info" s={14} /> محتوای این بخش فقط برای رابطه‌ی دوطرفه‌ی بزرگسالان با رضایت کامل است؛ پاسخ طرف مقابل هرگز قطعی نیست.</p>
           </>
         ) : (
           <>
-            <div className="adult-on"><Ic n="check" s={15} /> فضای بزرگسال فعال است</div>
+            <div className="adult-on"><Ic n="check" s={15} /> فضای بزرگسال بازه</div>
             <div className="flbl">علاقه‌مندی‌ها (تا ۸ مورد) — در پاسخ‌ها لحاظ می‌شوند</div>
             <div className="intgroup"><span>عمومی</span>
               <div className="ints">
@@ -317,7 +317,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
                 ))}
               </div>
             </div>
-            <button className="btn ghost" type="button" onClick={saveInts}><Ic n="check" s={16} /> ذخیره علاقه‌مندی‌ها</button>
+            <button className="btn ghost" type="button" onClick={saveInts}><Ic n="check" s={16} /> سلیقه‌هام رو سیو کن</button>
             {gateMsg ? <div className="mini-ok big"><Ic n="check" s={14} /> {gateMsg}</div> : null}
             <p className="consent"><Ic n="info" s={14} /> پایه‌ی همه‌چیز رضایت است؛ قبل از هر حدی، حرفش را بپرس. پیشنهادها خط‌کشی واقعی نیستند.</p>
           </>
@@ -328,7 +328,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
         <h3><Ic n="shield" s={17} /> حساب</h3>
         <p className="dim small">اگر رمزت را فراموش کردی، با کد بازیابی‌ای که موقع ثبت‌نام گرفتی از صفحه‌ی ورود برمی‌گردانی.</p>
         <div className="m-row">
-          <button className="btn ghost" type="button" onClick={exportData}><Ic n="exportIc" s={16} /> خروجی داده‌های من (JSON)</button>
+          <button className="btn ghost" type="button" onClick={exportData}><Ic n="exportIc" s={16} /> داده‌هام رو بده (JSON)</button>
           <button className="btn ghost danger" type="button" onClick={logout}><Ic n="logout" s={16} /> خروج از حساب</button>
         </div>
         <div className="delzone">
@@ -341,16 +341,16 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
       <section className="card setsec">
         <h3><Ic n="download" s={17} /> نصب اپ</h3>
         {installEvt ? (
-          <button className="btn ghost" type="button" onClick={install}><Ic n="download" s={16} /> نصب مخ‌یار روی گوشی</button>
+          <button className="btn ghost" type="button" onClick={install}><Ic n="download" s={16} /> مخ‌یار رو نصب کن</button>
         ) : (
-          <p className="dim small">از منوی مرورگر گوشی، «Add to Home Screen» را بزن؛ مخ‌یار مثل یک اپ واقعی نصب می‌شود و آفلاین هم باز می‌ماند.</p>
+          <p className="dim small">از منوی مرورگر گوشی «Add to Home Screen» رو بزن؛ مخ‌یار مثل اپ واقعی نصب می‌شه و آفلاین هم باز می‌مونه.</p>
         )}
       </section>
 
       <section className="card setsec aboutsec">
         <h3><Ic n="info" s={17} /> درباره</h3>
-        <p className="dim small">مخ‌یار · نسخه ۵٫۲ — ساخته‌شده با وسواس توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
-        <p className="dim tiny">پاسخ‌ها با اکانت/کلید خودت ساخته می‌شوند؛ هیچ کلیدی جایی جز سرورِ خودت ذخیره نمی‌شود.</p>
+        <p className="dim small">مخ‌یار · نسخه ۵٫۳ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
+        <p className="dim tiny">پاسخ‌ها با اکانت/کلید خودت ساخته می‌شوند؛ هیچ کلیدی هیچ‌جا جز سرور خودت ذخیره نمی‌شه.</p>
         <div className="m-row">
           <a className="btn ghost sm" href="/legal"><Ic n="shield" s={15} /> قوانین و حریم خصوصی</a>
         </div>

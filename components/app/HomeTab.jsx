@@ -6,19 +6,19 @@ import { Ic } from "@/lib/icons";
 import { levelOf, xp, streak } from "@/lib/rizz";
 
 const CELLS = [
-  { ic: "chatSpark", t: "پاسخ هوشمند", d: "پیامش را بده، سه پیشنهادِ آماده‌ی ارسال بگیر", go: "chat", wide: true },
-  { ic: "scan", t: "بینایی استوری", d: "اسکرین‌شات چت یا استوری را بفرست تا تحلیل شود", go: "chat" },
+  { ic: "chatSpark", t: "پاسخ هوشمند", d: "پیامش رو بده، سه تا جوابِ آماده‌ی ارسال بگیر", go: "chat", wide: true },
+  { ic: "scan", t: "بینایی استوری", d: "اسکرین‌شات چت یا استوری‌ش رو بفرست، خودش تحلیل می‌کنه", go: "chat" },
   { ic: "sparkles", t: "۹ لحن + شبیه‌ساز", d: "از بامزه تا جسور؛ حتی تمرین زنده در نقش کرشت", go: "chat" },
-  { ic: "shield", t: "فضای +۱۸", d: "لحن‌های بزرگسال با تأیید سن و رضایت", go: "settings", lock: true },
-  { ic: "invite", t: "دعوت‌نامه‌ی تعاملی", d: "لینکی که «نه» ندارد؛ برای مخ زدن کلاسیک", go: "create" },
-  { ic: "clock", t: "تاریخ‌واره شمسی", d: "همه‌ی چت‌ها و دعوت‌نامه‌ها یادت می‌مانند", go: "history" },
-  { ic: "download", t: "سبک و آفلاین", d: "PWA — نصب می‌شود و آفلاین هم باز می‌شود", go: null },
+  { ic: "shield", t: "فضای +۱۸", d: "لحن‌های بزرگسال با تأیید سن", go: "settings", lock: true },
+  { ic: "invite", t: "دعوت‌نامه‌ی تعاملی", d: "لینکی که «نه» نداره؛ مخ زدن کلاسیک", go: "create" },
+  { ic: "clock", t: "تاریخ‌واره شمسی", d: "گپ‌ها و دعوت‌نامه‌هات یادشون نمی‌ره", go: "history" },
+  { ic: "download", t: "سبک و آفلاین", d: "PWA — نصب می‌شه و آفلاین هم باز می‌مونه", go: null },
 ];
 
 const STEPS = [
-  { n: "۱", t: "ثبت‌نام ده‌ثانیه‌ای", d: "فقط یوزرنیم و رمز؛ نه ایمیل، نه شماره" },
-  { n: "۲", t: "با اکانتت وصل شو", d: "یک دکمه، لاگین با گوگل — بدون کلید و API" },
-  { n: "۳", t: "مخ بزن", d: "پاسخ بگیر، تمرین کن، قرار بچین، دعوت‌نامه بساز" },
+  { n: "۱", t: "ثبت‌نام ده‌ثانیه‌ای", d: "فقط یوزرنیم و رمز؛ نه ایمیل می‌خواد نه شماره" },
+  { n: "۲", t: "با اکانتت وصل شو", d: "یه دکمه، لاگین با گوگل — نه کلیدی نه دردسری" },
+  { n: "۳", t: "مخ بزن", d: "جواب بگیر، تمرین کن، قرار بچین، دعوت‌نامه بساز" },
 ];
 
 export default function HomeTab({ go, user, installEvt, install }) {
@@ -29,15 +29,15 @@ export default function HomeTab({ go, user, installEvt, install }) {
   return (
     <div className="hometab">
       <section className="hero">
-        <div className="hero-pill"><Ic n="spark" s={14} /> همراهِ همیشگیِ مخ زدن</div>
+        <div className="hero-pill"><Ic n="spark" s={14} /> همراه همیشگی مخ زدنت</div>
         <h1>از اولین پیام<br /><span className="gradtxt">تا قرار اول</span></h1>
-        <p className="hero-sub">مخ‌یار با هوش مصنوعیِ خودت جواب کرشت را می‌نویسد، استوری‌اش را تحلیل می‌کند، قرار می‌چیند و دعوت‌نامه‌ی تعاملی می‌سازد.</p>
+        <p className="hero-sub">مخ‌یار با هوش مصنوعی خودت جوابِ کرشت رو می‌نویسه، استوری‌ش رو تحلیل می‌کنه، قرار می‌ذاره و دعوت‌نامه‌ی تعاملی می‌سازه.</p>
         <div className="hero-cta">
           <button className="btn primary" type="button" onClick={() => go(user ? "chat" : "settings")}>
-            <Ic n="chatSpark" s={18} /> {user ? "شروع چت‌یار" : "شروع کن"}
+            <Ic n="chatSpark" s={18} /> {user ? "بریم چت‌یار" : "شروع کن"}
           </button>
           <button className="btn ghost" type="button" onClick={() => go("create")}>
-            <Ic n="invite" s={18} /> ساخت دعوت‌نامه
+            <Ic n="invite" s={18} /> دعوت‌نامه بساز
           </button>
         </div>
         <div className="hero-stats">
@@ -92,7 +92,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
       {installEvt ? (
         <section className="card installcard">
           <Ic n="download" s={22} />
-          <div><b>مخ‌یار را روی گوشی نصب کن</b><p>همین حالا، بدون فروشگاه اپ</p></div>
+          <div><b>مخ‌یار رو گوشیت نصب کن</b><p>همین الان، بدون فروشگاه اپ</p></div>
           <button className="btn primary sm" type="button" onClick={install}>نصب</button>
         </section>
       ) : (
@@ -103,7 +103,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
       )}
 
       <footer className="credit">
-        <span>ساخته‌شده با وسواس توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></span>
+        <span>با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></span>
         <span className="dim">مخ‌یار · نسخه ۵٫۰</span>
       </footer>
     </div>

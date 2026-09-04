@@ -94,14 +94,14 @@ export default function Onboarding({ onDone }) {
               ))}
             </div>
             {step > 0 ? <button type="button" className="auth-forgot" onClick={() => { setStep(step - 1); setPicks(picks.slice(0, -1)); }}>سؤال قبلی</button> : null}
-            <button type="button" className="auth-forgot" onClick={() => finish(false)}>رد کردن آزمون</button>
+            <button type="button" className="auth-forgot" onClick={() => finish(false)}>بی‌خیال، رد شو</button>
           </>
         ) : (
           <div className="qres">
             <span className="bigico"><Ic n="sparkles" s={30} /></span>
             <h3>شخصیت مخ‌زنِ تو: {result[1] && QS.flatMap(q => q.opts).find(o => o.style === result[0]).r}</h3>
-            <p>این را به‌عنوان لحن پیش‌فرض ذخیره کنم؟ هر وقت بخواهی در تنظیمات عوضش می‌کنی.</p>
-            <button className="btn primary big" type="button" onClick={() => finish(true)}><Ic n="check" s={16} /> بله، ذخیره کن</button>
+            <p>این رو بذارم لحن پیش‌فرضت؟ هر وقت خواستی تو تنظیمات عوضش می‌کنی.</p>
+            <button className="btn primary big" type="button" onClick={() => finish(true)}><Ic n="check" s={16} /> آره، ذخیره کن</button>
             <button type="button" className="auth-forgot" onClick={() => finish(false)}>بی‌خیال، خودم تنظیم می‌کنم</button>
           </div>
         )}

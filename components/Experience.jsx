@@ -796,8 +796,55 @@ function FinalScreen() {
             {E(cfg, "replyBtn", "جوابم رو خودم بهت بگم 💌")}
           </a>
         ) : null}
+        {cfg._inv && cfg._inv.slug ? <AnswerBox slug={cfg._inv.slug} name={displayName} dateLabel={appState.dateLabel} whenLabel={appState.whenLabel} /> : null}
       </div>
     </section>
+  );
+}
+
+/* ============================== جعبه‌ی جواب (دعوت‌نامه‌ی شخصی) ============================== */
+function AnswerBox({ slug, name, dateLabel, whenLabel }) {
+  const [txt, setTxt] = useState("");
+  const [state, setState] = useState("idle"); // idle | sent | err
+  const chips = ["آره، میام", "هنوز دارم فکر می‌کنم…", "سورپرایز شد!", "خودم بهت می‌گم"];
+  const send = async (t) => {
+    const text = String(t || txt).trim();
+    if (!text) return;
+    setState("idle");
+    try {
+      const r = await fetch("/api/i/" + slug + "/msg", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: text + (dateLabel ? " (قرار: " + dateLabel + (whenLabel ? " · " + whenLabel : "") + ")" : "") }),
+      });
+      const j = await r.json().catch(() => null);
+      if (j && j.ok) { setState("sent"); setTxt(""); }
+      else setState("err");
+    } catch { setState("err"); }
+  };
+  if (state === "sent") {
+    return (
+      <div className="ansbox glass" role="status">
+        <b>رسید!</b>
+        <p>جوابت رفت سمت سازنده‌ی این دعوت‌نامه؛ حالا دلخور نشو جوابش رو منتظر باش.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="ansbox glass">
+      <b>یه حرفی داری؟ همینجا بگو</b>
+      <p className="ansdim">هرچی بنویسی مستقیم می‌رسه به سازنده‌اش.</p>
+      <div className="anschips">
+        {chips.map((c) => (
+          <button key={c} type="button" className="anschip" onClick={() => send(c)}>{c}</button>
+        ))}
+      </div>
+      <div className="ansrow">
+        <input className="ansinp" value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={500} placeholder="بنویس…" onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
+        <button className="btn primary" type="button" onClick={() => send()} disabled={!txt.trim()}>بفرست</button>
+      </div>
+      {state === "err" ? <p className="anserr">نفرستاده شد؛ یه بار دیگه امتحان کن</p> : null}
+    </div>
   );
 }
 
