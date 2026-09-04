@@ -73,14 +73,14 @@ export default function CreateTab({ cfg: cfgProp, user, go, onUnreplied }) {
       method: "POST",
       body: { type: "invite", title: nm || "لینک دعوت", data: { url: encodeURI(link), name: nm, theme: theme || "", occasion: occ || "" } },
     });
-    setSavedMsg(r.ok ? "در تاریخچه ذخیره شد" : ((r.data && r.data.message) || "ذخیره نشد"));
+    setSavedMsg(r.ok ? "توی قبلیام نگهش داشتیم" : ((r.data && r.data.message) || "ذخیره نشد"));
     setTimeout(() => setSavedMsg(""), 2000);
   };
 
   return (
     <div className="createtab">
       <header className="tabhead">
-        <h2><Ic n="invite" s={20} /> ساخت درخواست</h2>
+        <h2><Ic n="invite" s={20} /> براش بساز</h2>
         <p>لینکی که «نه» نداره — یا یه دعوت‌نامه‌ی شخصی با پنل و جواب</p>
       </header>
 
@@ -131,7 +131,7 @@ export default function CreateTab({ cfg: cfgProp, user, go, onUnreplied }) {
           <a className="btn ghost" href={link} target="_blank" rel="noopener"><Ic n="eye" s={16} /> یه نگاه بندازم</a>
         </div>
         <div className="m-row">
-          <button className="btn ghost" type="button" onClick={saveToHistory}><Ic n="clock" s={16} /> ذخیره در تاریخچه</button>
+          <button className="btn ghost" type="button" onClick={saveToHistory}><Ic n="clock" s={16} /> توی قبلیام نگهش دار</button>
         </div>
         {savedMsg ? <div className="mini-ok"><Ic n="check" s={14} /> {savedMsg}</div> : null}
       </div>

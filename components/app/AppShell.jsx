@@ -22,9 +22,9 @@ const TABS = [
   { id: "home", ic: "home", label: "خانه" },
   { id: "chat", ic: "chatSpark", label: "چت‌یار" },
   { id: "discover", ic: "sparkles", label: "کشف" },
-  { id: "create", ic: "invite", label: "ساخت درخواست" },
+  { id: "create", ic: "invite", label: "براش بساز" },
   { id: "us", ic: "calHeart", label: "ما" },
-  { id: "history", ic: "clock", label: "تاریخچه" },
+  { id: "history", ic: "clock", label: "قبلیام" },
   { id: "settings", ic: "gear", label: "تنظیمات" },
 ];
 

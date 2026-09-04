@@ -113,7 +113,7 @@ await p.locator('button:has-text("پاک کردن همه")').scrollIntoViewIfNee
 await p.locator('button:has-text("پاک کردن همه")').click(); await p.waitForTimeout(700);
 await p.reload({ waitUntil: "domcontentloaded" }); await p.waitForTimeout(1500); await us();
 check(await p.locator(".pinbox").count() === 0, "۱۴) بعد از wipe، قلب PIN هم پاک شد");
-check((await p.locator(".pmscard").textContent()).includes("با ثبت اولین روز"), "۱۴ب) داده‌های «ما» صفر شدند");
+check((await p.locator(".pmscard").textContent()).includes("اولین روز پریود"), "۱۴ب) داده‌های «ما» صفر شدند");
 
 await b.close();
 console.log(failed ? "\n❌ " + failed + " مورد شکست" : "\n🎉 همه‌ی تست‌های v6.0 سبز");

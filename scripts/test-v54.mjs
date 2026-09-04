@@ -31,7 +31,7 @@ const ctx1 = await b.newContext({ viewport: { width: 390, height: 844 }, locale:
 
 /* ================= ۱) لینک سریع با آیدی تلگرام خود سازنده ================= */
 const ali = await mkuser("ali" + Date.now().toString(36).slice(-5));
-await ali.click('[role="tab"]:has-text("ساخت")');
+await ali.click('[role="tab"]:has-text("بساز")');
 await ali.waitForTimeout(800);
 await ali.fill('input[placeholder*="سارا"]', "سارا");
 await ali.fill('input[placeholder="myusername"]', "ali_lover99");

@@ -47,7 +47,7 @@ check((await p.locator("textarea.ctxt").inputValue()).includes("سرد شده"),
 
 /* مودهای جدید */
 check(await p.locator(".mode-chip").count() === 15, "۱۰) ۱۵ ابزار چت‌یار");
-for (const t of ["دلداری", "تبریک", "ابراز علاقه", "«هیچی نیستم»"]) {
+for (const t of ["دلداری", "تبریک", "بگم دوستش دارم؟", "«هیچی نیستم»"]) {
   check(await p.locator('.mode-chip:has-text("' + t + '")').count() === 1, "۱۱) مود «" + t + "»");
 }
 
@@ -58,7 +58,7 @@ check((await p.locator(".brainchip").textContent()).includes("خاموش") && (a
 await p.click(".brainchip"); await p.waitForTimeout(250);
 
 /* قرارساز */
-await p.locator('.mode-chip:has-text("قرار")').click(); await p.waitForTimeout(400);
+await p.locator('.mode-chip:has-text("کجا بریم")').click(); await p.waitForTimeout(400);
 check(await p.locator(".dplanner").count() === 1, "۱۴) قرارساز فرمی در مود قرار");
 await p.locator(".dpcity").fill("شیراز");
 await p.locator('.occ-chip:has-text("رمانتیک")').click();
@@ -79,7 +79,7 @@ check((await p.locator(".deckcard p").last().textContent() || "").includes(" ی�
 /* پایان پریود */
 await p.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - 4); const iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); localStorage.setItem("mk:pms", JSON.stringify({ logs: [iso], len: 5, notif: false })); });
 await p.click('[role="tab"]:has-text("ما")'); await p.waitForTimeout(600);
-check((await p.locator(".phasebox").textContent()).includes("قاعدگی"), "۱۹) روز ۴ سیکل: هنوز فاز قاعدگی");
+check((await p.locator(".phasebox").textContent()).includes("روزای پریود"), "۱۹) روز ۴ سیکل: هنوز فاز قاعدگی");
 await p.locator('button:has-text("پریود تموم شد")').click(); await p.waitForTimeout(500);
 const phTxt = (await p.locator(".phasebox").textContent().catch(() => ""));
 check(!phTxt.includes("قاعدگی"), "۲۰) ثبت پایان → فاز عوض شد (فولیکولار)");

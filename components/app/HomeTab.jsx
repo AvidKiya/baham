@@ -8,14 +8,14 @@ import { useState } from "react";
 import Games from "./Games";
 
 const CELLS = [
-  { ic: "chatSpark", t: "پاسخ هوشمند", d: "پیامش رو بده، سه تا جوابِ آماده‌ی ارسال بگیر", go: "chat", wide: true },
-  { ic: "scan", t: "بینایی استوری", d: "اسکرین‌شات چت یا استوری‌ش رو بفرست، خودش تحلیل می‌کنه", go: "chat" },
-  { ic: "sparkles", t: "۹ لحن + شبیه‌ساز", d: "از بامزه تا جسور؛ حتی تمرین زنده در نقش کرشت", go: "chat" },
-  { ic: "shield", t: "فضای +۱۸", d: "لحن‌های بزرگسال با تأیید سن", go: "settings", lock: true },
-  { ic: "sparkles", t: "کشف نزدیک‌ها", d: "با حوالیات آشنا شو؛ لایک بده، چت باز شه", go: "discover" },
-  { ic: "invite", t: "دعوت‌نامه‌ی تعاملی", d: "لینکی که «نه» نداره؛ مخ زدن کلاسیک", go: "create" },
-  { ic: "calHeart", t: "ما", d: "ترکر PMS، روزشمار رابطه و یادآور مناسبت‌ها", go: "us" },
-  { ic: "clock", t: "تاریخ‌واره شمسی", d: "گپ‌ها و دعوت‌نامه‌هات یادشون نمی‌ره", go: "history" },
+  { ic: "chatSpark", t: "چی جواب بدم؟", d: "پیامتو بفرست، ۳ تا جواب خفن تحویل بگیر", go: "chat", wide: true },
+  { ic: "scan", t: "ببین این چت چی میگه", d: "اسکرین‌شات چت یا استوری‌ش رو بفرست؛ خودم می‌خونم و می‌گم", go: "chat" },
+  { ic: "sparkles", t: "بذار جای اون جواب بده", d: "تمرین زنده با کرشت؛ ۹ تا لحن از بامزه تا جسور", go: "chat" },
+  { ic: "shield", t: "اتاق +۱۸", d: "بعد از تأیید سن باز می‌شه؛ حرف مال خودته", go: "settings", lock: true },
+  { ic: "sparkles", t: "کشف نزدیک‌ها", d: "کِی تو حوالیته؟ لایک بده؛ اگه دوطرفه شد چت بازه", go: "discover" },
+  { ic: "invite", t: "یه چیزی براش بساز", d: "لینکی که «نه» نداره؛ مخ زدن کلاسیک 😏", go: "create" },
+  { ic: "calHeart", t: "رابطه‌تو یه تکونی بده ❤️", d: "قرار، سورپرایز، آشتی، چرخه و کلی چیز دیگه", go: "us" },
+  { ic: "clock", t: "قبلیام", d: "گپ‌ها و دعوت‌نامه‌هات یادشون نمی‌ره", go: "history" },
   { ic: "download", t: "سبک و آفلاین", d: "PWA — نصب می‌شه و آفلاین هم باز می‌مونه", go: null },
 ];
 
@@ -34,9 +34,9 @@ export default function HomeTab({ go, user, installEvt, install }) {
   return (
     <div className="hometab">
       <section className="hero">
-        <div className="hero-pill"><Ic n="spark" s={14} /> همراه همیشگی مخ زدنت</div>
-        <h1>از اولین پیام<br /><span className="gradtxt">تا قرار اول</span></h1>
-        <p className="hero-sub">مخ‌یار با هوش مصنوعی خودت جوابِ کرشت رو می‌نویسه، استوری‌ش رو تحلیل می‌کنه، قرار می‌ذاره و دعوت‌نامه‌ی تعاملی می‌سازه.</p>
+        <div className="hero-pill"><Ic n="spark" s={14} /> رفیقی که رابطه رو می‌فهمه 😏</div>
+        <h1>از اولین پیام<br /><span className="gradtxt">تا رابطه‌ی خوب</span></h1>
+        <p className="hero-sub">پیامتو بده، باهم جمعش می‌کنیم 😏 جواب کرش، قرار، سورپرایز، آشتی… هرچی یه رابطه لازم داره یه جایی همین‌جاست.</p>
         <div className="hero-cta">
           <button className="btn primary" type="button" onClick={() => go(user ? "chat" : "settings")}>
             <Ic n="chatSpark" s={18} /> {user ? "بریم چت‌یار" : "شروع کن"}
@@ -46,7 +46,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
           </button>
         </div>
         <div className="hero-stats">
-          <span><b>۵</b> ابزار</span><i />
+          <span><b>۱۵</b> ابزار</span><i />
           <span><b>۹</b> لحن</span><i />
           <span><b>+۱۸</b> با تأیید سن</span><i />
           <span><b>PWA</b> آفلاین</span>
@@ -82,8 +82,8 @@ export default function HomeTab({ go, user, installEvt, install }) {
         ))}
         <button type="button" className="bcard card wide games-card" onClick={() => { setGamesOpen(true); }}>
           <span className="btile"><Ic n="smile" s={20} /></span>
-          <span className="bt">بازی و سرگرمی</span>
-          <span className="bd">دوز قلبی، حدس کلمه و طالع‌بینی — با امتیاز رِز</span>
+          <span className="bt">حوصله‌تون سر رفته؟</span>
+          <span className="bd">خب برای همین اینجاییم 😏 دوز، حدس کلمه، طالع‌بینی… با امتیاز رِز</span>
         </button>
       </section>
 
@@ -116,7 +116,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
 
       <footer className="credit">
         <span>با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></span>
-        <span className="dim">مخ‌یار · نسخه ۶٫۲</span>
+        <span className="dim">مخ‌یار · نسخه ۷٫۰</span>
       </footer>
     </div>
   );

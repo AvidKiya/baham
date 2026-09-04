@@ -19,7 +19,7 @@ await p.click('[role="tab"]:has-text("ما")'); await p.waitForTimeout(700);
 check(await p.locator('text=امروز شروع شد').count() >= 1, "۲) حالت خالی با دکمه‌ی ثبت");
 await p.locator('.pmscard button:has-text("امروز شروع شد")').click(); await p.waitForTimeout(700);
 const phTxt = (await p.locator(".phasebox").textContent().catch(() => "")).replace(/\s+/g, " ");
-check(phTxt.includes("روزهای قاعدگی") && phTxt.includes("روز ۱"), "۲ب) فاز قاعدگی روز ۱: " + phTxt.slice(0, 40));
+check(phTxt.includes("روزای پریود") && phTxt.includes("روز ۱"), "۲ب) فاز قاعدگی روز ۱: " + phTxt.slice(0, 40));
 check(await p.locator(".statrow b").first().textContent() === "۲۸" || phTxt.includes("۲۸"), "۲ج) پیش‌بینی ۲۸ روزه (پیش‌فرض)");
 
 /* ۳) راهنمای پارتنر */
@@ -37,7 +37,7 @@ await p.evaluate((d) => localStorage.setItem("mk:pms", JSON.stringify({ logs: [d
 await p.reload({ waitUntil: "domcontentloaded" }); await p.waitForTimeout(1200);
 await p.click('[role="tab"]:has-text("ما")'); await p.waitForTimeout(700);
 const ph2 = (await p.locator(".phasebox").textContent().catch(() => "")).replace(/\s+/g, " ");
-check(ph2.includes("حساس PMS"), "۵) روز ۲۴ → فاز PMS");
+check(ph2.includes("روزای حساس"), "۵) روز ۲۴ → فاز PMS");
 
 /* ۶) موعد امروز → هشدار */
 await p.evaluate((d) => localStorage.setItem("mk:pms", JSON.stringify({ logs: [d], len: 5, notif: true })), daysAgo(28));
@@ -47,7 +47,7 @@ check(await p.locator(".pms-alert").count() > 0, "۶) هشدار موعد امر
 
 /* ۷) روزشمار رابطه */
 const d100 = daysAgo(100);
-await p.locator('.card:has-text("شمارنده‌ی روزهای رابطه") input[type="date"]').fill(d100);
+await p.locator('.card:has-text("چند روزه کنارید") input[type="date"]').fill(d100);
 await p.waitForTimeout(700);
 const daysTxt = (await p.locator(".daysbig").textContent().catch(() => "")).replace(/\s+/g, " ");
 check(daysTxt.includes("۱۰۰") && daysTxt.includes("روز کناریم"), "۷) روزشمار: " + daysTxt.slice(0, 24));

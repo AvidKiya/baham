@@ -237,7 +237,7 @@ async function partnerFullState(env, uid) {
 
 async function requireUser(request, env) {
   const uid = await readToken(request, env);
-  if (!uid) return { err: json({ ok: false, error: "unauthorized", message: "اول وارد شوید" }, 401) };
+  if (!uid) return { err: json({ ok: false, error: "unauthorized", message: "اول بزن تو حسابت" }, 401) };
   const user = await getUser(env, uid);
   if (!user) return { err: json({ ok: false, error: "no_user" }, 401) };
   return { user };
@@ -271,7 +271,10 @@ function mokhyarPrompt(user, styleId, modeId, again) {
     "۴. اگر اطلاعات کم است، حداکثر یک سؤال کوتاه بپرس ولی همیشه حداقل دو گزینه‌ی قابل استفاده هم بده.\n" +
     "۵. هرگز تعقیب، فریب، اذیت یا توهین توصیه نکن؛ اگر نشانه‌های بی‌علاقگی طرف مقابل واضح است، صادقانه بگو و راه محترمانه‌ی عقب‌نشینی یا صبر را پیشنهاد بده.\n" +
     "۶. ایموجی را کم و بجا استفاده کن (۰ تا ۲ تا در برخی گزینه‌ها).\n" +
-    "۷. کوتاه و کاربردی؛ بدون مقدمه‌چینی.\n";
+    "۷. کوتاه و کاربردی؛ بدون مقدمه‌چینی.\n" +
+    "قوانین لحن (مهم‌ترین بخش): فارسیِ محاوره‌ی واقعی بنویس؛ مثل پیام یه رفیق ۲۲ساله‌ی باحال که روابط رو می‌فهمه — نه دستیار رسمی، نه مقاله‌ی روان‌شناسی، نه جواب ChatGPT‌وار. جمله‌های کوتاه. واژه‌های اداری (می‌باشد، می‌نماید، نمایید، لطفاً، کاربر گرامی، عملیات، درخواست شما، با موفقیت انجام شد) ممنوع. موضوع جدی شد (دعوا، ناراحتی، مرز، سلامت) شوخی را کم کن و درست و بالغ حرف بزن. ایموجی کم و به‌جا؛ لوس و بچگانه هرگز.\n" +
+    "مثال بد: «به نظر می‌رسد منظور او این است که از توجه شما احساس مثبتی دریافت کرده است.»\n" +
+    "مثال خوب: «داره می‌گه از توجهت خوشش اومده؛ پس خوب پیش رفتی 😏»\n";
   if (Array.isArray(p.interests) && p.interests.length) {
     s += "۸. علاقه‌مندی‌های اعلام‌شده‌ی کاربر: «" + p.interests.join("، ") + "» — این‌ها را به‌طور طبیعی در لحن و زاویه‌ی پیشنهادها لحاظ کن، بدون اینکه برچسب یا اصطلاح فنی را مستقیم در پیام بیاوری مگر اینکه خود کاربر آورده باشد.\n";
   }
@@ -289,7 +292,7 @@ function buildAiMessages(user, b, images) {
   const styleId = TONES[b.style] ? b.style : "funny";
   const sys = mokhyarPrompt(user, styleId, b.mode, !!b.again);
   const text = String(b.text || "").slice(0, 6000).trim();
-  const content = (text || "این تصویر را ببین.") + (b.again ? "\n(لطفاً گزینه‌های جدید و متفاوت از قبل بده.)" : "");
+  const content = (text || "این تصویر را ببین.") + (b.again ? "\n(این بار گزینه‌های تازه و متفاوت از قبلی بده.)" : "");
   const hist = [];
   for (const m of (b.msgs || []).slice(-12)) {
     if (!m || typeof m !== "object") continue;
@@ -319,7 +322,7 @@ async function callAi(user, messages, maxTokens, stream) {
   const key = ai.key || "";
   if (!key) return { err: json({ ok: false, error: "no_key", message: "کلید API هوش مصنوعی را در تنظیمات وارد کنید" }, 400) };
   const base = ((ai.base && String(ai.base).trim()) || "https://api.openai.com/v1").replace(/\/+$/, "");
-  if (!/^https?:\/\//.test(base)) return { err: json({ ok: false, error: "bad_base", message: "آدرس API نامعتبر است" }, 400) };
+  if (!/^https?:\/\//.test(base)) return { err: json({ ok: false, error: "bad_base", message: "این آدرس API یه چیزیش هست" }, 400) };
   const model = String(ai.model || "gpt-4o-mini").slice(0, 60);
   const headers = { "content-type": "application/json", authorization: "Bearer " + key };
   if (/openrouter\.ai/.test(base)) headers["X-Title"] = "Mokhyar";
@@ -336,7 +339,7 @@ async function callAi(user, messages, maxTokens, stream) {
     });
   } catch (e) {
     if (timer) clearTimeout(timer);
-    return { err: json({ ok: false, error: "ai_unreachable", message: "اتصال به سرویس هوش مصنوعی برقرار نشد — آدرس یا کلید را چک کنید" }, 502) };
+    return { err: json({ ok: false, error: "ai_unreachable", message: "به هوش مصنوعی دست نیافتیم؛ آدرس یا کلید رو یه چک بکن" }, 502) };
   }
   if (timer) clearTimeout(timer);
   if (!res.ok) {
@@ -692,7 +695,7 @@ export async function onRequestPut(context) {
     if (await authLocked(env && env.CONFIG)) return json({ ok: false, error: "locked", message: "تلاش زیاد؛ ۱۰ دقیقه صبر کن" }, 429);
     if (!isAuthed(request, env, cfg)) {
       await authFail(env && env.CONFIG);
-      return json({ ok: false, error: "unauthorized", message: "رمز اشتباه است" }, 401);
+      return json({ ok: false, error: "unauthorized", message: "رمز درست نیست" }, 401);
     }
     await authReset(env && env.CONFIG);
     if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv", message: "KV با نام CONFIG وصل نشده" }, 501);
@@ -795,10 +798,10 @@ if (seg[0] === "me") {
       if (b.onboarded !== undefined) p.onboarded = !!b.onboarded;
       if (b.birthYear !== undefined) {
         let y = parseInt(b.birthYear, 10);
-        if (!Number.isFinite(y)) return json({ ok: false, error: "bad_year", message: "سال تولد را درست وارد کن" }, 400);
+        if (!Number.isFinite(y)) return json({ ok: false, error: "bad_year", message: "سال تولد رو درست بزن" }, 400);
         if (y >= 1200 && y <= 1500) y = y + 621;
         const nowY = new Date().getUTCFullYear();
-        if (y < 1930 || y > nowY) return json({ ok: false, error: "bad_year", message: "سال تولد را درست وارد کن" }, 400);
+        if (y < 1930 || y > nowY) return json({ ok: false, error: "bad_year", message: "سال تولد رو درست بزن" }, 400);
         if (nowY - y < 18) return json({ ok: false, error: "not_adult", message: "سن شما برای فعال‌سازی فضای بزرگسال کافی نیست" }, 403);
         p.birthYear = y;
         p.adult = true;
@@ -827,7 +830,7 @@ if (seg[0] === "me") {
       if (b.ai.model !== undefined) ai.model = String(b.ai.model || "").replace(/[^\w.\-\/:]/g, "").slice(0, 60) || "gpt-4o-mini";
       if (b.ai.key !== undefined) {
         const key = String(b.ai.key || "").replace(/\s+/g, "").slice(0, 200);
-        if (key && !/^sk-[\w\-]{8,}$|^(sk-)?ant-[\w\-]{8,}$|^[\w\-]{20,}$/.test(key)) return json({ ok: false, error: "bad_key", message: "شکل کلید معتبر به نظر نمی‌رسد" }, 400);
+        if (key && !/^sk-[\w\-]{8,}$|^(sk-)?ant-[\w\-]{8,}$|^[\w\-]{20,}$/.test(key)) return json({ ok: false, error: "bad_key", message: "این کلید که درست به نظر نمی‌رسه" }, 400);
         ai.key = key || "";
       }
       user.ai = ai;
@@ -873,7 +876,7 @@ export async function onRequestDelete(context) {
     if (await authLocked(env && env.CONFIG)) return json({ ok: false, error: "locked", message: "تلاش زیاد؛ ۱۰ دقیقه صبر کن" }, 429);
     if (!isAuthed(request, env, cfg)) {
       await authFail(env && env.CONFIG);
-      return json({ ok: false, error: "unauthorized", message: "رمز اشتباه است" }, 401);
+      return json({ ok: false, error: "unauthorized", message: "رمز درست نیست" }, 401);
     }
     await authReset(env && env.CONFIG);
     if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
@@ -1037,7 +1040,7 @@ export async function onRequestPost(context) {
   /* ---------- ثبت‌نام / ورود ---------- */
   if (seg[0] === "auth") {
     const action = seg[1];
-    if (rateLimited(request, "auth", 12)) return json({ ok: false, error: "rate_limited", message: "تلاش زیاد؛ کمی صبر کنید" }, 429);
+    if (rateLimited(request, "auth", 12)) return json({ ok: false, error: "rate_limited", message: "یه کم سریع بودی؛ نفس تازه کن و دوباره بزن" }, 429);
     const r = await readBody(request, 4096);
     if (r.err) return json({ ok: false, error: r.err || "bad_json" }, 400);
     const b = r.body || {};
@@ -1048,7 +1051,7 @@ export async function onRequestPost(context) {
 
     if (action === "register") {
       const exists = await env.CONFIG.get("useridx:" + username);
-      if (exists) return json({ ok: false, error: "taken", message: "این یوزرنیم قبلاً گرفته شده" }, 409);
+      if (exists) return json({ ok: false, error: "taken", message: "این یوزرنیم رو یکی قبلاً برده" }, 409);
       const uid = randHex(6);
       const salt = randHex(8);
       const ABC = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -1085,7 +1088,7 @@ export async function onRequestPost(context) {
       if (newPassword.length < 6 || newPassword.length > 72) return json({ ok: false, error: "bad_password", message: "رمز جدید حداقل ۶ کاراکتر" }, 400);
       const uid = await env.CONFIG.get("useridx:" + username);
       const user = uid ? await getUser(env, uid) : null;
-      if (!user || !user.recoveryHash) return json({ ok: false, error: "bad_login", message: "حسابی با این یوزرنیم پیدا نشد" }, 401);
+      if (!user || !user.recoveryHash) return json({ ok: false, error: "bad_login", message: "حسابی با این یوزرنیم پیدا نکردیم" }, 401);
       if ((await sha256Hex(code)) !== user.recoveryHash) return json({ ok: false, error: "bad_code", message: "کد بازیابی اشتباه است" }, 401);
       const salt = randHex(8);
       user.salt = salt;
@@ -1296,7 +1299,7 @@ export async function onRequestPost(context) {
   if (seg[0] === "chat") {
     const u = await requireUser(request, env);
     if (u.err) return u.err;
-    if (rateLimited(request, "chat", 20)) return json({ ok: false, error: "rate_limited", message: "سرعت زیاد؛ کمی صبر کنید" }, 429);
+    if (rateLimited(request, "chat", 20)) return json({ ok: false, error: "rate_limited", message: "یه کم سریع بودی؛ نفس تازه کن و دوباره بزن" }, 429);
     const r = await readBody(request, 6 * 1024 * 1024);
     if (r.err) return json({ ok: false, error: r.err || "bad_json" }, r.err === "too_large" ? 413 : 400);
     const b = r.body || {};
@@ -1314,14 +1317,14 @@ export async function onRequestPost(context) {
       if (/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(s) && s.length <= 2_300_000) images.push(s);
     }
     const qText = String(b.text || "").replace(/\s+/g, " ").trim().slice(0, 6000);
-    if (!qText && !images.length) return json({ ok: false, error: "empty", message: "پیامی برای ارسال نیست" }, 400);
+    if (!qText && !images.length) return json({ ok: false, error: "empty", message: "یه چیزی بنویس یا عکس بذار، بعد بفرست" }, 400);
     const modeId = MODES[b.mode] ? b.mode : "reply";
     const messages = buildAiMessages(u.user, { ...b, style: styleId }, images);
 
     const saveChat = async (fullText) => {
       try {
         const h = await getHist(env, u.user.id);
-        const LBL = { reply: "پاسخ", opener: "شروع", rewrite: "بازنویسی", analyze: "تحلیل", date: "قرار", sim: "شبیه‌ساز", apology: "آشتی", sensitive: "موضوع حساس", sos: "الان چی بگم", comfort: "دلداری", congrats: "تبریک", express: "ابراز علاقه", nothing: "هیچی نیستم" };
+        const LBL = { reply: "چی جواب بدم", opener: "شروع گفتگو", rewrite: "بهترش کن", analyze: "چی می‌گه؟", date: "کجا بریم", sim: "جای اون", apology: "آشتی", sensitive: "موضوع حساس", sos: "الان چی بگم", comfort: "دلداری", congrats: "تبریک", express: "دوستش دارم؟", nothing: "هیچی نیستم" };
         h.chats.unshift({
           id: randHex(4) + "-" + Date.now().toString(36),
           ts: Date.now(),

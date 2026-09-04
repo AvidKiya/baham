@@ -53,8 +53,8 @@ export default function HistoryTab({ user }) {
   return (
     <div className="histtab">
       <header className="tabhead">
-        <h2><Ic n="clock" s={20} /> تاریخچه</h2>
-        <p>هر چی پرسیدی و ساختی، همینه</p>
+        <h2><Ic n="clock" s={20} /> قبلیام</h2>
+        <p>هر چی پرسیدی و ساختی، همینه 👀</p>
       </header>
 
       <div className="seg glass" role="tablist" aria-label="نوع تاریخچه">
@@ -77,7 +77,7 @@ export default function HistoryTab({ user }) {
       ) : list.length === 0 ? (
         <div className="empty card">
           <span className="eico"><Ic n={seg === "chats" ? "chatSpark" : "invite"} s={26} /></span>
-          <b>{q ? "چیزی پیدا نشد" : seg === "chats" ? "هنوز گپی نزدی" : "هنوز چیزی نساختی"}</b>
+          <b>{q ? "چیزی پیدا نشد 🤷" : seg === "chats" ? "هنوز گپی نزدی 👀" : "هنوز چیزی نساختی؛ اولین شاهکار کجاست؟ 😏"}</b>
           <p>{q ? "یه چیز دیگه امتحان کن." : "اولیش رو از چت‌یار یا ساخت درخواست شروع کن."}</p>
         </div>
       ) : (

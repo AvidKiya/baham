@@ -337,10 +337,10 @@ console.log("— اپ مخ‌یار v5");
   ok(theme1 !== theme0, `سوییچ شب/روز کار می‌کند (${theme0} → ${theme1})`);
   await p.click(".toptheme"); await sleep(300);
   const emojiHit = await p.evaluate(() => {
-    const t = document.body.innerText || "";
+    const t = (document.querySelector(".tabbar") || {}).innerText || "";
     return /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u.test(t);
   });
-  ok(!emojiHit, "رابط اپ بدون ایموجی");
+  ok(!emojiHit, "نوار تب بدون ایموجی (متن‌ها با ایموجی انتخابی اوکی)");
 
   // ۳.۲ ثبت‌نام
   await p.click('.tab:has-text("تنظیمات")'); await sleep(400);
@@ -375,10 +375,10 @@ console.log("— اپ مخ‌یار v5");
   ok(modes === 15, `۱۵ ابزار چت‌یار (${modes})`);
   const lockedModes = await p.locator(".mode-chip.locked").count();
   ok(lockedModes === 1, `ابزار +۱۸ (پس‌مراقبت) قفل تا تأیید سن (${lockedModes})`);
-  await p.click('.mode-chip:has-text("شبیه‌ساز")'); await sleep(250);
+  await p.click('.mode-chip:has-text("جای اون جواب بده")'); await sleep(250);
   const simPh = await p.locator("textarea.ctxt").getAttribute("placeholder");
-  ok(/حرف می‌زنی|نقش/.test(simPh || ""), "جای‌نمای شبیه‌ساز درست است");
-  await p.click('.mode-chip:has-text("پاسخ")'); await sleep(250);
+  ok(/حرف می‌زنی|نقش/.test(simPh || ""), "جای‌نمای «جای اون جواب بده» درست است");
+  await p.click('.mode-chip:has-text("چی جواب بدم")'); await sleep(250);
   // بازی کارتی محلی (بدون هوش مصنوعی)
   await p.click('.mode-chip:has-text("بازی")'); await sleep(350);
   ok(await p.isVisible(".deckcard"), "بازی حقیقت/جرأت: کارت شروع");
@@ -390,10 +390,10 @@ console.log("— اپ مخ‌یار v5");
   ok(cardTxt.length > 8, "کارت بازی کشیده شد: " + cardTxt.slice(0, 28));
   await p.click('button:has-text("یکی دیگه")'); await sleep(300);
   ok(((await p.locator(".deckcard p").nth(0).textContent()) || "").trim().length > 8, "کارت بعدی هم می‌آید");
-  await p.click('.mode-chip:has-text("قرار")'); await sleep(250);
+  await p.click('.mode-chip:has-text("کجا بریم")'); await sleep(250);
   const ph = await p.locator("textarea.ctxt").getAttribute("placeholder");
-  ok(/حال‌وهوا/.test(ph || ""), "جای‌نمای مخصوص حالت «قرار»");
-  await p.click('.mode-chip:has-text("پاسخ")'); await sleep(250);
+  ok(/حال‌وهوا/.test(ph || ""), "جای‌نمای مخصوص حالت «کجا بریم؟»");
+  await p.click('.mode-chip:has-text("چی جواب بدم")'); await sleep(250);
   const tones = await p.locator(".tone-chip").count();
   ok(tones === 9, `۹ لحن چت (${tones})`);
   const locked = await p.locator(".tone-chip.locked").count();
@@ -431,7 +431,7 @@ console.log("— اپ مخ‌یار v5");
   ok(locked2 === 0, `لحن‌های +۱۸ بعد از تأیید سن باز شدند (${locked2} قفل)`);
 
   // ۳.۸ ساخت دعوت‌نامه + ذخیره در تاریخچه
-  await p.click('.tab:has-text("ساخت درخواست")'); await sleep(500);
+  await p.click('.tab:has-text("براش بساز")'); await sleep(500);
   await p.fill('input[placeholder="مثلاً: سارا"]', "لیلا");
   await sleep(300);
   const link = await p.locator(".link-txt").textContent();
@@ -440,11 +440,11 @@ console.log("— اپ مخ‌یار v5");
   await p.click(".occ-chip >> nth=2"); await sleep(250);
   const link2 = await p.locator(".link-txt").textContent();
   ok(link2.includes("occasion="), "چیپ مناسبت در لینک: " + link2.trim().slice(-40));
-  await p.click('button:has-text("ذخیره در تاریخچه")'); await sleep(800);
-  ok(await p.isVisible("text=در تاریخچه ذخیره شد"), "لینک در تاریخچه ذخیره شد");
+  await p.click('button:has-text("توی قبلیام نگهش دار")'); await sleep(800);
+  ok(await p.isVisible("text=توی قبلیام نگهش داشتیم"), "لینک توی قبلیام نگه داشته شد");
 
   // ۳.۹ تاریخچه + جست‌وجو
-  await p.click('.tab:has-text("تاریخچه")'); await sleep(600);
+  await p.click('.tab:has-text("قبلیام")'); await sleep(600);
   await p.click('.seg button:has-text("دعوت‌نامه‌ها")'); await sleep(500);
   ok((await p.locator(".histitem").count()) === 1, "تاریخچه: ۱ دعوت‌نامه");
   await p.fill(".hsearch input", "لیلا"); await sleep(300);
@@ -646,7 +646,7 @@ console.log("— ریسپانسیو موبایل");
     return r ? r.left >= 0 && r.right <= window.innerWidth + 1 : false;
   });
   ok(fitsApp, "تب‌بار اپ در صفحه‌ی 320px جا می‌شود");
-  await p.click('.tab:has-text("ساخت درخواست")'); await sleep(600);
+  await p.click('.tab:has-text("براش بساز")'); await sleep(600);
   await p.fill('input[placeholder="مثلاً: سارا"]', "پریسا"); await sleep(300);
   const lnk = await p.locator(".link-txt").textContent();
   ok(lnk.includes("پریسا"), "ساخت لینک با فارسی خام @320: " + lnk.trim().slice(-28));

@@ -43,8 +43,8 @@ export default function UsTab() {
     try {
       const st = pmsStatus();
       if (!st.empty && typeof Notification !== "undefined" && Notification.permission === "granted") {
-        if (st.dueToday) new Notification("مخ‌یار 🌙", { body: "امروز موعد پیش‌بینی‌شده‌ست؛ مراقب خودت باش ❤️" });
-        else if (st.dueTomorrow) new Notification("مخ‌یار 🌙", { body: "فردا موعد پیش‌بینی‌شده‌ست؛ آماده باش 🧡" });
+        if (st.dueToday) new Notification("مخ‌یار 🌙", { body: "ممکنه امروز پریودت شروع بشه؛ چای گرم و یه کم مهربونی با خودت ❤️" });
+        else if (st.dueTomorrow) new Notification("مخ‌یار 🌙", { body: "فردا احتمالاً موعدهش؛ آماده باش 🧡" });
       }
     } catch {}
     /* یادآور هوشمند مناسبت‌ها (v6.1) */
@@ -148,11 +148,11 @@ function PmsCard({ reload }) {
 
   return (
     <div className="card ccard pmscard">
-      <h3 className="ip-head"><span>🌙</span> ترکر سیکل و PMS <span className="tiny est">تخمینی · نه تشخیص پزشکی</span></h3>
+      <h3 className="ip-head"><span>🌙</span> چرخه‌ش دستت باشه <span className="tiny est">حدسِ ماست، تشخیص پزشکی نیست</span></h3>
 
       {st.empty ? (
         <>
-          <p className="dim small">با ثبت اولین روز، همه‌چیز شروع می‌شه: پیش‌بینی پریود بعدی، فاز فعلی و راهنمای برخورد پارتنرت.</p>
+          <p className="dim small">اولین روز پریود رو ثبت کن؛ از اون به بعد پیش‌بینی، فاز و راهنمایِ کنار اومدنش رو خودم می‌گم.</p>
           <div className="m-row">
             <button className="btn primary" type="button" onClick={() => { logPeriodToday(); buzz(10); reload(); }}>امروز شروع شد</button>
           </div>
@@ -161,7 +161,7 @@ function PmsCard({ reload }) {
         <>
           {st.dueToday || st.dueTomorrow ? (
             <div className="pms-alert">
-              {st.dueToday ? "⏳ امروز موعدِ پیش‌بینی‌شده‌ست — مراقب خودت باش." : "🕐 فردا موعدِ پیش‌بینی‌شده‌ست — آماده باش."}
+              {st.dueToday ? "⏳ امروز احتمالاً روزشه؛ یه کم بیشتر ملاحظه‌ش باش ❤️" : "🕐 فردا احتمالاً موعدهش؛ کیسه‌ی آب داغ رو پیش بگیر 🧡"}
             </div>
           ) : null}
           <div className="phasebox" style={{ borderColor: ph.c + "66", background: ph.c + "14" }}>
@@ -221,10 +221,10 @@ function AnnivCard({ reload }) {
   const ms = days >= 0 ? nextMilestone(days) : null;
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><Ic n="invite" s={16} /> شمارنده‌ی روزهای رابطه</h3>
+      <h3 className="ip-head"><Ic n="invite" s={16} /> چند روزه کنارید؟ ❤️</h3>
       {days < 0 ? (
         <>
-          <p className="dim small">تاریخ شروع رابطه‌تون رو بده؛ روزشمار و مایل‌استون‌ها رو خودم می‌شمروم.</p>
+          <p className="dim small">تاریخ شروعتون رو بده؛ روزشمار و مایل‌استون‌ها رو خودم می‌شمروم.</p>
           <input className="inp" type="date" dir="ltr" value={v} onChange={(e) => { setAnniv(e.target.value); reload(); }} />
         </>
       ) : (
@@ -267,8 +267,8 @@ function OccsCard({ reload }) {
 
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><Ic n="star" s={16} /> تقویم رابطه 📅</h3>
-      <p className="dim small">سالگرد، تولد، اولین قرار… یادش می‌مونه و کادو پیشنهاد می‌دم 🎁</p>
+      <h3 className="ip-head"><Ic n="star" s={16} /> مناسبت‌ها 📅</h3>
+      <p className="dim small">تولد، سالگرد، هر چی که براتون مهمه؛ یادشون می‌دارم و کادوهم پیشنهاد می‌دم 🎁</p>
       <div className="occ-add">
         <input className="inp" dir="rtl" placeholder="مثلاً: تولد لیلا" maxLength={40} value={title} onChange={(e) => setTitle(e.target.value)} />
         <input className="inp" type="date" dir="ltr" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -340,7 +340,7 @@ function MoodCard({ reload }) {
           <p>تو {fa(ins.total)} روز اخیر، بیشتر از همه «{ins.top.t}» {ins.top.e} بودی ({fa(ins.n)} بار).</p>
           {ins.pmsLine ? <p className="dim small">{ins.pmsLine}</p> : null}
         </div>
-      ) : <p className="tiny">چند روز پشت‌سرهم ثبت کنی، الگوها رو بهت نشون می‌دم.</p>}
+      ) : <p className="tiny">چند روز پشت‌سرهم ثبت کن؛ الگوهاش خودشون رو نشون می‌دن 👀</p>}
     </div>
   );
 }
@@ -354,14 +354,14 @@ function LLCard({ reload }) {
     const ll = LOVE_LANGS.find((l) => l.id === res.id) || LOVE_LANGS[0];
     return (
       <div className="card ccard">
-        <h3 className="ip-head"><span>💝</span> زبان عشق تو</h3>
+        <h3 className="ip-head"><span>💝</span> عشق رو با چه زبونی نشون می‌دی؟</h3>
         <div className="llbox">
           <span className="phase-emoji">{ll.e}</span>
           <b>{ll.t}</b>
           <p className="dim small">{ll.d}</p>
-          <p className="say-one">برای این آدم، «{ll.t}» احتمالاً بیشتر از بقیه‌ی راه‌ها معنی داره؛ هم تو ابراز علاقه‌ت هم تو عذرخواهیت از همین زبون استفاده کن.</p>
+          <p className="say-one">«{ll.t}» برای تو احتمالاً بیشتر از بقیه‌ی راه‌ها جواب می‌ده؛ هم عشقت رو هم عذرخواهیت رو با همین زبون نشون بده.</p>
         </div>
-        <button className="btn ghost sm" type="button" onClick={() => { setI(0); setCnt({}); const k = "mk:ll"; try { localStorage.removeItem(k); } catch {} reload(); }}><Ic n="refresh" s={14} /> دوباره آزمون بدم</button>
+        <button className="btn ghost sm" type="button" onClick={() => { setI(0); setCnt({}); const k = "mk:ll"; try { localStorage.removeItem(k); } catch {} reload(); }}><Ic n="refresh" s={14} /> دوباره امتحان بدم؟</button>
       </div>
     );
   }
@@ -379,7 +379,7 @@ function LLCard({ reload }) {
   };
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><span>💝</span> آزمون زبان عشق</h3>
+      <h3 className="ip-head"><span>💝</span> زبان عشقت رو پیدا کن</h3>
       {done ? null : (
         <>
           <p className="tiny">سؤال {fa(i + 1)} از {fa(LL_QUIZ.length)}</p>
@@ -409,8 +409,8 @@ function PartnerCard({ reload }) {
   };
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><span>🧠</span> مغز رابطه — درباره‌ی پارتنرم</h3>
-      <p className="dim small">هرچی بیشتر بدونی، سورپرایزا و هدیه‌ا شخصی‌تر می‌شن. همه‌چیز فقط همین‌جاست.</p>
+      <h3 className="ip-head"><span>🧠</span> مغز رابطه 🧠 — هرچی درباره‌ش می‌دونی</h3>
+      <p className="dim small">هرچی بیشتر بگی، پیشنهادا و سورپرایزا شخصی‌تر می‌شن. همه‌چیز فقط تو همین گوشیه.</p>
       <label className="field">
         <span className="flbl"><Ic n="user" s={14} /> اسمش</span>
         <input className="inp" dir="rtl" maxLength={32} placeholder="مثلاً: نازنین" value={name} onChange={(e) => setName(e.target.value)} />
@@ -460,7 +460,7 @@ function WishCard({ reload }) {
   );
 }
 
-/* ---------------- سورپرایز و هدیه‌یاب ---------------- */
+/* ---------------- امروز چجوری خوشحالش کنیم؟ 🎁 ---------------- */
 function SurpriseCard() {
   const [b, setB] = useState("free");
   const [n, setN] = useState(0);
@@ -468,7 +468,7 @@ function SurpriseCard() {
   const g = giftFor(b, partner);
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><span>🎁</span> سورپرایز و هدیه‌یاب</h3>
+      <h3 className="ip-head"><span>🎁</span> امروز چجوری خوشحالش کنیم؟ 🎁</h3>
       <p className="dim small">بر اساس بودجه {partner && partner.name ? `و چیزایی که درباره‌ی «${partner.name}» می‌دونی` : "و سلیقه‌ش"}</p>
       <div className="occ-row">
         {BUDGETS.map((x) => (
@@ -492,8 +492,8 @@ function ScoreCard({ reload }) {
   const w = weakest(v);
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><span>📊</span> سلامت رابطه</h3>
-      <p className="dim small">به‌عنوان یه زوج، از ۱ تا ۵ به هر بخش امتیاز بدید (۵ = عالی).</p>
+      <h3 className="ip-head"><span>📊</span> رابطه‌تون چنده؟ 👀</h3>
+      <p className="dim small">از ۱ تا ۵ به هر بخش نمره بدید؛ ۵ یعنی عالیه.</p>
       {SCORE_DIMS.map((d) => (
         <div className="scorerow" key={d.id}>
           <span className="sc-lbl">{d.t}</span>
@@ -503,7 +503,7 @@ function ScoreCard({ reload }) {
       ))}
       <div className="scoreres">
         <b>{fa(avg)}/۵</b>
-        {w && w.n < 4 ? <p>ضعیف‌ترین حلقه: «{w.t}» — پیشنهاد می‌کنم این هفته فقط روی همین کار کنید 💪</p> : <p>هر هفته چک کنید؛ افت تدریجی رو زود ببینید.</p>}
+        {w && w.n < 4 ? <p>ضعیف‌ترین حلقه: «{w.t}» — این هفته فقط همین رو دست بگیرید 💪</p> : <p>هر هفته چک کنید؛ افت تدریجی رو زود ببینید.</p>}
       </div>
       <button className="btn primary" type="button" onClick={() => { setScore(v); buzz(8); reload(); }}>ثبت امتیاز</button>
     </div>
@@ -520,8 +520,8 @@ function CheckinCard({ reload }) {
   const weekAgo = last && Date.now() - last.ts < 6 * DAY;
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><span>🫶</span> چک‌این هفتگی زوج</h3>
-      <p className="dim small">۵ سؤال، یه بار در هفته؛ جوابا فقط برای خودتون ذخیره می‌شه.</p>
+      <h3 className="ip-head"><span>🫶</span> یه چک‌این هفتگی</h3>
+      <p className="dim small">۵ تا سؤال، هفته‌ای یه بار؛ جوابا فقط پیش خودتون می‌مونه.</p>
       {weekAgo ? <p className="tiny">آخرین چک‌این: {faDate(new Date(last.ts))} — هر وقت هفته شد دوباره پر کن.</p> : null}
       {CHECKIN_QS.map((q, i) => (
         <label className="field" key={i}>
@@ -531,7 +531,7 @@ function CheckinCard({ reload }) {
       ))}
       {saved ? <div className="mini-ok big">ثبت شد؛ فقط پیش خودت 🤫</div> : null}
       <button className="btn primary" type="button" disabled={!canSave} onClick={() => { addCheckin(ans.map((a) => a.trim())); setAns(CHECKIN_QS.map(() => "")); setSaved(true); buzz(10); setTimeout(() => setSaved(false), 2200); reload(); }}>ثبت چک‌این</button>
-      {list.length > 1 ? <p className="tiny">{fa(list.length)} چک‌این ذخیره شده؛ تو «داده‌هام» قابل خروجه.</p> : null}
+      {list.length > 1 ? <p className="tiny">{fa(list.length)} تا چک‌این نگه داشته شده؛ فقط پیش خودتون.</p> : null}
     </div>
   );
 }
@@ -543,7 +543,7 @@ function ChallengeCard({ reload }) {
     return (
       <div className="card ccard">
         <h3 className="ip-head"><span>🔥</span> چالش ۷ روزه‌ی توجه</h3>
-        <p className="dim small">هر روز یه کار کوچیک برای پارتنرت؛ ۷ روز پشت‌سرهم. آماده‌ای؟</p>
+        <p className="dim small">هر روز یه کار کوچیک، ۷ روز پشت‌سرهم. شدش؟ 🔥</p>
         <button className="btn primary" type="button" onClick={() => { startChallenge(); buzz([10, 30, 10]); reload(); }}>شروع چالش</button>
       </div>
     );
@@ -579,7 +579,7 @@ function UnsentCard() {
   return (
     <div className="card ccard">
       <h3 className="ip-head"><span>📮</span> صندوق حرف‌های ناگفته</h3>
-      <p className="dim small">همون حرف سخت رو بنویس؛ قبل ارسال براش لحن انتخاب می‌کنیم. هیچ‌جا ارسال نمی‌شه؛ فقط پیش خودته.</p>
+      <p className="dim small">همون حرف سخت رو بنویس؛ لحنش رو نرم می‌کنم. هیچ‌جا نمی‌ره؛ فقط پیش خودته.</p>
       <textarea className="inp" style={{ minHeight: 80, padding: "10px 14px", resize: "none" }} dir="rtl" maxLength={500} placeholder="مثلاً: از وقتی با گوشی حرف می‌زنی حس می‌کنم نیستم…" value={t} onChange={(e) => setT(e.target.value)} />
       <div className="occ-row" style={{ margin: "8px 0" }}>
         {REWRITE_TONES.map((x) => (
@@ -640,7 +640,7 @@ function PrivacyCard({ reload }) {
   return (
     <div className="card ccard">
       <h3 className="ip-head"><Ic n="shield" s={16} /> حریم خصوصی</h3>
-      <p className="dim small">هیچ داده‌ای از این تب به هیچ سروری نمی‌ره؛ همه‌ش روی همین گوشیه. موقعیت اختیاریه، اشتراک‌گذاری نداریم و هر لحظه می‌تونی همه‌چیز رو پاک کنی. مغز رابطه هم فقط وقتی به هوش مصنوعی می‌ره که خودت چیپ «مغز رابطه» رو تو چت‌یار روشن نگه داشته باشی؛ داده‌ی سیکل هرگز بهش نمی‌ره.</p>
+      <p className="dim small">این اطلاعات مال خودته؛ بدون اجازه‌ت با کسی share نمی‌شه و به هیچ سروری نمی‌ره — همه‌ش روی همین گوشیه. هر لحظه هم می‌تونی همه‌چیز رو پاک کنی. مغز رابطه هم فقط وقتی به هوش مصنوعی می‌ره که خودت چیپش رو تو چت‌یار روشن نگه داشته باشی؛ داده‌ی سیکل هرگز نمی‌ره.</p>
       <div className="pinrow">
         <input className="inp" dir="ltr" type="password" inputMode="numeric" placeholder="پین جدید (۴-۸ رقم)" maxLength={8} value={pin1} onChange={(e) => setPin1(e.target.value.replace(/\D/g, ""))} />
         <button className="btn ghost sm" type="button" onClick={savePin}>{hasPin ? "پین رو عوض کن" : "قفل بذار"}</button>
@@ -696,7 +696,7 @@ function DuoCard({ reload }) {
     setSt({ paired: false }); setCode(null);
   };
 
-  if (!st) return <div className="card ccard"><p className="dim small">در حال اتصال…</p></div>;
+  if (!st) return <div className="card ccard"><p className="dim small">یه لحظه…</p></div>;
   if (!st.paired) {
     return (
       <div className="card ccard">
@@ -804,7 +804,7 @@ function ConflictDuo({ st, onSaved }) {
   };
   return (
     <div className="card ccard">
-      <h3 className="ip-head"><span>🤝</span> حل اختلاف دونفره</h3>
+      <h3 className="ip-head"><span>🤝</span> دعوا کردین؟ بیا درستش کنیم</h3>
       {merged ? (
         <>
           <p className="dim small">موضوع: «{their.topic || my.topic}» — هر دو جواب دادید. برداشت‌ها رو مقایسه کن:</p>
