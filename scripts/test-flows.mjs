@@ -185,7 +185,7 @@ console.log("— جریان کامل دعوت‌نامه");
     imgOk = await p.evaluate(() => { const im = document.querySelector(".card-preview"); return !!im && im.naturalWidth > 100; });
   }
   ok(imgOk, "تصویر کارت (canvas) ساخته شد");
-  await p.screenshot({ path: "docs/shots/next-flow-final.png" });
+  await p.screenshot({ path: "/tmp/t-flow-final.png" });
   await ctx.close();
 }
 
@@ -313,31 +313,210 @@ for (const [occ, qWord, yesWord] of [["marriage", "ازدواج", "قبوله"],
   await ctx.close();
 }
 
-/* ================= 3) landing + builder ================= */
-console.log("— لندینگ و ساخت لینک");
+/* ================= 3) اپ مخ‌یار v5: خانه/ثبت‌نام/چت/+۱۸/ساخت/تاریخچه ================= */
+console.log("— اپ مخ‌یار v5");
 {
-  const { ctx, p } = await page({ viewport: { width: 1440, height: 900 } });
+  const uniq = "t" + Date.now().toString(36).slice(-6);
+  const { ctx, p } = await page({ viewport: { width: 390, height: 844 } });
+
+  // ۳.۱ پوسته‌ی اپ و تب‌بار آیکونی
   await p.goto(BASE + "/", { waitUntil: "networkidle" });
-  await sleep(500);
-  ok(await p.isVisible("#phoneShell .phone"), "موك‌آپ گوشی در دسکتاپ");
-  const phoneBox = await p.locator(".phone").boundingBox();
-  ok(phoneBox && phoneBox.height > 500, `موك‌آپ سایز مناسب (${Math.round(phoneBox.height)}px)`);
-  await audit(p, "landing");
-  await p.click("text=ساخت لینک شخصی");
-  await sleep(400);
-  await p.fill("#builderName", "لیلا");
-  await sleep(250);
+  await sleep(700);
+  const tabs = await p.locator(".tabbar .tab").count();
+  ok(tabs === 5, `تب‌بار شناور با ۵ تب (${tabs})`);
+  const tabIcons = await p.locator(".tabbar .tab svg").count();
+  ok(tabIcons === 5, `آیکون SVG در همه‌ی تب‌ها (${tabIcons})`);
+  ok(await p.isVisible(".hero"), "تب خانه: هیرو");
+  const bento = await p.locator(".bento .bcard").count();
+  ok(bento === 7, `بنتوگرید خانه: ۷ سلول (${bento})`);
+  ok(await p.isVisible("text=اَوید کیا"), "اعتبار سازنده در خانه");
+  const theme0 = await p.evaluate(() => document.querySelector(".appwrap").getAttribute("data-theme"));
+  ok(theme0 === "light" || theme0 === "dark", "تم اولیه ست است: " + theme0);
+  await p.click(".toptheme"); await sleep(350);
+  const theme1 = await p.evaluate(() => document.querySelector(".appwrap").getAttribute("data-theme"));
+  ok(theme1 !== theme0, `سوییچ شب/روز کار می‌کند (${theme0} → ${theme1})`);
+  await p.click(".toptheme"); await sleep(300);
+  const emojiHit = await p.evaluate(() => {
+    const t = document.body.innerText || "";
+    return /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u.test(t);
+  });
+  ok(!emojiHit, "رابط اپ بدون ایموجی");
+
+  // ۳.۲ ثبت‌نام
+  await p.click('.tab:has-text("تنظیمات")'); await sleep(400);
+  ok(await p.isVisible(".authcard"), "تب نیاز به حساب → فرم ورود/ثبت‌نام");
+  await p.click('button:has-text("حساب نداری؟ رایگان ثبت‌نام کن")'); await sleep(250);
+  await p.fill('input[autocomplete="username"]', uniq);
+  await p.fill('input[type="password"]', "test1234");
+  await p.click('button:has-text("ثبت‌نام و شروع")'); await sleep(900);
+  ok(await p.isVisible(".recmodal"), "کد بازیابی بعد از ثبت‌نام نشان داده شد");
+  const recTxt = ((await p.locator(".recode").textContent()) || "").trim();
+  ok(/^[A-Z0-9]{10}$/.test(recTxt), "شکل کد بازیابی درست است: " + recTxt);
+  await p.click(".rec-ok"); await sleep(400);
+  ok(await p.isVisible(".qscrim"), "آزمون شخصیت بعد از ثبت‌نام باز شد");
+  for (let i = 0; i < 4; i++) { await p.click(".qop >> nth=0"); await sleep(250); }
+  await sleep(300);
+  const qres = ((await p.locator(".qres h3").textContent()) || "").trim();
+  ok(qres.includes("شخصیت مخ‌زن"), "نتیجه‌ی آزمون نشان داده شد: " + qres.slice(0, 34));
+  await p.click('button:has-text("بله، ذخیره کن")'); await sleep(700);
+  ok(!(await p.isVisible(".qscrim")), "آزمون بسته شد");
+  ok(await p.isVisible(".settingstab"), "ثبت‌نام موفق → تنظیمات باز شد");
+  ok(((await p.locator(".topuser").textContent()) || "").trim().length > 0, "نام کاربری در نوار بالا");
+
+  // ۳.۳ ذخیره‌ی پروفایل
+  await p.fill('input[placeholder="مثلاً: سارا"]', "سارا");
+  await p.click('button:has-text("ذخیره پروفایل")'); await sleep(700);
+  ok(await p.isVisible("text=پروفایل ذخیره شد"), "پروفایل ذخیره شد");
+
+  // ۳.۴ چت‌یار: ابزارها، لحن‌ها، قفل +۱۸
+  await p.click('.tab:has-text("چت‌یار")'); await sleep(500);
+  ok(await p.isVisible(".ai-banner"), "بنر «هوش مصنوعی وصل نیست»");
+  const modes = await p.locator(".mode-chip").count();
+  ok(modes === 8, `۸ ابزار چت‌یار (${modes})`);
+  const lockedModes = await p.locator(".mode-chip.locked").count();
+  ok(lockedModes === 1, `ابزار +۱۸ (پس‌مراقبت) قفل تا تأیید سن (${lockedModes})`);
+  await p.click('.mode-chip:has-text("شبیه‌ساز")'); await sleep(250);
+  const simPh = await p.locator("textarea.ctxt").getAttribute("placeholder");
+  ok(/حرف می‌زنی|نقش/.test(simPh || ""), "جای‌نمای شبیه‌ساز درست است");
+  await p.click('.mode-chip:has-text("پاسخ")'); await sleep(250);
+  // بازی کارتی محلی (بدون هوش مصنوعی)
+  await p.click('.mode-chip:has-text("بازی")'); await sleep(350);
+  ok(await p.isVisible(".deckcard"), "بازی حقیقت/جرأت: کارت شروع");
+  const lockedDeckCats = await p.locator(".deckcats .locked").count();
+  ok(lockedDeckCats === 1, "دسته‌ی بزرگسال بازی قفل است");
+  await p.click('.deckcats button:has-text("یخ‌شکن")'); await sleep(250);
+  await p.click(".deckcard"); await sleep(350);
+  const cardTxt = ((await p.locator(".deckcard p").nth(0).textContent()) || "").trim();
+  ok(cardTxt.length > 8, "کارت بازی کشیده شد: " + cardTxt.slice(0, 28));
+  await p.click('button:has-text("یکی دیگه")'); await sleep(300);
+  ok(((await p.locator(".deckcard p").nth(0).textContent()) || "").trim().length > 8, "کارت بعدی هم می‌آید");
+  await p.click('.mode-chip:has-text("قرار")'); await sleep(250);
+  const ph = await p.locator("textarea.ctxt").getAttribute("placeholder");
+  ok(/حال‌وهوا/.test(ph || ""), "جای‌نمای مخصوص حالت «قرار»");
+  await p.click('.mode-chip:has-text("پاسخ")'); await sleep(250);
+  const tones = await p.locator(".tone-chip").count();
+  ok(tones === 9, `۹ لحن چت (${tones})`);
+  const locked = await p.locator(".tone-chip.locked").count();
+  ok(locked === 3, `۳ لحن +۱۸ قفل تا تأیید سن (${locked})`);
+  const scens = await p.locator(".scen").count();
+  ok(scens >= 4, `چیپ‌های سناریو در دسترس (${scens})`);
+  await p.fill("textarea.ctxt", "جوابمو نداده");
+  await p.click(".c-send"); await sleep(500);
+  ok(await p.isVisible(".settingstab"), "ارسال بدون کلید → هدایت به تنظیمات");
+
+  // ۳.۵ اتصال با اکانت + کلید AI جعلی → تست اتصال با خطای فارسی
+  ok(await p.isVisible('button:has-text("اتصال با اکانت")'), "دکمه‌ی «اتصال با اکانت» حاضر است");
+  await p.click(".adv summary"); await sleep(300);
+  await p.fill('input[placeholder="sk-…"]', "sk-test00000000");
+  await p.click('button:has-text("ذخیره و تست اتصال")'); await sleep(3000);
+  const aiMsg = await p.evaluate(() => { const els = document.querySelectorAll(".mini-ok, .mini-err"); return els.length ? els[els.length - 1].innerText : ""; });
+  ok(/کلید|اتصال|نامعتبر/.test(aiMsg || ""), "تست اتصال پاسخ داد: " + String(aiMsg).slice(0, 40));
+
+  // ۳.۶ دروازه‌ی +۱۸: سال زیر ۱۸ رد، سال درست فعال
+  await p.fill('input[placeholder="1376 یا 1998"]', "1390");
+  await p.click('button:has-text("تأیید سن و فعال‌سازی")'); await sleep(700);
+  ok(await p.isVisible("text=کافی نیست"), "سال ۱۳۹۰ → رد شد (زیر ۱۸)");
+  await p.fill('input[placeholder="1376 یا 1998"]', "1376");
+  await p.click('button:has-text("تأیید سن و فعال‌سازی")'); await sleep(700);
+  ok(await p.isVisible(".adult-on"), "سال ۱۳۷۶ → فضای بزرگسال فعال");
+  const ints = await p.locator(".int-chip").count();
+  ok(ints === 14, `۱۴ علاقه‌مندی (۴ عمومی + ۱۰ بزرگسال) (${ints})`);
+  await p.click('.int-chip:has-text("رابطه جدی")');
+  await p.click('.int-chip:has-text("بانداج")'); await sleep(200);
+  await p.click('button:has-text("ذخیره علاقه‌مندی‌ها")'); await sleep(700);
+  ok(await p.isVisible("text=علاقه‌مندی‌ها ذخیره شد"), "علاقه‌مندی‌ها ذخیره شد");
+
+  // ۳.۷ لحن‌های +۱۸ باز شد
+  const locked2 = await p.locator(".tone-chip.locked").count();
+  ok(locked2 === 0, `لحن‌های +۱۸ بعد از تأیید سن باز شدند (${locked2} قفل)`);
+
+  // ۳.۸ ساخت دعوت‌نامه + ذخیره در تاریخچه
+  await p.click('.tab:has-text("ساخت درخواست")'); await sleep(500);
+  await p.fill('input[placeholder="مثلاً: سارا"]', "لیلا");
+  await sleep(300);
   const link = await p.locator(".link-txt").textContent();
-  ok(link.includes("لیلا"), "لینک با اسم فارسیِ خام (بدون کد): " + link.trim().slice(-24));
-  ok(!link.includes("%D9"), "لینک بدون درصد-انکودینگ فارسی");
-  await p.click(".occ-chip >> nth=2"); // دوستی
-  await sleep(250);
+  ok(link.includes("لیلا"), "لینک با اسم فارسیِ خام: " + link.trim().slice(-24));
+  ok(!link.includes("%D9"), "لینک بدون درصد-انکودینگ");
+  await p.click(".occ-chip >> nth=2"); await sleep(250);
   const link2 = await p.locator(".link-txt").textContent();
-  ok(link2.includes("occasion=friendship"), "چیپ مناسبت در لینک: " + link2.trim().slice(-40));
-  ok(link2.includes("لیلا"), "اسم فارسی خام هنوز در لینک است");
-  await p.screenshot({ path: "docs/shots/next-landing.png" });
+  ok(link2.includes("occasion="), "چیپ مناسبت در لینک: " + link2.trim().slice(-40));
+  await p.click('button:has-text("ذخیره در تاریخچه")'); await sleep(800);
+  ok(await p.isVisible("text=در تاریخچه ذخیره شد"), "لینک در تاریخچه ذخیره شد");
+
+  // ۳.۹ تاریخچه + جست‌وجو
+  await p.click('.tab:has-text("تاریخچه")'); await sleep(600);
+  await p.click('.seg button:has-text("دعوت‌نامه‌ها")'); await sleep(500);
+  ok((await p.locator(".histitem").count()) === 1, "تاریخچه: ۱ دعوت‌نامه");
+  await p.fill(".hsearch input", "لیلا"); await sleep(300);
+  ok((await p.locator(".histitem").count()) === 1, "جست‌وجوی «لیلا»: نتیجه دارد");
+  await p.fill(".hsearch input", "zzzz"); await sleep(300);
+  ok((await p.locator(".histitem").count()) === 0, "جست‌وجوی بی‌نتیجه: خالی");
+  await p.fill(".hsearch input", ""); await sleep(300);
+  await p.click(".hi-row"); await sleep(300);
+  ok(await p.isVisible(".hi-detail .link-txt"), "جزئیات لینک باز شد");
+  await p.click(".hi-x"); await sleep(700);
+  ok((await p.locator(".histitem").count()) === 0, "حذف آیتم تاریخچه");
+
+  // ۳.۹ب خروجی داده و کارت سطح
+  await p.click('.tab:has-text("تنظیمات")'); await sleep(500);
+  ok(await p.isVisible('button:has-text("خروجی داده‌های من")'), "دکمه‌ی خروجی JSON هست");
+  await p.click('.tab:has-text("خانه")'); await sleep(500);
+  ok(await p.isVisible(".levelcard"), "کارت سطح/استریک در خانه");
+  ok(await p.isVisible(".lvlbar"), "نوار پیشرفت سطح");
+
+  // ۳.۱۰ خروج و ورود دوباره
+  await p.click('.tab:has-text("تنظیمات")'); await sleep(400);
+  await p.click('button:has-text("خروج از حساب")'); await sleep(500);
+  ok(await p.isVisible(".authcard"), "خروج → فرم ورود");
+  await p.fill('input[autocomplete="username"]', uniq);
+  await p.fill('input[type="password"]', "test1234");
+  await p.click('button:has-text("ورود")'); await sleep(900);
+  ok(await p.isVisible(".settingstab"), "ورود دوباره موفق");
+  const stillAdult = await p.isVisible(".adult-on");
+  ok(stillAdult, "وضعیت +۱۸ بعد از ورود دوباره حفظ شد");
+  await p.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch {} });
+
+  // ۳.۱۱ PWA و فونت
+  const swR = await fetch(BASE + "/sw.js");
+  ok(swR.status === 200, "سرویس‌ورکر /sw.js سرو می‌شود");
+  const mf = await (await fetch(BASE + "/site.webmanifest")).json();
+  ok(mf.name && mf.name.includes("مخ‌یار") && mf.start_url === "/", "مانیفست PWA: مخ‌یار");
+  ok(mf.theme_color === "#0b0810", "تم دارک در مانیفست");
+  const fR = await fetch(BASE + "/fonts/Vazirmatn-var.woff2");
+  ok(fR.status === 200 && (await (await fR.arrayBuffer()).byteLength) > 50000, "فونت وزیرمتن متغیر سرو می‌شود");
   await ctx.close();
 }
+
+/* ================= 3b) API مخ‌یار v5.1: بازیابی/OAuth/کرش‌ها/حذف/قوانین ================= */
+{
+  const u2 = "r" + Date.now().toString(36).slice(-6);
+  const J = { "content-type": "application/json" };
+  const reg = await (await fetch(BASE + "/api/auth/register", { method: "POST", headers: J, body: JSON.stringify({ username: u2, password: "test1234" }) })).json();
+  ok(reg.ok && /^[A-Z0-9]{10}$/.test(reg.recoveryCode || ""), "API ثبت‌نام: کد بازیابی می‌دهد (" + (reg.recoveryCode || "—") + ")");
+  const bad = await fetch(BASE + "/api/auth/recover", { method: "POST", headers: J, body: JSON.stringify({ username: u2, recoveryCode: "WRONG12345", newPassword: "newpass99" }) });
+  ok(bad.status === 401 || bad.status === 400, "بازیابی با کد غلط رد شد (" + bad.status + ")");
+  const rec = await (await fetch(BASE + "/api/auth/recover", { method: "POST", headers: J, body: JSON.stringify({ username: u2, recoveryCode: reg.recoveryCode, newPassword: "newpass99" }) })).json();
+  ok(rec.ok && rec.token, "بازیابی با کد درست → رمز نو و ورود");
+  const relogin = await (await fetch(BASE + "/api/auth/login", { method: "POST", headers: J, body: JSON.stringify({ username: u2, password: "newpass99" }) })).json();
+  ok(relogin.ok, "ورود با رمز نو موفق");
+  const A2 = { ...J, authorization: "Bearer " + relogin.token };
+  const oa = await (await fetch(BASE + "/api/oauth/openrouter/start", { headers: A2 })).json();
+  ok(oa.ok && /openrouter\.ai\/auth\?/.test(oa.url || "") && /callback_url=/.test(oa.url || "") && /code_challenge_method=S256/.test(oa.url || ""), "شروع OAuth: لینک PKCEی OpenRouter ساخته شد");
+  const oaAnon = await fetch(BASE + "/api/oauth/openrouter/start");
+  ok(oaAnon.status === 401, "شروع OAuth بدون توکن → 401");
+  const cb = await fetch(BASE + "/api/oauth/openrouter/callback?st=fake12&code=shortcode1", { redirect: "manual" });
+  const cbLoc = cb.headers.get("location") || String(cb.status);
+  ok(/connect=/.test(cbLoc), "کال‌بک OAuth با ورودی خراب → ریدایرکت خطا (" + cbLoc.slice(0, 24) + ")");
+  const cr = await (await fetch(BASE + "/api/me", { method: "PUT", headers: A2, body: JSON.stringify({ crushes: ["لیلا", "آرمین", "لیلا"] }) })).json();
+  ok(cr.ok && cr.user.profile.crushes.length === 2, "کرش‌های چندتا + حذف تکراری (" + (cr.user.profile.crushes || []).length + ")");
+  const del = await fetch(BASE + "/api/me", { method: "DELETE", headers: A2 });
+  ok(del.status === 200, "حذف کامل حساب انجام شد");
+  const gone = await fetch(BASE + "/api/me", { headers: A2 });
+  ok(gone.status === 401, "بعد از حذف حساب، توکن مردود است");
+  const lg = await (await fetch(BASE + "/legal")).text();
+  ok(lg.includes("حریم خصوصی"), "صفحه‌ی قوانین/حریم خصوصی سرو می‌شود");
+}
+
 
 /* ================= 4) demo panel ================= */
 console.log("— حالت دمو");
@@ -457,21 +636,21 @@ console.log("— ریسپانسیو موبایل");
     await noOverflow(p, "date " + vp.width);
     await ctx.close();
   }
-  // مودال ساخت لینک در کوچک‌ترین عرض
+  // اپ در کوچک‌ترین عرض (320px)
   const { ctx, p } = await page({ viewport: { width: 320, height: 568 } });
   await p.goto(BASE + "/", { waitUntil: "networkidle" });
-  await sleep(400);
-  await p.click("text=ساخت لینک شخصی"); await sleep(400);
-  await p.fill("#builderName", "پریسا");
-  await p.click(".occ-chip >> nth=1"); await sleep(250);
-  const fits = await p.evaluate(() => {
-    const m = document.querySelector(".m-card");
-    const r = m ? m.getBoundingClientRect() : null;
-    return r ? r.left >= 0 && r.right <= window.innerWidth : false;
+  await sleep(700);
+  const fitsApp = await p.evaluate(() => {
+    const t = document.querySelector(".tabbar");
+    const r = t ? t.getBoundingClientRect() : null;
+    return r ? r.left >= 0 && r.right <= window.innerWidth + 1 : false;
   });
-  ok(fits, "مودال ساخت لینک در صفحه‌ی ۳۲۰px جا می‌شود");
+  ok(fitsApp, "تب‌بار اپ در صفحه‌ی 320px جا می‌شود");
+  await p.click('.tab:has-text("ساخت درخواست")'); await sleep(600);
+  await p.fill('input[placeholder="مثلاً: سارا"]', "پریسا"); await sleep(300);
   const lnk = await p.locator(".link-txt").textContent();
-  ok(lnk.includes("occasion=marriage") && lnk.includes("پریسا"), "لینک با مناسبت + فارسی خام: " + lnk.trim().slice(-42));
+  ok(lnk.includes("پریسا"), "ساخت لینک با فارسی خام @320: " + lnk.trim().slice(-28));
+  await noOverflow(p, "app create 320");
   await ctx.close();
 }
 

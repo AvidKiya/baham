@@ -21,6 +21,7 @@ export const metadata = {
     images: ["/assets/og-cover.jpg"],
   },
   icons: { icon: "/assets/icon-192.png", apple: "/assets/icon-192.png" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "مخ‌یار" },
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
 };
 
