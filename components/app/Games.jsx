@@ -3,7 +3,7 @@
 // components/app/Games.jsx — بازی و سرگرمی (کاملاً محلی، بدون هوش مصنوعی)
 // تیک‌تک‌تو با بات · حدس کلمه‌ی عاشقانه · طالع‌بینی قلب — همه با امتیاز رِز
 // ---------------------------------------------------------------------------
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Ic } from "@/lib/icons";
 import { addXp } from "@/lib/rizz";
 import { buzz } from "@/lib/fx";
@@ -12,6 +12,8 @@ const GAMES = [
   { id: "ttt", t: "دوز قلبی", d: "با بات بازی کن؛ قلبا در برابر گل‌ها", ic: "invite" },
   { id: "word", t: "حدس کلمه", d: "کلمه‌ی عاشقانه رو حدس بزن", ic: "pencil" },
   { id: "fortune", t: "طالع‌بینی قلب", d: "یه عدد بزن، ببین قلب چی می‌گه", ic: "sparkles" },
+  { id: "wheel", t: "گردونه شانس", d: "روزی یه بار بچرخون، امتیاز رِز ببر", ic: "star" },
+  { id: "quiz", t: "کوییز رابطه", d: "۸ سؤال ببین چطور توی رابطه‌ای", ic: "smile" },
 ];
 
 export default function Games({ onClose }) {
@@ -36,7 +38,7 @@ export default function Games({ onClose }) {
         ) : (
           <>
             <button className="btn ghost sm gback" type="button" onClick={() => setGame(null)}><Ic n="chev" s={14} style={{ transform: "rotate(90deg)" }} /> همه بازی‌ها</button>
-            {game === "ttt" ? <TicTacToe /> : game === "word" ? <WordGuess /> : <Fortune />}
+            {game === "ttt" ? <TicTacToe /> : game === "word" ? <WordGuess /> : game === "wheel" ? <Wheel /> : game === "quiz" ? <RelQuiz /> : <Fortune />}
           </>
         )}
       </div>
@@ -173,6 +175,108 @@ function Fortune() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+
+/* ---------------- گردونه شانس (روزی یک‌بار) ---------------- */
+const PRIZES = [
+  { t: "+۵ امتیاز رِز", xp: 5 }, { t: "امسال عاشق می‌شی ❤️", xp: 2 },
+  { t: "+۱۰ امتیاز رِز", xp: 10 }, { t: "یه پیام خوش حساب کن 💌", xp: 2 },
+  { t: "+۱۵ امتیاز رِز", xp: 15 }, { t: "قرارت نزدیکه 🌹", xp: 2 },
+  { t: "+۲۰ امتیاز رِز", xp: 20 }, { t: "خوش شانسی! فردا دوباره بچرخون ✨", xp: 3 },
+];
+function Wheel() {
+  const today = () => { try { return new Date().toISOString().slice(0, 10); } catch { return String(Date.now()); } };
+  const key = "mk:spin:" + today();
+  const [used, setUsed] = useState(false);
+  const [spin, setSpin] = useState(false);
+  const [prize, setPrize] = useState(null);
+  const [deg, setDeg] = useState(0);
+  useEffect(() => { try { setUsed(!!localStorage.getItem(key)); } catch {} }, [key]);
+  const go = () => {
+    if (used || spin) return;
+    setSpin(true);
+    const idx = Math.floor(Math.random() * PRIZES.length);
+    const target = 360 * 4 + (360 - idx * (360 / PRIZES.length));
+    setDeg(target);
+    setTimeout(() => {
+      setSpin(false);
+      setPrize(PRIZES[idx]);
+      setUsed(true);
+      addXp(PRIZES[idx].xp);
+      buzz([12, 40, 18]);
+      try { localStorage.setItem(key, "1"); } catch {}
+    }, 2600);
+  };
+  return (
+    <div className="wheel">
+      <div className="wheel-rot" style={{ transform: "rotate(" + deg + "deg)" }}>
+        {PRIZES.map((p, i) => (
+          <div key={i} className="wseg" style={{ transform: "rotate(" + i * (360 / PRIZES.length) + "deg)" }}>
+            <span>{p.t}</span>
+          </div>
+        ))}
+      </div>
+      <div className="wheel-pin">▼</div>
+      {prize ? <p className="fort-txt">جایزه‌ت: {prize.t} (+{faNum(prize.xp)} رِز)</p> : <p className="dim small center">{used ? "امروز چرخوندی؛ فردا دوباره بِه!" : "روزی یه بار — شانست رو امتحان کن"}</p>}
+      <button className="btn primary" type="button" onClick={go} disabled={used || spin}>{spin ? "می‌چرخه…" : "بچرخون!"}</button>
+    </div>
+  );
+}
+const faNum = (n) => { try { return Number(n).toLocaleString("fa-IR"); } catch { return String(n); } };
+
+
+/* ---------------- کوییز رابطه ---------------- */
+const QZ = [
+  { q: "طرف یه پیام سرد می‌فرسته؛ واکنشت؟", o: ["همون‌طور سرد جواب می‌دم", "شوخی می‌کنم یخ رو می‌شکنم", "خیلی تحلیل می‌کنم", "منتظر می‌مونه خودش بگه"], a: 1 },
+  { q: "اولین قرار کجا باشه بهتره؟", o: ["کافه‌ی خلوت", "سینما", "پارک و بستنی", "یه جا شلوغ"], a: 2 },
+  { q: "بامزه‌ترین راه مخ زدن کدومه؟", o: ["متنای طولانی", "شوخی لحظه‌ای", "استوری‌های تلخ", "سکوت مرگبار"], a: 1 },
+  { q: "اگه دیر جواب بده…", o: ["پیام پشت پیام", "آروم منتظر می‌مونم", "منم دیر جواب می‌دم", "کلا بی‌خیال می‌شم"], a: 1 },
+  { q: "بهترین ویژگی تو تو رابطه؟", o: ["صبورم", "خندونم", "رکم", "وفادارم"], a: 3 },
+  { q: "یه تعارف چطور جواب می‌دی؟", o: ["انکار می‌کنم", "شکر می‌کنم بامزه", "سکوت خوشمزه", "معامله می‌کنم"], a: 1 },
+  { q: "قرار بدون گوشی…", o: ["معرکه‌ست", "سخت ولی می‌ارزه", "چرا بی‌گوشی؟!", "نصفه‌نیمه"], a: 0 },
+  { q: "آخرین قدم قبل از رل زدن؟", o: ["مطمئن‌ش می‌کنم حسش رو", "شعر می‌نویسم", "دست به انتظار می‌زنم", "یه لینک دعوت‌نامه می‌فرستم!"], a: 3 },
+];
+function RelQuiz() {
+  const [i, setI] = useState(0);
+  const [score, setScore] = useState(0);
+  const [pick, setPick] = useState(null);
+  const done = i >= QZ.length;
+  const choose = (k) => {
+    if (pick !== null) return;
+    setPick(k);
+    const good = k === QZ[i].a;
+    const ns = score + (good ? 1 : 0);
+    if (good) buzz(6); else buzz(20);
+    setTimeout(() => {
+      setPick(null);
+      setI(i + 1);
+      setScore(ns);
+      if (i + 1 >= QZ.length) { addXp(ns * 2); buzz([12, 40, 18]); }
+    }, 550);
+  };
+  if (done) {
+    return (
+      <div className="qz">
+        <div className="fort-heart">{score >= 6 ? "💖" : score >= 4 ? "❤️" : "💛"}</div>
+        <p className="fort-txt">{faNum(score)} از {faNum(QZ.length)} درست!</p>
+        <p className="dim small center">{score >= 7 ? "استاد مخ زدنی!" : score >= 5 ? "خیلی خوبی؛ یه ذره دیگه!" : "بیشتر تمرین کن؛ چت‌یار کمکت هست 😉"}</p>
+        <button className="btn ghost sm" type="button" onClick={() => { setI(0); setScore(0); }}><Ic n="refresh" s={14} /> دوباره</button>
+      </div>
+    );
+  }
+  return (
+    <div className="qz">
+      <p className="dim small center">سؤال {faNum(i + 1)} از {faNum(QZ.length)} · {faNum(score)} درست</p>
+      <p className="qz-q">{QZ[i].q}</p>
+      <div className="qz-opts">
+        {QZ[i].o.map((t, k) => (
+          <button key={k} type="button" className={"qopt" + (pick === null ? "" : k === QZ[i].a ? " good" : pick === k ? " bad" : " dim")}
+            onClick={() => choose(k)} disabled={pick !== null}>{t}</button>
+        ))}
+      </div>
     </div>
   );
 }

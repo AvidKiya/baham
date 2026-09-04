@@ -179,6 +179,40 @@ function cleanName(v) {
   return String(v || "").trim().replace(/\s+/g, "%20").slice(0, 32);
 }
 
+function ReportsCard({ password }) {
+  const [list, setList] = useState(null);
+  const [msg, setMsg] = useState("");
+  const load = async () => {
+    const r = await fetch("/api/reports", { headers: { "x-admin-key": password } });
+    const j = await r.json().catch(() => null);
+    if (j && j.ok) { setList(j.reports || []); setMsg(""); }
+    else setMsg((j && j.message) || "گرفته نشد؛ رمز رو چک کن");
+  };
+  const clearAll = async () => {
+    if (!confirm("همه‌ی گزارش‌ها پاک بشن؟")) return;
+    await fetch("/api/reports", { method: "DELETE", headers: { "x-admin-key": password } });
+    load();
+  };
+  return (
+    <section className="adm-card glass">
+      <h2>🚨 گزارش‌های کشف</h2>
+      <p className="adm-hint" style={{ marginTop: -8 }}>کاربرایی که تو بخش کشف گزارش شدن. بازبینی کن و اگه لازمه دستی پیگیری کن.</p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button className="btn ghost sm" type="button" onClick={load}>بارگذاری</button>
+        {list && list.length ? <button className="btn ghost sm" type="button" onClick={clearAll}>پاک کردن همه</button> : null}
+      </div>
+      {msg ? <p className="adm-hint">{msg}</p> : null}
+      {list ? list.length === 0 ? <p className="adm-hint">هیچ گزارشی نیست؛ عالیه 🎉</p> : (
+        <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+          {list.map((r, i) => (
+            <li key={i} style={{ fontSize: 13 }}>«{String(r.by)}» گزارش داد: <b>{String(r.target)}</b> — {new Date(r.ts).toLocaleString("fa-IR")}</li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
 export default function AdminPanel() {
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState("");
@@ -623,6 +657,9 @@ export default function AdminPanel() {
               </section>
             </>
           ) : null}
+
+          {/* ---------------- reports ---------------- */}
+          {tab === "stats" ? <ReportsCard password={password} /> : null}
 
           {/* ---------------- stats ---------------- */}
           {tab === "stats" ? (

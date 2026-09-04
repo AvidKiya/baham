@@ -1121,7 +1121,7 @@ html,body{height:100%}
 .roomrow .ansinp{background:var(--card2);border-color:var(--line);color:var(--txt)}
 
 .gscrim{position:fixed;inset:0;background:rgba(10,6,22,.55);backdrop-filter:blur(6px);z-index:95;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
-.gpanel{width:100%;max-width:520px;max-height:86vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:16px 16px 22px;animation:riseIn .3s ease}
+.gpanel{width:100%;max-width:520px;max-height:86vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:16px 16px calc(92px + env(safe-area-inset-bottom));animation:riseIn .3s ease}
 .glist{display:flex;flex-direction:column;gap:8px}
 .gitem{flex-direction:row;display:flex;align-items:center;gap:10px;padding:11px;text-align:right;cursor:pointer;font:inherit;color:inherit;width:100%}
 .gback{margin-bottom:8px}
@@ -1158,3 +1158,179 @@ html,body{height:100%}
 [data-theme="light"] .anschip{background:rgba(255,255,255,.7);color:var(--txt)}
 [data-theme="light"] .ansinp{background:rgba(255,255,255,.7);color:var(--txt)}
 [data-theme="light"] .anserr{color:#e11d48}
+
+/* ================= v5.5 — کشف پلاس ================= */
+.hi-ava{flex:none;width:35px;height:35px;border-radius:12px;object-fit:cover}
+.sw-img{flex:none;width:48px;height:48px;border-radius:17px;object-fit:cover;border:2px solid var(--line)}
+.sw-shared{margin-right:auto;font-size:10.5px;font-weight:800;color:#f59e0b;background:rgba(245,158,11,.13);border-radius:9px;padding:3px 8px;display:inline-flex;gap:4px;align-items:center}
+.sw-status{margin:0;font-size:12.5px;font-weight:700;color:var(--acc);background:var(--accsoft);border-radius:11px;padding:7px 11px;line-height:1.8}
+.sw-flag{align-self:flex-start;background:none;border:0;color:var(--dim2);font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:4px;align-items:center;padding:2px 0}
+.sw-flag:hover{color:var(--warn)}
+.fanous{padding:0;border:0;background:none}
+.fanous-card{border:2px dashed color-mix(in srgb,#f59e0b 55%,transparent);box-shadow:0 6px 20px -10px rgba(245,158,11,.4)}
+.fn-tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:#b45309;background:rgba(245,158,11,.14);border-radius:11px;padding:5px 11px;margin:0 0 8px}
+.ava-row{display:flex;align-items:center;gap:12px;margin:4px 0 12px}
+.ava-big{width:64px;height:64px;border-radius:20px;object-fit:cover;border:2px solid var(--line)}
+.ava-big.ph{display:grid;place-items:center;background:var(--accsoft);color:var(--acc);border-style:dashed}
+.ava-btns{display:flex;flex-direction:column;gap:7px}
+.filt-row{display:flex;gap:7px;margin:8px 0 2px}
+.filt-row .inp{min-height:41px;font-size:13px;text-align:center}
+.filt-row .inp::placeholder{font-size:11px}
+
+.rgame{padding:13px;margin:2px 0 10px}
+.ttt-grid.sm{grid-template-columns:repeat(3,56px)}
+.ttt-grid.sm .ttc{width:56px;height:56px;font-size:23px;border-radius:13px}
+.gstart{margin:2px 0 10px}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:13px;padding:6px 0}
+.wheel-rot{position:relative;width:210px;height:210px;border-radius:50%;border:5px solid var(--acc2);overflow:hidden;transition:transform 2.4s cubic-bezier(.15,.9,.2,1);background:conic-gradient(#ff4f8b 0 45deg,#a855f7 45deg 90deg,#f59e0b 90deg 135deg,#34d399 135deg 180deg,#ff4f8b 180deg 225deg,#a855f7 225deg 270deg,#f59e0b 270deg 315deg,#34d399 315deg 360deg)}
+.wseg{position:absolute;left:50%;top:50%;width:50%;height:16px;transform-origin:0 50%;display:flex;align-items:center;justify-content:flex-end;padding-right:7px}
+.wseg span{font-size:8.5px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);white-space:nowrap;transform:translateX(14px)}
+.wheel-pin{font-size:22px;color:var(--acc);margin-top:-186px;margin-bottom:164px;pointer-events:none}
+
+
+/* ================= v5.6 — جستجو، واکنش، کوییز ================= */
+.findrow{margin:6px 0 4px}
+.findrow .inp{text-align:center;direction:ltr}
+.reactrow{display:flex;gap:6px;justify-content:flex-end;margin:2px 0 6px}
+.rbtn{width:34px;height:34px;border-radius:11px;border:1.5px solid var(--line);background:var(--card2);color:var(--dim);cursor:pointer;display:grid;place-items:center;transition:.15s}
+.rbtn:hover{color:var(--acc);border-color:var(--acc);transform:translateY(-1px)}
+.dreact{display:flex;justify-content:flex-start}
+.dreact.mine{justify-content:flex-end}
+.dreact svg{background:var(--card2);border:1.5px solid var(--line);border-radius:50%;padding:6px;color:var(--acc);box-shadow:0 2px 8px -3px rgba(0,0,0,.2)}
+.qz{display:flex;flex-direction:column;align-items:center;gap:11px;padding:4px 0}
+.qz-q{margin:0;font-size:15.5px;font-weight:800;line-height:2;text-align:center}
+.qz-opts{display:flex;flex-direction:column;gap:8px;width:100%}
+.qopt{width:100%;min-height:46px;border-radius:13px;border:1.5px solid var(--line);background:var(--card2);color:var(--txt);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s;padding:0 14px}
+.qopt:hover{border-color:var(--acc)}
+.qopt.good{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.qopt.bad{border-color:var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.qopt.dim{opacity:.45}
+.statrow{flex-wrap:wrap}
+.statrow .stat{min-width:70px}
+
+
+/* ================= v5.7 — تب «ما» ================= */
+.ustab{display:flex;flex-direction:column}
+.pmscard{border:1.5px solid color-mix(in srgb,#f59e0b 25%,transparent)}
+.pms-alert{background:color-mix(in srgb,#ef4444 12%,transparent);border:1.5px solid color-mix(in srgb,#ef4444 35%,transparent);color:#ef4444;border-radius:13px;padding:9px 13px;font-size:13px;font-weight:800;margin-bottom:10px}
+[data-theme="dark"] .pms-alert{color:#fca5a5}
+.phasebox{border:2px solid;border-radius:17px;padding:13px 14px;margin-bottom:10px}
+.phase-head{display:flex;align-items:center;gap:11px}
+.phase-emoji{font-size:27px}
+.phase-head b{font-size:15.5px;display:block}
+.phase-desc{margin:8px 0 0;font-size:12.5px;color:var(--dim);line-height:1.9}
+.ptips{display:flex;flex-direction:column;gap:6px;border-top:1.5px dashed var(--line);margin-top:12px;padding-top:12px}
+.ptips ul{margin:0;padding-right:18px;font-size:13px;line-height:2;color:var(--txt)}
+.ptips ul.donts{color:var(--warn)}
+.ptips .flbl{margin-top:6px}
+.ptips .flbl.warn{color:var(--warn)}
+.gift-one,.say-one{margin:0;background:var(--accsoft);border-radius:11px;padding:8px 12px;font-size:13px;font-weight:700;line-height:1.9}
+.say-one{background:color-mix(in srgb,#f59e0b 12%,transparent)}
+.tiny.self{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.daysbig{display:flex;flex-direction:column;align-items:center;padding:10px 0 6px}
+.daysbig b{font-size:44px;font-weight:900;background:linear-gradient(95deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.2}
+.daysbig span{font-size:13px;font-weight:800;color:var(--dim)}
+.occ-add{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 4px}
+.occ-add .inp{flex:1;min-width:120px}
+.occ-add input[type="date"]{flex:0 0 150px}
+.occrow{flex-direction:row;display:flex;align-items:center;gap:10px;padding:10px 12px;text-align:right}
+.occ-ic{font-size:19px;flex:none}
+.gift-chip{margin-right:auto;font-size:10.5px;font-weight:800;color:#b45309;background:rgba(245,158,11,.13);border-radius:10px;padding:4px 9px;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help}
+
+/* ============================ v6.0 — هاب رابطه ============================ */
+.usegs{flex-wrap:wrap}
+.usegs .seg-btn{flex:1 1 45%}
+.pinbox{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:26px 18px}
+.pinbox h3{font-size:16px;font-weight:800}
+.pinbox .phase-emoji{font-size:38px}
+.pininp{max-width:190px;text-align:center;font-size:20px;letter-spacing:8px}
+
+/* حال روزانه */
+.moodrow{display:flex;gap:7px;margin-top:10px}
+.moodbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 4px;border-radius:15px;border:1.5px solid var(--line);background:var(--card2);cursor:pointer;transition:.18s;font:inherit}
+.moodbtn span{font-size:21px}
+.moodbtn b{font-size:10.5px;font-weight:800;color:var(--dim)}
+.moodbtn.sel{border-color:var(--acc2);background:var(--accsoft);transform:scale(1.04)}
+.moodbtn.sel b{color:var(--acc)}
+.moodstrip{display:flex;gap:6px;flex-wrap:wrap}
+.moodstrip span{width:36px;height:36px;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;font-size:17px}
+.insight{margin-top:12px;background:var(--accsoft);border:1.5px solid color-mix(in srgb,var(--acc) 30%,transparent);border-radius:15px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.insight b{font-size:13px;color:var(--acc)}
+.insight p{margin:0;font-size:13px;line-height:1.9}
+
+/* زبان عشق */
+.llbox{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;padding:14px 10px;border-radius:16px;background:var(--card2);border:1.5px solid var(--line)}
+.llbox .phase-emoji{font-size:36px}
+.llbox b{font-size:16px;font-weight:900}
+.qz-q{font-size:14.5px;font-weight:800;line-height:1.9;margin:8px 0 10px}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qopt{text-align:right;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);color:var(--txt);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:.18s}
+.qopt:hover{border-color:var(--acc2);background:var(--accsoft)}
+
+/* پارتنرمن */
+.wishold{display:block;font-size:12px;line-height:1.9;font-weight:700}
+.giftbox{margin-top:10px;background:linear-gradient(135deg,rgba(245,158,11,.09),rgba(236,72,153,.07));border:1.5px solid color-mix(in srgb,#f59e0b 30%,transparent);border-radius:16px;padding:13px 15px}
+.giftbox .big-gift{font-size:15px;font-weight:900}
+.strike{text-decoration:line-through;color:var(--dim2)}
+.dimcard2{opacity:.55}
+
+/* سلامت رابطه */
+.scorerow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.sc-lbl{flex:0 0 115px;font-size:12.5px;font-weight:800;color:var(--dim)}
+.scorerow input[type="range"]{flex:1;accent-color:var(--acc);height:26px}
+.sc-num{width:26px;text-align:center;font-size:14px;font-weight:900;color:var(--acc)}
+.scoreres{display:flex;flex-direction:column;gap:5px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin:10px 0}
+.scoreres b{font-size:19px;font-weight:900}
+.scoreres p{margin:0;font-size:12.5px;line-height:1.8;color:var(--dim)}
+
+/* چالش ۷ روزه */
+.chbar{display:flex;gap:5px;margin:10px 0}
+.chd{flex:1;height:34px;display:grid;place-items:center;background:var(--card2);border:1.5px solid var(--line);border-radius:11px;font-size:12.5px;font-weight:800;color:var(--dim2)}
+.chd.on{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#fff}
+.fort-txt{font-size:13.5px;font-weight:800;color:var(--ok);text-align:center;margin:10px 0}
+
+/* صندوق ناگفته + مدرسه */
+.wchk{background:none;border:0;font-size:19px;cursor:pointer;padding:2px}
+.lesson{border:1.5px solid var(--line);border-radius:15px;overflow:hidden;background:var(--card2)}
+.lesson-body{margin:0;padding:0 13px 13px;font-size:13.5px;line-height:2.1;color:var(--txt);border:0}
+.est{margin-right:auto;font-size:9.5px;font-weight:700;color:var(--dim2);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.pinrow{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 4px}
+.pinrow .inp{flex:1;min-width:120px}
+
+/* ============================ v6.1 — SOS شناور + مغز + قرارساز ============================ */
+.sosfab{position:fixed;bottom:86px;inset-inline-end:14px;z-index:60;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid color-mix(in srgb,var(--acc) 55%,transparent);background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 10px 26px -8px color-mix(in srgb,var(--acc) 70%,transparent)}
+.sosscrim{position:fixed;inset:0;z-index:80;background:rgba(8,6,15,.55);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .18s ease}
+.sossheet{width:100%;max-width:430px;max-height:82vh;overflow:auto;background:var(--card);border-radius:24px 24px 0 0;padding:18px 18px 26px;animation:sheetUp .25s ease}
+.sos-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sos-head h3{display:flex;align-items:center;gap:7px;font-size:16px;font-weight:900}
+.sos-head button{background:none;border:0;color:var(--dim);cursor:pointer;padding:6px}
+.sospicks{display:flex;flex-direction:column;gap:8px}
+.sospick{display:flex;align-items:center;gap:9px;min-height:50px;padding:0 15px;border-radius:15px;border:1.5px solid var(--line);background:var(--card2);color:var(--txt);font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.18s}
+.sospick:hover{border-color:var(--acc2);background:var(--accsoft)}
+.sosans{display:flex;flex-direction:column;gap:8px;margin:10px 0 14px}
+.sosans-one{display:flex;flex-direction:column;gap:6px;text-align:right;padding:12px 14px;border-radius:15px;border:1.5px solid var(--line);background:var(--card2);color:var(--txt);font:inherit;font-size:13.5px;line-height:1.9;cursor:pointer;transition:.18s}
+.sosans-one:hover{border-color:var(--acc2)}
+.sosans-one b{font-size:10.5px;color:var(--acc);font-weight:800}
+.brainrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:2px 0 10px}
+.brainchip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--card2);color:var(--dim);font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:.18s}
+.brainchip.on{background:var(--accsoft);border-color:color-mix(in srgb,var(--acc) 55%,transparent);color:var(--acc)}
+.dplanner{display:flex;flex-direction:column;gap:9px;margin-bottom:12px;padding:13px 14px}
+.dpcity{min-height:41px;font-size:13px}
+.dprow{display:flex;flex-direction:column;gap:6px}
+.dpk{font-size:11px;font-weight:800;color:var(--dim2)}
+.dpopts{display:flex;gap:6px;flex-wrap:wrap}
+.datecond{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--accsoft);border:1.5px dashed color-mix(in srgb,var(--acc) 45%,transparent);border-radius:13px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--acc)}
+.occgifts{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px 2px}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ============================ v6.2 — همراه دونفره ============================ */
+.sospick.on{border-color:var(--acc2);background:var(--accsoft)}
+.cyccheck{display:flex;align-items:flex-start;gap:9px;margin:12px 0;font-size:13px;line-height:1.8;cursor:pointer}
+.cyccheck input{margin-top:5px;accent-color:var(--acc)}
+.confrow{display:flex;flex-direction:column;gap:4px;background:var(--card2);border:1px solid var(--line);border-radius:13px;padding:11px 13px}
+.confrow p{margin:0;font-size:13px;line-height:1.9}
+.confside{font-size:10.5px;font-weight:900;border-radius:7px;padding:2px 7px;margin-inline-end:6px}
+.confside.me{color:#15803d;background:rgba(34,197,94,.13)}
+.confside.them{color:#b45309;background:rgba(245,158,11,.13)}
+.confsteps{margin:4px 0 0;padding-right:20px;font-size:13px;line-height:2.1}

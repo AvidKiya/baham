@@ -7,12 +7,14 @@ import { getToken, getUser, setSession, clearSession, api } from "@/lib/appauth"
 import { Ic, Logo } from "@/lib/icons";
 import { buzz } from "@/lib/fx";
 import { touchDay } from "@/lib/rizz";
+import { SOS_QUICK } from "@/lib/relationship";
 import Onboarding from "./Onboarding";
 import AuthView from "./AuthView";
 import HomeTab from "./HomeTab";
 import ChatTab from "./ChatTab";
 import CreateTab from "./CreateTab";
 import DiscoverTab from "./DiscoverTab";
+import UsTab from "./UsTab";
 import HistoryTab from "./HistoryTab";
 import SettingsTab from "./SettingsTab";
 
@@ -21,6 +23,7 @@ const TABS = [
   { id: "chat", ic: "chatSpark", label: "چت‌یار" },
   { id: "discover", ic: "sparkles", label: "کشف" },
   { id: "create", ic: "invite", label: "ساخت درخواست" },
+  { id: "us", ic: "calHeart", label: "ما" },
   { id: "history", ic: "clock", label: "تاریخچه" },
   { id: "settings", ic: "gear", label: "تنظیمات" },
 ];
@@ -32,10 +35,20 @@ export const ACCENTS = {
   teal: ["#2dd4bf", "#3b82f6"],
 };
 
+const effTheme = (mode) => {
+  if (mode !== "auto") return mode;
+  const h = new Date().getHours();
+  let dark = h >= 19 || h < 6;
+  try { if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) dark = true; } catch {}
+  return dark ? "dark" : "light";
+};
+
 export default function AppShell() {
   const [booted, setBooted] = useState(false);
+  const [themeMode, setThemeModeState] = useState("light");
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState("home");
+  const [sosOpen, setSosOpen] = useState(false);
   const [unreplied, setUnreplied] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [installEvt, setInstallEvt] = useState(null);
@@ -47,12 +60,22 @@ export default function AppShell() {
 
   useEffect(() => {
     try {
+      /* لینک دعوت پارتنر: ?pair=CODE → تب «ما» بخش همراه */
+      const qp = new URLSearchParams(window.location.search || "");
+      const pairC = qp.get("pair");
+      if (pairC && /^[a-f0-9]{4,16}$/i.test(pairC)) {
+        localStorage.setItem("mk:paircode", pairC.toLowerCase());
+        try { window.history.replaceState({}, "", "/"); } catch {}
+        setTab("us");
+        try { localStorage.setItem("mk:tab", "us"); } catch {}
+      }
       const t = localStorage.getItem("mk:tab");
       if (t && TABS.some((x) => x.id === t)) setTab(t);
       const a = localStorage.getItem("mk:accent");
       if (a && ACCENTS[a]) setAcc(a);
       const th = localStorage.getItem("mk:theme");
       if (th === "dark" || th === "light") setTheme(th);
+      else if (th === "auto") { setTheme(effTheme("auto")); setThemeMode("auto"); }
       else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark");
     } catch {}
     touchDay();
@@ -68,6 +91,9 @@ export default function AppShell() {
     }
     const bip = (e) => { e.preventDefault(); setInstallEvt(e); };
     window.addEventListener("beforeinstallprompt", bip);
+    const thTimer = setInterval(() => {
+      try { if (localStorage.getItem("mk:theme") === "auto") setTheme(effTheme("auto")); } catch {}
+    }, 60000);
     try {
       const q = new URLSearchParams(location.search);
       if (q.get("connected") === "1") { setToast("وصل شد؛ چت‌یار روشنه ✨"); setTimeout(() => api("/api/me").then((r) => { if (r.ok && r.data && r.data.user) saveUserRef(r.data.user); }), 400); }
@@ -75,7 +101,7 @@ export default function AppShell() {
       if (q.get("connected") || q.get("connect")) history.replaceState({}, "", "/");
     } catch {}
     setBooted(true);
-    return () => window.removeEventListener("beforeinstallprompt", bip);
+    return () => { clearInterval(thTimer); window.removeEventListener("beforeinstallprompt", bip); };
   }, []);
 
   const saveUser = (u) => {
@@ -109,7 +135,8 @@ export default function AppShell() {
     try { localStorage.setItem("mk:accent", k); } catch {}
   };
   const setThemeMode = (m) => {
-    setTheme(m);
+    setThemeModeState(m);
+    setTheme(effTheme(m));
     try { localStorage.setItem("mk:theme", m); } catch {}
   };
   const install = async () => {
@@ -137,8 +164,8 @@ export default function AppShell() {
           <div className="topname">مخ‌یار</div>
         </div>
         <div className="topuser" style={{ marginRight: 6, marginLeft: 6 }}>{user ? "@" + user.username : "مهمان"}</div>
-        <button className="toptheme" type="button" aria-label={theme === "dark" ? "تم روشن" : "تم تاریک"} onClick={() => setThemeMode(theme === "dark" ? "light" : "dark")}>
-          <Ic n={theme === "dark" ? "sun" : "moon"} s={19} />
+        <button className="toptheme" type="button" aria-label={themeMode === "auto" ? "تم خودکار" : theme === "dark" ? "تم روشن" : "تم تاریک"} onClick={() => setThemeMode(themeMode === "light" ? "dark" : themeMode === "dark" ? "auto" : "light")}>
+          <Ic n={themeMode === "auto" ? "clock" : theme === "dark" ? "sun" : "moon"} s={19} />
         </button>
       </header>
 
@@ -182,6 +209,7 @@ export default function AppShell() {
         {tab === "chat" ? (user ? <ChatTab user={user} go={go} onUser={saveUser} /> : <Gate />) : null}
         {tab === "create" ? <CreateTab user={user} go={go} cfg={null} onUnreplied={setUnreplied} /> : null}
       {tab === "discover" ? (user ? <DiscoverTab user={user} go={go} /> : <Gate />) : null}
+      {tab === "us" ? <UsTab /> : null}
         {tab === "history" ? (user ? <HistoryTab user={user} /> : <Gate />) : null}
         {tab === "settings" ? (user ? <SettingsTab user={user} onUser={saveUser} logout={logout} installEvt={installEvt} install={install} acc={acc} setAcc={setAccent} theme={theme} setTheme={setThemeMode} /> : <Gate />) : null}
       </main>
@@ -204,6 +232,11 @@ export default function AppShell() {
         </div>
       ) : null}
 
+      <button type="button" className="sosfab" aria-label="الان چی بگم؟" onClick={() => { setSosOpen(true); try { buzz(6); } catch {} }}>
+        <Ic n="alert" s={17} /> <span>الان چی بگم؟</span>
+      </button>
+      {sosOpen ? <SosSheet onClose={() => setSosOpen(false)} onAsk={(t) => { try { localStorage.setItem("mk:sosdraft", t); } catch {} go("chat"); setSosOpen(false); }} /> : null}
+
       <nav className="tabbar" role="tablist" aria-label="بخش‌های مخ‌یار">
         {TABS.map((t) => (
           <button key={t.id} type="button" role="tab" aria-selected={tab === t.id}
@@ -214,6 +247,47 @@ export default function AppShell() {
           </button>
         ))}
       </nav>
+    </div>
+  );
+}
+
+/* ---------- شیت «الان چی بگم؟» (v6.1) ---------- */
+function SosSheet({ onClose, onAsk }) {
+  const [pick, setPick] = useState(null);
+  const [copied, setCopied] = useState("");
+  return (
+    <div className="sosscrim" onClick={onClose}>
+      <div className="sossheet" onClick={(e) => e.stopPropagation()}>
+        <div className="sos-head">
+          <h3><Ic n="alert" s={17} /> الان چی بگم؟</h3>
+          <button type="button" aria-label="بستن" onClick={onClose}><Ic n="x" s={16} /></button>
+        </div>
+        {!pick ? (
+          <>
+            <p className="dim small">وضعیت الان‌تون رو بزن؛ سه جوابِ آماده‌ی همین لحظه می‌دم — بدون اینترنت هم کار می‌کنه.</p>
+            <div className="sospicks">
+              {SOS_QUICK.map((s) => (
+                <button key={s.id} type="button" className="sospick" onClick={() => setPick(s)}>
+                  <Ic n="chatSpark" s={15} /> {s.t}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <button type="button" className="btn ghost sm" onClick={() => setPick(null)}><Ic n="chev" s={14} style={{ transform: "rotate(180deg)" }} /> {pick.t}</button>
+            <div className="sosans">
+              {pick.a.map((x, i) => (
+                <button key={i} type="button" className="sosans-one" onClick={() => { try { navigator.clipboard.writeText(x); } catch {} setCopied(String(i + 1)); setTimeout(() => setCopied(""), 1500); }}>
+                  <span>{x}</span>
+                  <b>{copied === String(i + 1) ? "کپی شد" : "کپی"}</b>
+                </button>
+              ))}
+            </div>
+            <button className="btn primary big" type="button" onClick={() => onAsk("وضعیت الان: " + pick.t + ". جوابای شخصی‌تر و دقیق‌تر می‌خوام.")}>جواب شخصی‌تر از چت‌یار بگیر</button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -266,6 +266,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
         <div className="seg mini" style={{ marginBottom: "14px" }}>
           <button type="button" className={theme === "light" ? "on" : ""} onClick={() => setTheme("light")}><Ic n="sun" s={15} /> روشن (لاوندر)</button>
           <button type="button" className={theme === "dark" ? "on" : ""} onClick={() => setTheme("dark")}><Ic n="moon" s={15} /> تاریک (شب)</button>
+          <button type="button" className={theme === "auto" ? "on" : ""} onClick={() => setTheme("auto")}><Ic n="clock" s={15} /> خودکار (شب‌ها تاریک)</button>
         </div>
         <div className="flbl">رنگ اصلی اپ</div>
         <div className="accrow">
@@ -349,7 +350,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
 
       <section className="card setsec aboutsec">
         <h3><Ic n="info" s={17} /> درباره</h3>
-        <p className="dim small">مخ‌یار · نسخه ۵٫۴ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
+        <p className="dim small">مخ‌یار · نسخه ۶٫۲ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
         <p className="dim tiny">پاسخ‌ها با اکانت/کلید خودت ساخته می‌شوند؛ هیچ کلیدی هیچ‌جا جز سرور خودت ذخیره نمی‌شه.</p>
         <div className="m-row">
           <a className="btn ghost sm" href="/legal"><Ic n="shield" s={15} /> قوانین و حریم خصوصی</a>

@@ -51,6 +51,13 @@ const MODES = {
   analyze: "متن یا تصویر پروفایل/چت طرف مقابل را تحلیل کن: شخصیت محتمل، نشانه‌های علاقه یا بی‌علاقگی، و سه پیشنهاد پیامِ متناسب.",
   date: "سه ایده‌ی قرار متناسب با شرط کاربر بده؛ برای هر کدام مکان، بهانه و یک جمله‌ی دعوتِ آماده بنویس.",
   sim: "شبیه‌ساز کرش — در نقش طرف مقابل کاربر گفت‌وگو کن (تمرین زندهٔ مخ زدن).",
+  comfort: "دلداری — برای وقتی طرف مقابل حالش بد است؛ سه پیام همدلانه بدون نصیحت‌کاری و بدون کوچک‌کردن احساسش؛ اول احساس را تأیید کن بعد (فقط اگر مناسب بود) راه بشمار.",
+  congrats: "تبریک — سه پیام تبریک پرانرژی و شخصی متناسب با مناسبتی که کاربر گفته؛ بیش‌ازحد تشریفاتی نباشد.",
+  express: "ابراز علاقه — سه پیام صادقانه برای گفتن حس کاربر؛ متناسب با مرحله‌ی رابطه (تازه‌آشنا تا جدی)؛ پوشالی و کلیشه‌ای نباشد.",
+  nothing: "جواب به «هیچی نیستم» — طرف مقابل منفعل و ساکت است؛ سه پیام که بدون فشار و بازخواست در را باز نگه دارد و حرفِ پشتِ سکوتش را با ملایمت بیرون بکشد.",
+  apology: "آشتی/عذرخواهی واقعی — با مسئولیت‌پذیریِ روشن (بدن «متأسفم که…») سه پیشنهاد بده؛ بدون توجیه اضافه و بدون شرط («اگر ناراحت شدی…» ممنوع).",
+  sensitive: "موضوع حساس رابطه — برای آغاز یک گفت‌وگوی سخت، سه جمله‌ی شروعِ ملایمِ بدون سرزنش (با «من» جمله‌بندی شود نه «تو»)؛ و دو جمله که حتماً نگوی.",
+  sos: "الان چی بگم؟ — کاربر وسط مکالمه است و جواب فوری می‌خواهد؛ دقیقاً به آخرین پیام طرف، سه جواب کوتاهِ آماده‌ی ارسال بده (سرد، گرم، شاد) و در یک خط بگو کدام را پس بده.",
   aftercare: "پس‌مراقبت (aftercare) — پیام‌های گرم، آرام و مراقبت‌محور برای بعد از یک بازی/لحظه‌ی بزرگسال؛ لحن نرم، امن‌ساز و مسئولانه. سه پیام کوتاه بده.",
   game: "بازی کارتی (محلی) — اگر پیام آمد، راهنمای کوتاه بازی حقیقت یا جرأت بده.",
 };
@@ -197,6 +204,37 @@ function safeUser(u) {
   };
 }
 
+/* ---------- حالت پارتنر (v6.2): جفت‌شدن دو حساب ---------- */
+async function pairGet(env, key) {
+  try { const r = await env.CONFIG.get(key); return r ? JSON.parse(r) : null; } catch { return null; }
+}
+async function pairPut(env, key, val, ttl) {
+  try { await env.CONFIG.put(key, JSON.stringify(val), ttl ? { expirationTtl: ttl } : undefined); } catch {}
+}
+async function pairDel(env, key) {
+  try { await env.CONFIG.delete(key); } catch {}
+}
+const SHARE_STATUS = new Set(["", "low", "talk", "hard"]);
+const SHARE_CYCLE = new Set(["", "period", "follicular", "ovulation", "pms", "luteal", "due"]);
+async function partnerFullState(env, uid) {
+  const pid = await env.CONFIG.get("uspair:" + uid);
+  if (!pid) return { paired: false };
+  const pair = await pairGet(env, "pair:" + pid);
+  if (!pair || (pair.a !== uid && pair.b !== uid)) { await pairDel(env, "uspair:" + uid); return { paired: false }; }
+  const otherId = pair.a === uid ? pair.b : pair.a;
+  const mine = (await pairGet(env, "pshare:" + uid)) || { name: "", status: "", mood: "", cycle: "" };
+  const theirs = (await pairGet(env, "pshare:" + otherId)) || { name: "پارتنر", status: "", mood: "", cycle: "" };
+  const myConf = await pairGet(env, "pconf:" + uid);
+  const theirConf = await pairGet(env, "pconf:" + otherId);
+  return {
+    paired: true, since: pair.ts, otherId,
+    partner: { name: theirs.name || "پارتنر", status: theirs.status || "", mood: theirs.mood || "", cycle: theirs.cycle || "", ts: theirs.ts || 0 },
+    me: { status: mine.status || "", mood: mine.mood || "", cycle: mine.cycle || "" },
+    myConf: myConf ? { topic: myConf.topic, ans: myConf.ans, ts: myConf.ts } : null,
+    theirConf: theirConf ? { topic: theirConf.topic, ans: theirConf.ans, ts: theirConf.ts } : null,
+  };
+}
+
 async function requireUser(request, env) {
   const uid = await readToken(request, env);
   if (!uid) return { err: json({ ok: false, error: "unauthorized", message: "اول وارد شوید" }, 401) };
@@ -268,7 +306,12 @@ function buildAiMessages(user, b, images) {
   } else {
     userMsg = { role: "user", content };
   }
-  return [{ role: "system", content: sys }].concat(hist).concat([userMsg]);
+  const out = [{ role: "system", content: sys }];
+  const brain = String(b.brain || "").slice(0, 600).trim();
+  if (brain) {
+    out.push({ role: "system", content: "حافظه‌ی رابطه (کاربر با اجازه‌ی خودش فرستاده؛ فقط برای شخصی‌سازی پاسخ استفاده کن و اگر مرتبط نیست نادیده‌اش بگیر؛ داده‌های سلامت هرگز در آن نیست):\n" + brain });
+  }
+  return out.concat(hist).concat([userMsg]);
 }
 
 async function callAi(user, messages, maxTokens, stream) {
@@ -351,6 +394,12 @@ async function putDiscIdx(env, arr) {
 async function getLikes(env, uid) {
   try { return JSON.parse((await env.CONFIG.get("dlike:" + uid)) || "null") || {}; } catch { return {}; }
 }
+async function getDStats(env, uid) {
+  try { return JSON.parse((await env.CONFIG.get("dstats:" + uid)) || "null") || { v: 0 }; } catch { return { v: 0 }; }
+}
+async function getBlocks(env, uid) {
+  try { return JSON.parse((await env.CONFIG.get("dblock:" + uid)) || "null") || {}; } catch { return {}; }
+}
 async function getRoomIdx(env, uid) {
   try { return JSON.parse((await env.CONFIG.get("rooms:" + uid)) || "null") || []; } catch { return []; }
 }
@@ -359,6 +408,7 @@ async function getRoom(env, id) {
 }
 function kmBetween(a, b) {
   if (!a || !b || !isFinite(a.lat) || !isFinite(b.lat)) return -1;
+  if ((a.lat === 0 && a.lng === 0) || (b.lat === 0 && b.lng === 0)) return -1; // بدون موقعیت
   const R = 6371, dLa = (b.lat - a.lat) * Math.PI / 180, dLo = (b.lng - a.lng) * Math.PI / 180;
   const x = Math.sin(dLa / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLo / 2) ** 2;
   return Math.round(R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)));
@@ -397,28 +447,71 @@ export async function onRequestGet(context) {
     return json({ ok: true, invite: invPublic(inv) });
   }
 
+  /* ---------- حالت پارتنر: وضعیت ارتباط ---------- */
+  if (seg[0] === "partner") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    return json({ ok: true, ...(await partnerFullState(env, u.user.id)) });
+  }
+
   /* ---------- کشف: کارت من + کاندیدها + چت‌ها ---------- */
   if (seg[0] === "discover") {
     const u = await requireUser(request, env);
     if (u.err) return u.err;
     if (!(u.user.profile && u.user.profile.adult)) return json({ ok: false, error: "adult_only", message: "کشف فقط برای بزرگسداده؛ اول سنت رو تأیید کن" }, 403);
+
+    /* جستجوی مستقیم با یوزرنیم */
+    if (seg[1] === "find") {
+      const un = String(url.searchParams.get("u") || "").toLowerCase().replace(/^@/, "").trim();
+      if (!/^[a-z0-9_]{3,24}$/.test(un)) return json({ ok: true, found: false, message: "یوزرنیم درست نیست" });
+      const uid = await env.CONFIG.get("useridx:" + un);
+      if (!uid) return json({ ok: true, found: false });
+      const c = await getDisc(env, uid);
+      if (!c || c.ghost || !isAdultBy(c.by)) return json({ ok: true, found: false });
+      const theirBlocks = await getBlocks(env, uid);
+      if (theirBlocks[u.user.id]) return json({ ok: true, found: false });
+      const myInterests0 = (u.user.profile && Array.isArray(u.user.profile.interests) && u.user.profile.interests) || [];
+      const now0 = Date.now();
+      return json({ ok: true, found: true, cand: { uid, name: c.name || c.username, age: new Date().getFullYear() - c.by, city: c.city, bio: c.bio || "", km: -1, g: c.g || "x", img: c.img || "", status: (c.st && now0 - c.st < 864e5 && c.status) || "", shared: (c.interests || []).filter((x) => myInterests0.includes(x)).length } });
+    }
+
     const me = await getDisc(env, u.user.id);
     const myLikes = await getLikes(env, u.user.id);
+    const myBlocks = await getBlocks(env, u.user.id);
+    const myInterests = (u.user.profile && Array.isArray(u.user.profile.interests) && u.user.profile.interests) || [];
+    const f = (me && me.f) || {};
     const idx = await getDiscIdx(env);
+    const now = Date.now();
     const cands = [];
     let likesGot = 0;
     for (const uid of idx.slice(0, 60)) {
       if (uid === u.user.id) continue;
+      if (myBlocks[uid]) continue;
       const c = await getDisc(env, uid);
       if (!c) continue;
       const theirLikes = await getLikes(env, uid);
       if (theirLikes[u.user.id] === 1) likesGot++;
       if (myLikes[uid]) continue;
       if (!isAdultBy(c.by)) continue;
+      if (c.ghost) continue; // حالت نامرئی
+      const theirBlocks = await getBlocks(env, uid);
+      if (theirBlocks[u.user.id]) continue;
+      const age = now && (new Date().getFullYear() - c.by);
+      // فیلترها
+      if (f.g && f.g !== "any" && (c.g || "x") !== f.g) continue;
+      if (f.amin && age < f.amin) continue;
+      if (f.amax && age > f.amax) continue;
       const km = kmBetween(me, c);
-      cands.push({ uid, name: c.name || c.username, age: new Date().getFullYear() - c.by, city: c.city, bio: c.bio || "", km, ts: c.ts });
+      if (f.km && (km < 0 || km > f.km)) continue;
+      const shared = (c.interests || []).filter((x) => myInterests.includes(x)).length;
+      cands.push({ uid, name: c.name || c.username, age, city: c.city, bio: c.bio || "", km, ts: c.ts, g: c.g || "x", img: c.img || "", status: (c.st && now - c.st < 864e5 && c.status) || "", shared });
     }
     cands.sort((x, y) => (x.km < 0 ? 999 : x.km) - (y.km < 0 ? 999 : y.km));
+    // فانوس: بیشترین علاقه‌ی مشترک؛ وگرنه نزدیک‌ترین
+    let fanous = null;
+    const withShared = cands.filter((c) => c.shared > 0);
+    if (withShared.length) fanous = withShared.sort((a, b) => b.shared - a.shared)[0];
+    else if (cands.length) fanous = cands[0];
     const roomIdx = await getRoomIdx(env, u.user.id);
     const rooms = [];
     for (const rid of roomIdx) {
@@ -427,10 +520,11 @@ export async function onRequestGet(context) {
       const peerId = r.a === u.user.id ? r.b : r.a;
       const pc = await getDisc(env, peerId);
       const last = r.msgs && r.msgs.length ? r.msgs[r.msgs.length - 1] : null;
-      rooms.push({ id: r.id, peer: (pc && pc.name) || "؟", last: last ? last.text.slice(0, 40) : "", ts: last ? last.ts : r.created });
+      rooms.push({ id: r.id, peer: (pc && pc.name) || "؟", img: (pc && pc.img) || "", last: last ? last.text.slice(0, 40) : "", ts: last ? last.ts : r.created });
     }
     rooms.sort((x, y) => (y.ts || 0) - (x.ts || 0));
-    return json({ ok: true, on: !!me, card: me ? { city: me.city, bio: me.bio || "", lat: me.lat || 0, lng: me.lng || 0 } : null, candidates: cands.slice(0, 30), likesGot, rooms });
+    const myStats = await getDStats(env, u.user.id);
+    return json({ ok: true, on: !!me, card: me ? { city: me.city, bio: me.bio || "", lat: me.lat || 0, lng: me.lng || 0, img: me.img || "", status: me.status || "", ghost: !!me.ghost, views: myStats.v || 0, f: me.f || {} } : null, candidates: cands.slice(0, 30), fanous, likesGot, rooms });
   }
 
   /* ---------- اتاق چت دونفره ---------- */
@@ -442,7 +536,7 @@ export async function onRequestGet(context) {
     const since = Number(url.searchParams.get("since") || 0) || 0;
     const peerId = r.a === u.user.id ? r.b : r.a;
     const pc = await getDisc(env, peerId);
-    return json({ ok: true, peer: (pc && pc.name) || "؟", msgs: (r.msgs || []).filter((m) => m.ts > since).slice(-60) });
+    return json({ ok: true, peer: (pc && pc.name) || "؟", peerImg: (pc && pc.img) || "", game: r.game || null, msgs: (r.msgs || []).filter((m) => m.ts > since).slice(-60) });
   }
 
   /* ---------- دعوت‌نامه‌های من: لیست/جزئیات ---------- */
@@ -463,6 +557,23 @@ export async function onRequestGet(context) {
       if (inv) out.push({ id: inv.id, name: inv.name, occasion: inv.occasion, theme: inv.theme, music: inv.music, qText: inv.qText || "", letter: inv.letter || "", views: inv.views || 0, lastView: inv.lastView || 0, msgs: (inv.msgs || []).length, unreplied: (inv.msgs || []).filter((m) => !m.reply).length, created: inv.created });
     }
     return json({ ok: true, invites: out });
+  }
+
+  /* ---------- گزارش‌های کشف: لیست (ادمین) ---------- */
+  if (seg[0] === "reports") {
+    const cfg = await currentConfig(env);
+    if (!isAuthed(request, env, cfg)) return json({ ok: false, error: "unauthorized", message: "رمز ادمین لازمه" }, 401);
+    const raw = (await env.CONFIG.get("dreports")) || "[]";
+    let list = [];
+    try { list = JSON.parse(raw) || []; } catch {}
+    const out = [];
+    for (const r of list.slice(0, 60)) {
+      let tn = r.target, bn = r.by;
+      try { const uo = JSON.parse((await env.CONFIG.get("user:" + r.target)) || "null"); if (uo && uo.username) tn = uo.username; } catch {}
+      try { const uo = JSON.parse((await env.CONFIG.get("user:" + r.by)) || "null"); if (uo && uo.username) bn = uo.username; } catch {}
+      out.push({ ts: r.ts, target: tn, by: bn });
+    }
+    return json({ ok: true, reports: out });
   }
 
   /* ---------- اتصال با اکانت (OpenRouter PKCE) ---------- */
@@ -616,7 +727,19 @@ export async function onRequestPut(context) {
     if (!city) return json({ ok: false, error: "bad_city", message: "شهرت رو بنویس" }, 400);
     const lat = isFinite(Number(b.lat)) ? Math.round(Number(b.lat) * 100) / 100 : 0;
     const lng = isFinite(Number(b.lng)) ? Math.round(Number(b.lng) * 100) / 100 : 0;
-    const card = { uid, username: u.user.username, name: (u.user.profile && u.user.profile.name) || u.user.username, by: u.user.profile.birthYear || 0, city, bio: invText(b.bio, 200), lat, lng, ts: Date.now() };
+    const prev = await getDisc(env, uid);
+    let img = (prev && prev.img) || "";
+    if (b.img !== undefined) {
+      const t = String(b.img || "");
+      img = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(t) && t.length <= 60000 ? t : "";
+    }
+    const status = invText(b.status, 140);
+    const g = ["m", "f", "x"].includes(b.g) ? b.g : ((u.user.profile && u.user.profile.gender) || "x");
+    const bf = b.f || {};
+    const nAge = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 18 ? Math.min(90, Math.round(n)) : 0; };
+    const nKm = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 1 ? Math.min(500, Math.round(n)) : 0; };
+    const flt = { g: ["m", "f", "x", "any"].includes(bf.g) ? bf.g : "any", amin: nAge(bf.amin), amax: nAge(bf.amax), km: nKm(bf.km) };
+    const card = { uid, username: u.user.username, name: (u.user.profile && u.user.profile.name) || u.user.username, by: u.user.profile.birthYear || 0, city, bio: invText(b.bio, 200), lat, lng, g, img, status, st: status ? Date.now() : (prev && prev.st) || 0, ghost: !!b.ghost, f: flt, interests: (u.user.profile && Array.isArray(u.user.profile.interests) && u.user.profile.interests) || [], ts: Date.now() };
     try {
       await env.CONFIG.put("disc:" + uid, JSON.stringify(card));
       if (!idx.includes(uid)) await putDiscIdx(env, [uid].concat(idx));
@@ -724,6 +847,27 @@ export async function onRequestDelete(context) {
   const url = new URL(request.url);
   const seg = url.pathname.replace(/^\/api\/?/, "").split("/");
 
+  /* ---------- قطع ارتباط پارتنر (v6.2) ---------- */
+  if (seg[0] === "partner") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const pid = await env.CONFIG.get("uspair:" + u.user.id);
+    if (pid) {
+      const pair = await pairGet(env, "pair:" + pid);
+      if (pair) {
+        const otherId = pair.a === u.user.id ? pair.b : pair.a;
+        await pairDel(env, "uspair:" + otherId);
+        await pairDel(env, "pshare:" + otherId);
+        await pairDel(env, "pconf:" + otherId);
+      }
+      await pairDel(env, "uspair:" + u.user.id);
+      await pairDel(env, "pshare:" + u.user.id);
+      await pairDel(env, "pconf:" + u.user.id);
+      await pairDel(env, "pair:" + pid);
+    }
+    return json({ ok: true });
+  }
+
   if (seg[0] === "config") {
     const cfg = await currentConfig(env);
     if (await authLocked(env && env.CONFIG)) return json({ ok: false, error: "locked", message: "تلاش زیاد؛ ۱۰ دقیقه صبر کن" }, 429);
@@ -747,6 +891,17 @@ export async function onRequestDelete(context) {
     h[t] = (h[t] || []).filter((x) => x && x.id !== id);
     try { await putHist(env, u.user.id, h); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
     return json({ ok: true, history: h });
+  }
+
+  /* ---------- گزارش‌های کشف (ادمین) ---------- */
+  if (seg[0] === "reports") {
+    const cfg = await currentConfig(env);
+    if (!isAuthed(request, env, cfg)) return json({ ok: false, error: "unauthorized", message: "رمز ادمین لازمه" }, 401);
+    try {
+      const reps = JSON.parse((await env.CONFIG.get("dreports")) || "[]");
+      await env.CONFIG.put("dreports", "[]");
+    } catch {}
+    return json({ ok: true });
   }
 
   /* ---------- حذف دعوت‌نامه‌ی شخصی ---------- */
@@ -786,6 +941,65 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const seg = url.pathname.replace(/^\/api\/?/, "").split("/");
+
+  /* ---------- حالت پارتنر (v6.2) ---------- */
+  if (seg[0] === "partner" && seg[1] === "invite") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (await env.CONFIG.get("uspair:" + u.user.id)) return json({ ok: false, error: "already_paired", message: "قبلاً وصل شدی؛ اول قطع کن" }, 409);
+    const code = randHex(3);
+    await pairPut(env, "pcode:" + code, { u: u.user.id, name: u.user.username, ts: Date.now() }, 7 * 86400);
+    let base = "";
+    try { base = new URL(request.url).origin; } catch {}
+    return json({ ok: true, code, url: base + "/?pair=" + code });
+  }
+  if (seg[0] === "partner" && seg[1] === "accept") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const r = await readBody(request, 512);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const code = String(r.body.code || "").toLowerCase().trim();
+    if (!/^[a-f0-9]{4,16}$/.test(code)) return json({ ok: false, error: "bad_code", message: "کد درست نیست" }, 400);
+    const pc = await pairGet(env, "pcode:" + code);
+    if (!pc) return json({ ok: false, error: "not_found", message: "کد پیدا نشد یا منقضی شده" }, 404);
+    if (pc.u === u.user.id) return json({ ok: false, error: "self", message: "این کد مال خودته؛ به پارتنرت بده" }, 400);
+    if (await env.CONFIG.get("uspair:" + u.user.id)) return json({ ok: false, error: "already_paired", message: "تو قبلاً وصل شدی" }, 409);
+    if (await env.CONFIG.get("uspair:" + pc.u)) return json({ ok: false, error: "owner_paired", message: "اون که کد رو ساخته قبلاً وصل شده" }, 409);
+    const pid = randHex(4);
+    await pairPut(env, "pair:" + pid, { a: pc.u, b: u.user.id, ts: Date.now() });
+    await env.CONFIG.put("uspair:" + pc.u, pid);
+    await env.CONFIG.put("uspair:" + u.user.id, pid);
+    if (!(await pairGet(env, "pshare:" + pc.u))) await pairPut(env, "pshare:" + pc.u, { name: pc.name || "پارتنر", status: "", mood: "", cycle: "", ts: 0 });
+    if (!(await pairGet(env, "pshare:" + u.user.id))) await pairPut(env, "pshare:" + u.user.id, { name: u.user.username || "پارتنر", status: "", mood: "", cycle: "", ts: 0 });
+    await pairDel(env, "pcode:" + code);
+    return json({ ok: true, paired: true, partner: { name: pc.name || "پارتنر" } });
+  }
+  if (seg[0] === "partner" && seg[1] === "share") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!(await env.CONFIG.get("uspair:" + u.user.id))) return json({ ok: false, error: "not_paired", message: "اول پارتنرت رو وصل کن" }, 409);
+    const r = await readBody(request, 1024);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const status = SHARE_STATUS.has(r.body.status) ? r.body.status : "";
+    const cycle = SHARE_CYCLE.has(r.body.cycle) ? r.body.cycle : "";
+    const mood = String(r.body.mood || "").trim().slice(0, 60);
+    const cur = (await pairGet(env, "pshare:" + u.user.id)) || { name: u.user.username };
+    await pairPut(env, "pshare:" + u.user.id, { ...cur, status, cycle, mood, ts: Date.now() });
+    return json({ ok: true });
+  }
+  if (seg[0] === "partner" && seg[1] === "conflict") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!(await env.CONFIG.get("uspair:" + u.user.id))) return json({ ok: false, error: "not_paired", message: "اول پارتنرت رو وصل کن" }, 409);
+    const r = await readBody(request, 4096);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const topic = String(r.body.topic || "").trim().slice(0, 60);
+    const ans = Array.isArray(r.body.ans) ? r.body.ans.slice(0, 4).map((x) => String(x || "").trim().slice(0, 200)) : [];
+    if (!topic || ans.length < 4 || ans.some((x) => !x)) return json({ ok: false, error: "incomplete", message: "موضوع و هر ۴ جواب لازمه" }, 400);
+    await pairPut(env, "pconf:" + u.user.id, { topic, ans, ts: Date.now() });
+    const st = await partnerFullState(env, u.user.id);
+    return json({ ok: true, bothDone: !!(st.theirConf) });
+  }
 
   /* ---------- ایونت‌های دعوت‌نامه ---------- */
   if (seg[0] === "event") {
@@ -962,6 +1176,45 @@ export async function onRequestPost(context) {
     return json({ ok: true, matched: false });
   }
 
+  /* ---------- کشف: ثبت بازدید کارت ---------- */
+  if (seg[0] === "discover" && seg[1] === "seen") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (rateLimited(request, "dseen", 150)) return json({ ok: true, throttled: true });
+    const r = await readBody(request, 1024);
+    if (r.err || !r.body) return json({ ok: false, error: "bad_json" }, 400);
+    const target = String(r.body.target || "");
+    if (!/^[a-f0-9]{4,24}$/.test(target)) return json({ ok: false, error: "bad_target" }, 400);
+    const c = await getDisc(env, target);
+    if (c) {
+      const st = await getDStats(env, target);
+      st.v = (st.v || 0) + 1;
+      try { await env.CONFIG.put("dstats:" + target, JSON.stringify(st)); } catch {}
+    }
+    return json({ ok: true });
+  }
+
+  /* ---------- کشف: گزارش/مسدود ---------- */
+  if (seg[0] === "discover" && seg[1] === "block") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    const r = await readBody(request, 2048);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const target = String(r.body.target || "");
+    if (!/^[a-f0-9]{4,24}$/.test(target) || target === u.user.id) return json({ ok: false, error: "bad_target" }, 400);
+    const blocks = await getBlocks(env, u.user.id);
+    blocks[target] = 1;
+    try { await env.CONFIG.put("dblock:" + u.user.id, JSON.stringify(blocks)); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+    if (r.body.report) {
+      try {
+        const reps = JSON.parse((await env.CONFIG.get("dreports")) || "[]");
+        reps.unshift({ by: u.user.id, target, ts: Date.now() });
+        await env.CONFIG.put("dreports", JSON.stringify(reps.slice(0, 200)));
+      } catch {}
+    }
+    return json({ ok: true, blocked: true });
+  }
+
   /* ---------- اتاق چت: پیام جدید ---------- */
   if (seg[0] === "room" && seg[2] === "msg") {
     const u = await requireUser(request, env);
@@ -969,13 +1222,46 @@ export async function onRequestPost(context) {
     if (rateLimited(request, "rmsg", 30)) return json({ ok: false, error: "rate_limited", message: "یه کم آروم‌تر" }, 429);
     const r = await readBody(request, 4096);
     if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
-    const text = invText(r.body.text, 500);
-    if (!text) return json({ ok: false, error: "empty" }, 400);
+    const react = r.body && ["heart", "laugh", "star", "fire"].includes(r.body.react) ? r.body.react : "";
+    const text = react ? "" : invText(r.body.text, 500);
+    if (!text && !react) return json({ ok: false, error: "empty" }, 400);
     const room = await getRoom(env, String(seg[1]));
     if (!room || (room.a !== u.user.id && room.b !== u.user.id)) return json({ ok: false, error: "not_found" }, 404);
-    room.msgs = (room.msgs || []).concat([{ uid: u.user.id, ts: Date.now(), text }]).slice(-200);
+    room.msgs = (room.msgs || []).concat([{ uid: u.user.id, ts: Date.now(), text, react }]).slice(-200);
     try { await env.CONFIG.put("room:" + room.id, JSON.stringify(room)); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
     return json({ ok: true });
+  }
+
+  /* ---------- اتاق چت: دوز چالشی ---------- */
+  if (seg[0] === "room" && seg[2] === "game" && seg[1]) {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (rateLimited(request, "rgame", 90)) return json({ ok: false, error: "rate_limited" }, 429);
+    const room = await getRoom(env, String(seg[1]));
+    if (!room || (room.a !== u.user.id && room.b !== u.user.id)) return json({ ok: false, error: "not_found" }, 404);
+    const r = await readBody(request, 2048);
+    if (r.err || !r.body) return json({ ok: false, error: r.err || "bad_json" }, 400);
+    const b = r.body;
+    if (b.new) {
+      room.game = { bd: ["", "", "", "", "", "", "", "", ""], x: u.user.id, turn: u.user.id, over: 0 };
+    } else if (b.end) {
+      room.game = null;
+    } else {
+      const g = room.game;
+      const i = Number(b.i);
+      if (!g || g.over) return json({ ok: false, error: "no_game" }, 400);
+      if (g.turn !== u.user.id) return json({ ok: false, error: "not_your_turn", message: "نوبت طرف نیست" }, 400);
+      if (!(i >= 0 && i <= 8) || g.bd[i]) return json({ ok: false, error: "bad_move" }, 400);
+      const sym = g.x === u.user.id ? "♥" : "✿";
+      g.bd[i] = sym;
+      const L = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+      const win = L.some((l) => l.every((k) => g.bd[k] === sym));
+      if (win) g.over = u.user.id;
+      else if (g.bd.every((x) => x)) g.over = -1;
+      else g.turn = room.a === u.user.id ? room.b : room.a;
+    }
+    try { await env.CONFIG.put("room:" + room.id, JSON.stringify(room)); } catch { return json({ ok: false, error: "kv_write_failed" }, 500); }
+    return json({ ok: true, game: room.game });
   }
 
   /* ---------- ساخت دعوت‌نامه‌ی شخصی ---------- */
@@ -1035,7 +1321,7 @@ export async function onRequestPost(context) {
     const saveChat = async (fullText) => {
       try {
         const h = await getHist(env, u.user.id);
-        const LBL = { reply: "پاسخ", opener: "شروع", rewrite: "بازنویسی", analyze: "تحلیل", date: "قرار", sim: "شبیه‌ساز" };
+        const LBL = { reply: "پاسخ", opener: "شروع", rewrite: "بازنویسی", analyze: "تحلیل", date: "قرار", sim: "شبیه‌ساز", apology: "آشتی", sensitive: "موضوع حساس", sos: "الان چی بگم", comfort: "دلداری", congrats: "تبریک", express: "ابراز علاقه", nothing: "هیچی نیستم" };
         h.chats.unshift({
           id: randHex(4) + "-" + Date.now().toString(36),
           ts: Date.now(),

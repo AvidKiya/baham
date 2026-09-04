@@ -165,8 +165,10 @@ await sara.click('.games-card'); await sara.waitForTimeout(700);
 check(await sara.locator(".gpanel").count() > 0, "پنل بازی‌ها باز شد");
 console.log("   ↳ gitem count:", await sara.locator(".gitem").count());
 await sara.screenshot({ path: "/tmp/dbg-fail.png" });
-await sara.locator(".gitem").nth(1).click({ force: true }); await sara.waitForTimeout(600); // حدس کلمه
-await sara.locator(".wgk").first().click({ force: true }); await sara.waitForTimeout(600);
+await sara.locator(".gitem").nth(1).click({ force: true }); // حدس کلمه
+await sara.waitForSelector(".wgk", { timeout: 6000 }).catch(() => {});
+await sara.locator(".wgk").first().evaluate((el) => el.click());
+await sara.waitForSelector(".wgk.good, .wgk.bad, .wgl.on", { timeout: 5000 }).catch(() => {});
 check((await sara.locator(".wgk.good, .wgk.bad").count()) > 0 || (await sara.locator(".wgl.on").count()) > 0, "حدس کلمه: حرف زده شد");
 await sara.locator('.gback').click({ force: true }); await sara.waitForTimeout(500);
 await sara.locator('.gitem:has-text("دوز")').first().click({ force: true }); await sara.waitForTimeout(500);

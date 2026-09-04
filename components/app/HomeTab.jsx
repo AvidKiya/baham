@@ -14,6 +14,7 @@ const CELLS = [
   { ic: "shield", t: "فضای +۱۸", d: "لحن‌های بزرگسال با تأیید سن", go: "settings", lock: true },
   { ic: "sparkles", t: "کشف نزدیک‌ها", d: "با حوالیات آشنا شو؛ لایک بده، چت باز شه", go: "discover" },
   { ic: "invite", t: "دعوت‌نامه‌ی تعاملی", d: "لینکی که «نه» نداره؛ مخ زدن کلاسیک", go: "create" },
+  { ic: "calHeart", t: "ما", d: "ترکر PMS، روزشمار رابطه و یادآور مناسبت‌ها", go: "us" },
   { ic: "clock", t: "تاریخ‌واره شمسی", d: "گپ‌ها و دعوت‌نامه‌هات یادشون نمی‌ره", go: "history" },
   { ic: "download", t: "سبک و آفلاین", d: "PWA — نصب می‌شه و آفلاین هم باز می‌مونه", go: null },
 ];
@@ -115,7 +116,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
 
       <footer className="credit">
         <span>با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></span>
-        <span className="dim">مخ‌یار · نسخه ۵٫۰</span>
+        <span className="dim">مخ‌یار · نسخه ۶٫۲</span>
       </footer>
     </div>
   );

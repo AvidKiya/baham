@@ -8,6 +8,7 @@ import { api, getToken } from "@/lib/appauth";
 import { Ic } from "@/lib/icons";
 import { buzz } from "@/lib/fx";
 import { addXp } from "@/lib/rizz";
+import { getBrainContext } from "@/lib/relationship";
 
 const MODES = [
   { id: "reply", ic: "chatSpark", t: "پاسخ", ph: "چه گفته یا چه گذشته؟ متنش را بنویس یا اسکرین‌شات را پیوست کن…", scens: ["جوابمو نداده", "دیده ولی ساکته", "گفت فعلاً فقط دوستیم", "تازه آشنا شدیم", "بعد از قرار ساکته", "سر حرف دعوایش شد"] },
@@ -17,6 +18,13 @@ const MODES = [
   { id: "date", ic: "calHeart", t: "قرار", ph: "چه حال‌وهوایی می‌خواهی؟ (مثلاً: آرام و قهوه‌ای، پرهیجان، بودجه کم، غریبه نیستیم…)", scens: ["قهوه و پیاده‌رو", "فیلم و پاپ‌کورن", "کوه و طلوع", "بودجه کم", "دور است، آنلاین بگذریم"] },
   { id: "sim", ic: "user", t: "شبیه‌ساز", ph: "انگار داری با خودش حرف می‌زنی؛ اولین پیامت را بفرست تا در نقشِ او جواب بدهم…", scens: ["طرفش سرد و خودخواه است", "خجالتی و کم‌حرف", "شیطان و بازیگوش", "جادار و متمایل"] },
   { id: "game", ic: "dice", t: "بازی", ph: "", scens: [], local: true },
+  { id: "comfort", ic: "shieldPlain", t: "دلداری", ph: "چه اتفاقی افتاده و الان چه حسی داره؟ (مثلاً: امتحانش خراب شده، خانوادگی، خسته‌ست…)", scens: ["امتحانش خراب شده", "خسته و کوفته‌ست", "خانوادگی شکرش ریخته", "اخبار بدی شنیده"] },
+  { id: "congrats", ic: "star", t: "تبریک", ph: "چه مناسبتیه؟ (قبولی، تولد، پروموشن، اولین قدمش…)", scens: ["قبولی کنکور", "تولدشه", "پروموشن گرفته", "کار جدیدش شروع شده"] },
+  { id: "express", ic: "invite", t: "ابراز علاقه", ph: "چقدر جدی هستید و چه سبکی؟ (تازه آشنا شدیم، رابطه‌ی جدی، دیر شده بگم…)", scens: ["تازه آشنا شدیم", "رابطه‌مان جدی است", "دیر شده و نمی‌دانم", "دوریم و دلم تنگ است"] },
+  { id: "nothing", ic: "user", t: "«هیچی نیستم»", ph: "وقتی طرف می‌گوید «هیچی نیستم / أهمیتی ندارد» و نمی‌دانی جوابش را چه بدهی…", scens: ["گفته هیچی نیستم و ساکت شده", "گفته مهم نیست ولی معلوم است مهم است", "همه‌اش «باشه» می‌گوید"] },
+  { id: "apology", ic: "invite", t: "آشتی", ph: "چه گذشته؟ چه بخشی تقصیر تو بوده و چه حسی داری؟ (خلاصه بگو…)", scens: ["تقصیر من بود", "هر دو بد گفتیم", "قهریم و نمی‌دونم چطور شروع کنم", "دیر جوابش رو دادم"] },
+  { id: "sensitive", ic: "shieldPlain", t: "موضوع حساس", ph: "موضوع سخت را بنویس تا قبل از گفتن، جمله‌اش را با هم پیدا کنیم (مثلاً: حسودیت، گذشته، خانواده‌ها…)", scens: ["درباره‌ی گذشته‌ش", "مشکل خانوادگی", "حسودیت شدید", "رابطه‌مان یکنواخت شده"] },
+  { id: "sos", ic: "alert", t: "الان چی بگم؟", ph: "همین الان وسط مکالمه‌ای؛ آخرین پیامش و چیزی که می‌خوانی بگو (یا ضبط کن)…", scens: ["متنش رو دیده و جواب نداده", "ازم بغض کرده", "داره قهر می‌کنه", "سوالی پرسیده و نمی‌دونم"] },
   { id: "aftercare", ic: "shieldPlain", t: "پس‌مراقبت", ph: "برای بعد از یک بازی یا لحظه‌ی خصوصی؛ چه چیزی لازم است؟ (مثلاً: آرامشش کن، بگو برجاست، بپرسم حالش خوب است…)", scens: ["می‌خواهم آرامش کنم", "حالم خوب نیست", "می‌خواهم بگویم برجایم"], adult: true },
 ];
 
@@ -24,6 +32,7 @@ const DECKS = [
   { id: "ice", t: "یخ‌شکن", ic: "snow", cards: ["یک راز کوچک بگو که اینجا هیچ‌کس نمی‌داند", "بدترین قرار خواب‌آلود زندگی‌ات را تعریف کن", "آخرین بار کی برای کسی قلبت تند زد؟", "یک عادت مسخره‌ی خودت را اعتراف کن", "اگر الان اجازه داشته باشی به یکی پیام بدهی، به کی چه می‌گویی؟"] },
   { id: "love", t: "عاشقانه", ic: "invite", cards: ["سه چیزی که دوست داری درباره‌ی من بدانی بگو", "اولین برداشتت از من چه بود؟", "یک خاطره از ما که هنوز به آن می‌خندی", "اگر الان جلوی من بودی، چه می‌کردی؟", "کدام ویژگی‌ام بیشتر از همه دلت را می‌گیرد؟"] },
   { id: "bold", t: "جسورانه", ic: "flame", cards: ["جرأت داری حرف دلت رو با من رک بگی؟", "یه جسورت: بگو کِی از طرفم حسودیت شده", "بگو کدوم پیامم رو ده بار خوندی", "جرأت داری بگی چند بار اسمت رو آورده‌م زبونم؟"] },
+  { id: "either", ic: "dice", t: "این یا اون", cards: ["قهوه‌ی سرد یا چای داغ؟", "دریا یا کوه؟", "فیلم در خانه یا سینما؟", "سفر جاده‌ای یا پرواز؟", "صبح‌زود یا شب‌بیدار؟", "گفت‌وگوی عمیق یا شوخی تا صبح؟", "شام خانگی یا رستوران جدید؟", "هدیه‌ی کوچک یا نامه‌ی بلند؟", "تماس صوتی یا پیام طولانی؟", "قرار برنامه‌دار یا بی‌برنامه؟"] },
   { id: "adult", t: "بزرگسال", ic: "crown", adult: true, cards: ["یک مرز نرمِ امشب را با یک کلمه تعیین کن", "بگو کدام نقش امشب مالِ توست", "یک خیال ناگفته را تنها با یک جمله بگو — بدون جزئیات", "جرأت داری امن‌واژه‌ی امشب را انتخاب کنی؟", "یک چیز کوچک که بعد از بازی به‌ترتیبت می‌آید بگو"] },
 ];
 
@@ -58,11 +67,30 @@ export default function ChatTab({ user, go, onUser }) {
   const [deck, setDeck] = useState(null);
   const [deckCard, setDeckCard] = useState(null);
   const [toast2, setToast2] = useState("");
+  const [brain, setBrain] = useState(() => { try { return localStorage.getItem("mk:brainon") !== "0"; } catch { return true; } });
+  const [plan, setPlan] = useState({ city: "", budget: "", dur: "", place: "", vibe: "" });
   const fileRef = useRef(null);
   const boxRef = useRef(null);
   const md = MODES.find((m) => m.id === mode) || MODES[0];
+  const planStr = () => [plan.city && "در " + plan.city, plan.budget, plan.dur, plan.place, plan.vibe].filter(Boolean).join(" · ") || "";
 
-  useEffect(() => { setSugs([]); setErr(""); setSimMsg(""); setLive(""); setDeck(null); setDeckCard(null); }, [mode]);
+  useEffect(() => { setSugs([]); setErr(""); setSimMsg(""); setLive(""); setDeck(null); setDeckCard(null); setPlan({ city: "", budget: "", dur: "", place: "", vibe: "" }); }, [mode]);
+
+  /* درفت SOS از دکمه‌ی شناور */
+  useEffect(() => {
+    const grab = () => {
+      try {
+        const d = localStorage.getItem("mk:sosdraft");
+        if (d) {
+          localStorage.removeItem("mk:sosdraft");
+          setMode("sos"); setText(d); setErr("");
+        }
+      } catch {}
+    };
+    grab();
+    window.addEventListener("mk-sos", grab);
+    return () => window.removeEventListener("mk-sos", grab);
+  }, []);
 
   /* میکروفون (Web Speech فارسی) */
   const mic = () => {
@@ -135,7 +163,7 @@ export default function ChatTab({ user, go, onUser }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: "Bearer " + (getToken() || "") },
-        body: JSON.stringify({ text: t || "این تصویر را ببین.", images: imgs, style: tone, mode, again: !!again, msgs: hist, stream: true }),
+        body: JSON.stringify({ text: t || "این تصویر را ببین.", images: imgs, style: tone, mode, again: !!again, msgs: hist, stream: true, brain: brain ? getBrainContext() : "" }),
       });
       const ctype = res.headers.get("content-type") || "";
       if (ctype.includes("text/event-stream")) {
@@ -255,6 +283,36 @@ export default function ChatTab({ user, go, onUser }) {
           );
         })}
       </div>
+
+      <div className="brainrow">
+        <button type="button" className={"brainchip" + (brain ? " on" : "")} onClick={() => { const v = !brain; setBrain(v); try { localStorage.setItem("mk:brainon", v ? "1" : "0"); } catch {} }}>
+          <Ic n="spark" s={14} /> مغز رابطه {brain ? "روشن" : "خاموش"}
+        </button>
+        <span className="tiny">با اجازه‌ت از «درباره‌ی پارتنرم» برای شخصی‌سازی جواب‌ها استفاده می‌شه</span>
+      </div>
+
+      {md.id === "date" ? (
+        <div className="dplanner card">
+          <b className="flbl"><Ic n="calHeart" s={14} /> قرارساز</b>
+          <input className="inp dpcity" dir="rtl" maxLength={24} placeholder="کدوم شهر؟ (اختیاری)" value={plan.city} onChange={(e) => setPlan({ ...plan, city: e.target.value })} />
+          {[["budget", "بودجه", ["بدون هزینه", "اقتصادی", "متوسط", "خاص"]], ["dur", "مدت", ["کوتاه (۲ ساعت)", "نیم‌روز", "تمام‌روز"]], ["place", "فضا", ["داخل", "بیرون", "فرقی نمی‌کنه"]], ["vibe", "حال‌وهوا", ["رمانتیک", "باحال", "آرام", "ماجراجو"]]].map(([k, t, opts]) => (
+            <div className="dprow" key={k}>
+              <span className="dpk">{t}</span>
+              <div className="dpopts">
+                {opts.map((o) => (
+                  <button key={o} type="button" className={"occ-chip" + (plan[k] === o ? " sel" : "")} onClick={() => setPlan({ ...plan, [k]: plan[k] === o ? "" : o })}>{o}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+          {planStr() ? (
+            <div className="datecond">
+              <span>{planStr()}</span>
+              <button className="btn ghost sm" type="button" onClick={() => { setText((p) => (p ? p + "\n" : "") + "شرط قرارم: " + planStr()); }}><Ic n="plus" s={14} /> بذار توی پیام</button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {md.scens && md.scens.length ? (
         <div className="scens">
