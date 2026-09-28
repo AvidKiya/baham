@@ -7,17 +7,22 @@ compatibility_date = "2025-06-01"
 pages_build_output_dir = "out"
 
 # --- KV ها ---
-# اول با دستور زیر بساز (یا از داشبورد: Workers & Pages > KV):
+# روش پیشنهادی: از داشبورد ست کن (راهنما: DEPLOY.md قدم ۲)
+# یعنی: پروژه > Settings > Functions > KV namespace bindings
+#   CONFIG -> baham-config
+#   STATS  -> baham-stats
+#
+# اگه با CLI دیپلوی می‌کنی، اول بساز:
 #   wrangler kv namespace create baham-config
 #   wrangler kv namespace create baham-stats
-# بعد id هایی که میده رو جایگزین کن:
-[[kv_namespaces]]
-binding = "CONFIG"
-id = "PUT_BAHAM_CONFIG_KV_ID_HERE"
-
-[[kv_namespaces]]
-binding = "STATS"
-id = "PUT_BAHAM_STATS_KV_ID_HERE"
+# بعد کامنت‌های زیر رو باز کن و id ها رو بذار:
+# [[kv_namespaces]]
+# binding = "CONFIG"
+# id = "PUT_BAHAM_CONFIG_KV_ID_HERE"
+#
+# [[kv_namespaces]]
+# binding = "STATS"
+# id = "PUT_BAHAM_STATS_KV_ID_HERE"
 
 # --- سکرت‌ها (هرگز اینجا ننویس!) ---
 # با این دستورها ست کن (برای Production و Preview جدا):
