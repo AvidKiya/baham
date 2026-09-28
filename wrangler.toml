@@ -6,23 +6,16 @@ name = "baham"
 compatibility_date = "2025-06-01"
 pages_build_output_dir = "out"
 
-# --- KV ها ---
-# روش پیشنهادی: از داشبورد ست کن (راهنما: DEPLOY.md قدم ۲)
-# یعنی: پروژه > Settings > Functions > KV namespace bindings
-#   CONFIG -> baham-config
-#   STATS  -> baham-stats
-#
-# اگه با CLI دیپلوی می‌کنی، اول بساز:
-#   wrangler kv namespace create baham-config
-#   wrangler kv namespace create baham-stats
-# بعد کامنت‌های زیر رو باز کن و id ها رو بذار:
-# [[kv_namespaces]]
-# binding = "CONFIG"
-# id = "PUT_BAHAM_CONFIG_KV_ID_HERE"
-#
-# [[kv_namespaces]]
-# binding = "STATS"
-# id = "PUT_BAHAM_STATS_KV_ID_HERE"
+# --- KV ها (وصل شدن ✅) ---
+# چون این بایندینگ‌ها اینجان، بخش Bindings توی داشبورد قفله (طبیعیه!)
+# سکرت‌ها (ADMIN_PASSWORD و AUTH_SECRET) همچنان از داشبورد ست می‌شن.
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "f1a2236876da4ac6859c0e455e076d54"
+
+[[kv_namespaces]]
+binding = "STATS"
+id = "8590e4afbb73413e83b073f5763d7229"
 
 # --- سکرت‌ها (هرگز اینجا ننویس!) ---
 # با این دستورها ست کن (برای Production و Preview جدا):

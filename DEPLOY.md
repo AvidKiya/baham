@@ -22,19 +22,11 @@
 
 4. **Deploy site** رو بزن. ✅ فرانت بالا میاد ولی API هنوز KV نداره — ادامه بده.
 
-### قدم ۲ — ساخت KV ها (دیتابیس)
+### قدم ۲ — KV ها (دیتابیس) — ✅ انجام شده، کاری لازم نیست
 
-1. توی همون اکانت برو به **Workers & Pages** → **KV** → **Create a namespace** و دو تا بساز:
-   - `baham-config` (اصلی: یوزرها، جفت‌ها، فضای ما، پوش…)
-   - `baham-stats` (آمار؛ اگه حوصله نداری می‌تونی همون اولی رو دوباره بایند کنی)
-2. برگرد به پروژه‌ی Pages → **Settings** → **Functions** → **KV namespace bindings** → **Add binding**:
+دو نیم‌اسپیس `baham-config` و `baham-stats` ساخته شدن و آی‌دی‌هاشون مستقیم توی `wrangler.toml` هست، پس با هر دیپلوی خودکار وصل می‌شن.
 
-| Variable name | KV namespace |
-|---|---|
-| `CONFIG` | `baham-config` |
-| `STATS` | `baham-stats` |
-
-> ⚠️ اسم‌ها باید **دقیقاً** همین باشن (حروف بزرگ). برای هر دو Environment یعنی **Production** و **Preview** اضافه کن.
+> 💡 به همین دلیل بخش **Bindings** توی داشبورد قفله و پیام *«managed through wrangler.toml»* می‌ده — این طبیعیه، نه خطا!
 
 ### قدم ۳ — سکرت‌ها (مهم! 🔑)
 
