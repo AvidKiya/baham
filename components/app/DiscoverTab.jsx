@@ -40,7 +40,7 @@ export default function DiscoverTab({ user, go }) {
             const last = Number(localStorage.getItem(k) || 0);
             if (rm.ts > last && last > 0) {
               if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-                new Notification("مخ‌یار 💬", { body: rm.peer + ": " + (rm.last || "پیام جدید") });
+                new Notification("باهم 💬", { body: rm.peer + ": " + (rm.last || "پیام جدید") });
               }
             }
             if (rm.ts > last) localStorage.setItem(k, String(rm.ts));
@@ -380,7 +380,7 @@ function RoomChat({ room, onBack, me }) {
             const k = "mk:lastmsg:" + room.id;
             const last = Number(localStorage.getItem(k) || 0);
             if (last > 0 && typeof Notification !== "undefined" && Notification.permission === "granted") {
-              new Notification("مخ‌یار 💬", { body: peer + ": " + lastMsg.text.slice(0, 60) });
+              new Notification("باهم 💬", { body: peer + ": " + lastMsg.text.slice(0, 60) });
             }
             if (lastMsg.ts > last) localStorage.setItem(k, String(lastMsg.ts));
           } catch {}

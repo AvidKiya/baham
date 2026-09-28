@@ -313,8 +313,8 @@ for (const [occ, qWord, yesWord] of [["marriage", "ازدواج", "قبوله"],
   await ctx.close();
 }
 
-/* ================= 3) اپ مخ‌یار v5: خانه/ثبت‌نام/چت/+۱۸/ساخت/تاریخچه ================= */
-console.log("— اپ مخ‌یار v5");
+/* ================= 3) اپ باهم v5: خانه/ثبت‌نام/چت/+۱۸/ساخت/تاریخچه ================= */
+console.log("— اپ باهم v5");
 {
   const uniq = "t" + Date.now().toString(36).slice(-6);
   const { ctx, p } = await page({ viewport: { width: 390, height: 844 } });
@@ -480,14 +480,14 @@ console.log("— اپ مخ‌یار v5");
   const swR = await fetch(BASE + "/sw.js");
   ok(swR.status === 200, "سرویس‌ورکر /sw.js سرو می‌شود");
   const mf = await (await fetch(BASE + "/site.webmanifest")).json();
-  ok(mf.name && mf.name.includes("مخ‌یار") && mf.start_url === "/", "مانیفست PWA: مخ‌یار");
+  ok(mf.name && mf.name.includes("باهم") && mf.start_url === "/", "مانیفست PWA: باهم");
   ok(mf.theme_color === "#0b0810", "تم دارک در مانیفست");
   const fR = await fetch(BASE + "/fonts/Vazirmatn-var.woff2");
   ok(fR.status === 200 && (await (await fR.arrayBuffer()).byteLength) > 50000, "فونت وزیرمتن متغیر سرو می‌شود");
   await ctx.close();
 }
 
-/* ================= 3b) API مخ‌یار v5.1: بازیابی/OAuth/کرش‌ها/حذف/قوانین ================= */
+/* ================= 3b) API باهم v5.1: بازیابی/OAuth/کرش‌ها/حذف/قوانین ================= */
 {
   const u2 = "r" + Date.now().toString(36).slice(-6);
   const J = { "content-type": "application/json" };

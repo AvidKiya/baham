@@ -19,6 +19,7 @@ const TABS = [
   { id: "contract", label: "قرارداد", icon: "📜" },
   { id: "secrets", label: "پیام‌های مخفی", icon: "🕵️" },
   { id: "media", label: "موسیقی و استیکر", icon: "🎵" },
+  { id: "plus", label: "پلاس 💎", icon: "💎" },
   { id: "stats", label: "آمار", icon: "📊" },
   { id: "links", label: "لینک و پیش‌نمایش", icon: "🔗" },
   { id: "backup", label: "پشتیبان‌گیری", icon: "💾" },
@@ -208,6 +209,113 @@ function ReportsCard({ password }) {
             <li key={i} style={{ fontSize: 13 }}>«{String(r.by)}» گزارش داد: <b>{String(r.target)}</b> — {new Date(r.ts).toLocaleString("fa-IR")}</li>
           ))}
         </ul>
+      ) : null}
+    </section>
+  );
+}
+
+function PlusAdmin({ password }) {
+  const [st, setSt] = useState(null);
+  const [codes, setCodes] = useState([]);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [merchant, setMerchant] = useState("");
+  const [price1, setPrice1] = useState("");
+  const [price12, setPrice12] = useState("");
+  const [sandbox, setSandbox] = useState(false);
+  const [mkMonths, setMkMonths] = useState("1");
+  const [mkCount, setMkCount] = useState("5");
+  const [made, setMade] = useState([]);
+  const load = async () => {
+    setBusy(true);
+    try {
+      const r = await fetch("/api/plus/admin", { headers: { "x-admin-key": password } });
+      const j = await r.json().catch(() => null);
+      if (j && j.ok) {
+        setSt(j.settings); setCodes(j.codes || []); setMsg("");
+        setPrice1(String(j.settings.price1 || "")); setPrice12(String(j.settings.price12 || ""));
+        setSandbox(!!j.settings.sandbox);
+      } else setMsg((j && (j.message || j.error)) || "گرفته نشد؛ رمز رو چک کن");
+    } catch { setMsg("خطای شبکه"); }
+    setBusy(false);
+  };
+  const save = async () => {
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/plus/admin", {
+        method: "POST", headers: { "x-admin-key": password, "content-type": "application/json" },
+        body: JSON.stringify({ op: "settings", merchant, price1: Number(price1) || 0, price12: Number(price12) || 0, sandbox }),
+      });
+      const j = await r.json().catch(() => null);
+      if (j && j.ok) { setSt(j.settings); setMerchant(""); setMsg("ذخیره شد ✓"); }
+      else setMsg("ذخیره نشد");
+    } catch { setMsg("خطای شبکه"); }
+    setBusy(false);
+  };
+  const mk = async () => {
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/plus/admin", {
+        method: "POST", headers: { "x-admin-key": password, "content-type": "application/json" },
+        body: JSON.stringify({ op: "mkcodes", months: Number(mkMonths) || 1, count: Number(mkCount) || 1 }),
+      });
+      const j = await r.json().catch(() => null);
+      if (j && j.ok) { setMade(j.codes || []); setMsg(j.codes.length + " کد ساخته شد 🎟"); load(); }
+      else setMsg("ساخته نشد");
+    } catch { setMsg("خطای شبکه"); }
+    setBusy(false);
+  };
+  return (
+    <section className="adm-card glass">
+      <h2>💎 باهم پلاس</h2>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button className="btn ghost sm" type="button" onClick={load} disabled={busy}>بارگذاری</button>
+      </div>
+      {msg ? <p className="adm-hint">{msg}</p> : null}
+      {st ? (
+        <>
+          <Row label="مرچنت زرین‌پال" hint={st.hasMerchant ? "تنظیم شده ✓ — برای عوض کردن، کد جدید رو بنویس و ذخیره کن" : "هنوز تنظیم نشده؛ بدون مرچنت خرید آنلاین غیرفعاله و فقط کد کار می‌کنه"}>
+            <TextInput value={merchant} onChange={setMerchant} ph="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" dir="ltr" />
+          </Row>
+          <Row label="قیمت یک‌ماهه (تومان)" hint="صفر = غیرفعال">
+            <TextInput value={price1} onChange={(v) => setPrice1(v.replace(/[^\d]/g, ""))} ph="مثلاً 59000" dir="ltr" />
+          </Row>
+          <Row label="قیمت یک‌ساله (تومان)" hint="صفر = غیرفعال">
+            <TextInput value={price12} onChange={(v) => setPrice12(v.replace(/[^\d]/g, ""))} ph="مثلاً 490000" dir="ltr" />
+          </Row>
+          <Toggle label="حالت سندباکس زرین‌پال" hint="برای تست با درگاه آزمایشی" value={sandbox} onChange={setSandbox} />
+          <div className="adm-row">
+            <button className="btn primary sm" type="button" onClick={save} disabled={busy}>ذخیره‌ی تنظیمات</button>
+          </div>
+          <h3 className="adm-h3">🎟 ساخت کد فعال‌سازی</h3>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>
+            <label className="adm-lab">مدت (ماه)
+              <input className="adm-input" dir="ltr" value={mkMonths} onChange={(e) => setMkMonths(e.target.value.replace(/[^\d]/g, ""))} style={{ width: 70 }} />
+            </label>
+            <label className="adm-lab">تعداد (حداکثر ۵۰)
+              <input className="adm-input" dir="ltr" value={mkCount} onChange={(e) => setMkCount(e.target.value.replace(/[^\d]/g, ""))} style={{ width: 70 }} />
+            </label>
+            <button className="btn ghost sm" type="button" onClick={mk} disabled={busy}>ساخت</button>
+          </div>
+          {made.length ? (
+            <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+              {made.map((c) => (
+                <li key={c.code} style={{ fontSize: 13 }}>
+                  <button type="button" dir="ltr" className="recode" onClick={() => { try { navigator.clipboard.writeText(c.code); } catch {} }}>{c.code}</button>
+                  <span className="adm-hint"> — {c.months} ماهه (بزن کپی شه)</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <h3 className="adm-h3">📋 کدهای قبلی ({codes.length})</h3>
+          {codes.length === 0 ? <p className="adm-hint">کدی ساخته نشده.</p> : (
+            <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 3, maxHeight: 220, overflow: "auto" }}>
+              {codes.map((c) => (
+                <li key={c.code} style={{ fontSize: 12 }} dir="ltr">{c.code} — {c.months}m {c.used ? "✅ مصرف‌شده" : "⬜"}</li>
+              ))}
+            </ul>
+          )}
+        </>
       ) : null}
     </section>
   );
@@ -657,6 +765,9 @@ export default function AdminPanel() {
               </section>
             </>
           ) : null}
+
+          {/* ---------------- plus ---------------- */}
+          {tab === "plus" ? <PlusAdmin password={password} /> : null}
 
           {/* ---------------- reports ---------------- */}
           {tab === "stats" ? <ReportsCard password={password} /> : null}

@@ -19,6 +19,7 @@ import {
   CONFLICT_QS, CONFLICT_STEPS, conflictMerge,
 } from "@/lib/relationship";
 import { api } from "@/lib/appauth";
+import { exportSpace } from "@/lib/couple";
 
 const fa = (n) => { try { return Number(n).toLocaleString("fa-IR"); } catch { return String(n); } };
 const DAY = 86400000;
@@ -43,8 +44,8 @@ export default function UsTab() {
     try {
       const st = pmsStatus();
       if (!st.empty && typeof Notification !== "undefined" && Notification.permission === "granted") {
-        if (st.dueToday) new Notification("مخ‌یار 🌙", { body: "ممکنه امروز پریودت شروع بشه؛ چای گرم و یه کم مهربونی با خودت ❤️" });
-        else if (st.dueTomorrow) new Notification("مخ‌یار 🌙", { body: "فردا احتمالاً موعدهش؛ آماده باش 🧡" });
+        if (st.dueToday) new Notification("باهم 🌙", { body: "ممکنه امروز پریودت شروع بشه؛ چای گرم و یه کم مهربونی با خودت ❤️" });
+        else if (st.dueTomorrow) new Notification("باهم 🌙", { body: "فردا احتمالاً موعدهش؛ آماده باش 🧡" });
       }
     } catch {}
     /* یادآور هوشمند مناسبت‌ها (v6.1) */
@@ -60,7 +61,7 @@ export default function UsTab() {
           if (left <= 3) {
             const pa = getPartner();
             const g = giftFor("mid", pa);
-            new Notification("مخ‌یار 🎁", { body: (left === 0 ? "امروز " : fa(left) + " روز دیگه: ") + o.t + (pa && pa.name ? " — بر اساس چیزایی که داری: " + g.idea : " — پیشنهاد هدیه: " + g.idea) });
+            new Notification("باهم 🎁", { body: (left === 0 ? "امروز " : fa(left) + " روز دیگه: ") + o.t + (pa && pa.name ? " — بر اساس چیزایی که داری: " + g.idea : " — پیشنهاد هدیه: " + g.idea) });
             break;
           }
         }
@@ -689,7 +690,16 @@ function DuoCard({ reload }) {
     else flash((r.data && r.data.message) || "نشد؛ دوباره امتحان کن");
   };
   const unlink = async () => {
-    if (!confirm("ارتباط با پارتنرت قطع بشه؟ همه‌ی چیزای اشتراک‌گذاشته‌شده از هر دو طرف پاک می‌شه.")) return;
+    if (!confirm("ارتباط با پارتنرت قطع بشه؟\n\n• اول یه بکاپ خودکار از «فضای ما» دانلود می‌شه 💾\n• چیزای اشتراک‌گذاشته‌شده از سرور پاک می‌شه\n• نسخه‌ی این گوشی فقط خواندنی می‌شه (بدون تغییر، ولی با بکاپ)")) return;
+    try {
+      const blob = new Blob([JSON.stringify(exportSpace())], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "baham-backup-" + iso(new Date()) + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => { try { URL.revokeObjectURL(a.href); } catch {} }, 4000);
+    } catch {}
+    try { localStorage.setItem("mk:spacero", "1"); } catch {}
     setBusy(true);
     await api("/api/partner", { method: "DELETE" });
     setBusy(false);
@@ -726,7 +736,7 @@ function DuoCard({ reload }) {
     <>
       <div className="card ccard">
         <h3 className="ip-head"><span>💞</span> متصل با {st.partner.name}</h3>
-        <p className="dim small">از {faDate(new Date(st.since || Date.now()))} کنارید. هر دو طرف می‌تونید هر لحظه قطع کنید؛ با قطع شدن، همه‌ی چیزای اشتراک‌گذاشته‌شده پاک می‌شه.</p>
+        <p className="dim small">از {faDate(new Date(st.since || Date.now()))} کنارید. هر دو طرف می‌تونید هر لحظه قطع کنید؛ موقع قطع، بکاپ خودکار دانلود و نسخه‌ی گوشیتون فقط خواندنی می‌شه.</p>
         <button className="btn ghost danger sm" type="button" disabled={busy} onClick={unlink}><Ic n="x" s={14} /> قطع ارتباط</button>
       </div>
       <ShareCard st={st} onSaved={load} />

@@ -102,7 +102,7 @@ export default function HistoryTab({ user }) {
                     <div className="hi-q"><b>لینک:</b></div>
                   )}
                   {seg === "chats" ? (
-                    <div className="hi-a"><b>مخ‌یار:</b> {x.data && x.data.a}</div>
+                    <div className="hi-a"><b>باهم:</b> {x.data && x.data.a}</div>
                   ) : (
                     <>
                       <div className="link-box"><span className="link-txt" dir="ltr">{typeof location !== "undefined" ? location.origin : ""}{x.data && x.data.url ? safeDec(x.data.url) : ""}</span></div>

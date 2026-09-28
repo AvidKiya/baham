@@ -3,9 +3,11 @@
 // components/app/SettingsTab.jsx — تنظیمات: پروفایل، اتصال اکانت هوش مصنوعی،
 // ظاهر، فضای بزرگسال، کرش‌ها، حساب (کد بازیابی/حذف)، نصب، درباره
 // ---------------------------------------------------------------------------
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/appauth";
 import { Ic } from "@/lib/icons";
+import { pushStatus, pushToggle } from "@/lib/push";
+import { plusStatus, plusLeftDays, plusRedeem, plusPay, plusVerify } from "@/lib/plus";
 
 const TONES = [
   { id: "funny", t: "بامزه" }, { id: "romantic", t: "رمانتیک" }, { id: "literary", t: "ادبی" },
@@ -43,6 +45,80 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
 
   const [newCrush, setNewCrush] = useState("");
   const [delArm, setDelArm] = useState(false);
+
+  /* وب‌پوش (v8.2) */
+  const [push, setPush] = useState({ sup: false, on: false, perm: "default" });
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMsg, setPushMsg] = useState("");
+  useEffect(() => {
+    let live = true;
+    pushStatus().then((s) => { if (live) setPush(s); }).catch(() => {});
+    return () => { live = false; };
+  }, []);
+  const flipPush = async () => {
+    setPushBusy(true); setPushMsg("");
+    const r = await pushToggle(!push.on);
+    setPushBusy(false);
+    setPushMsg((r && r.msg) || "");
+    pushStatus().then(setPush).catch(() => {});
+  };
+
+  /* باهم پلاس (v9) */
+  const [plus, setPlus] = useState({ plus: false, until: 0 });
+  const [redeem, setRedeem] = useState("");
+  const [plusBusy, setPlusBusy] = useState(false);
+  const [buyBusy, setBuyBusy] = useState(false);
+  const [plusMsg, setPlusMsg] = useState("");
+  useEffect(() => {
+    let live = true;
+    plusStatus(true).then((s) => { if (live) setPlus(s); }).catch(() => {});
+    try {
+      const pv = JSON.parse(localStorage.getItem("mk:plusverify") || "null");
+      if (pv && pv.authority) {
+        localStorage.removeItem("mk:plusverify");
+        setPlusMsg("دارم پرداخت رو چک می‌کنم… 💳");
+        plusVerify(pv.authority, pv.status || "").then((r) => {
+          if (!live) return;
+          setPlusMsg((r && r.msg) || "");
+          plusStatus(true).then((s) => { if (live) setPlus(s); }).catch(() => {});
+        });
+      }
+    } catch {}
+    return () => { live = false; };
+  }, []);
+  const doRedeem = async () => {
+    setPlusBusy(true); setPlusMsg("");
+    const r = await plusRedeem(redeem);
+    setPlusBusy(false); setPlusMsg((r && r.msg) || "");
+    if (r && r.ok) { setRedeem(""); plusStatus(true).then(setPlus).catch(() => {}); }
+  };
+  const doBuy = async (m) => {
+    setBuyBusy(true); setPlusMsg("");
+    const r = await plusPay(m);
+    setBuyBusy(false);
+    if (r && r.ok && r.url) { window.location.href = r.url; return; }
+    setPlusMsg((r && r.msg) || "");
+  };
+  const plusUntilFa = (() => { try { return new Date(plus.until).toLocaleDateString("fa-IR"); } catch { return ""; } })();
+
+  /* قفل اپ (v8.1) */
+  const [ap1, setAp1] = useState("");
+  const [ap2, setAp2] = useState("");
+  const [apMsg, setApMsg] = useState("");
+  const [apOn, setApOn] = useState(() => { try { return !!localStorage.getItem("mk:applock"); } catch { return false; } });
+  const saveAppLock = () => {
+    const a = ap1.replace(/\D/g, "").slice(0, 8), b = ap2.replace(/\D/g, "").slice(0, 8);
+    if (a.length < 4) { setApMsg("پین حداقل ۴ رقمه"); return; }
+    if (a !== b) { setApMsg("دو تا پین یکی نیستن"); return; }
+    try { localStorage.setItem("mk:applock", a); } catch {}
+    setApOn(true); setAp1(""); setAp2(""); setApMsg("قفل فعال شد 🔒");
+    setTimeout(() => setApMsg(""), 2200);
+  };
+  const removeAppLock = () => {
+    try { localStorage.removeItem("mk:applock"); localStorage.removeItem("mk:lockts"); } catch {}
+    setApOn(false); setAp1(""); setAp2(""); setApMsg("قفل برداشته شد");
+    setTimeout(() => setApMsg(""), 2200);
+  };
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(""), 2200); };
 
@@ -123,7 +199,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
       const hist = await api("/api/history");
       const data = {
         exportedAt: new Date().toISOString(),
-        app: "mokhyar",
+        app: "baham",
         version: "5.2",
         profile: user,
         history: (hist.ok && hist.data && hist.data.history) || { chats: [], invites: [] },
@@ -131,7 +207,7 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "mokhyar-backup-" + Date.now() + ".json";
+      a.download = "baham-backup-" + Date.now() + ".json";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -285,6 +361,54 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
         ) : null}
       </section>
 
+      <section className="card setsec">
+        <h3><Ic n="lock" s={17} /> قفل اپ {apOn ? <em className="haskey">فعاله</em> : null}</h3>
+        <p className="dim small">با پین، کل اپ قفل می‌شه؛ اگه ۲ دقیقه بره پس‌زمینه هم خودش قفل می‌کنه. (پین فقط روی همین گوشیه)</p>
+        <div className="two">
+          <input className="inp" dir="ltr" type="password" inputMode="numeric" placeholder={apOn ? "پین جدید" : "پین (۴ تا ۸ رقم)"} value={ap1} onChange={(e) => setAp1(e.target.value.replace(/\D/g, ""))} maxLength={8} />
+          <input className="inp" dir="ltr" type="password" inputMode="numeric" placeholder="تکرار پین" value={ap2} onChange={(e) => setAp2(e.target.value.replace(/\D/g, ""))} maxLength={8} />
+        </div>
+        <div className="m-row" style={{ marginTop: "10px" }}>
+          <button className="btn primary sm" type="button" onClick={saveAppLock}><Ic n="check" s={15} /> {apOn ? "تغییر پین" : "فعالش کن"}</button>
+          {apOn ? <button className="btn ghost sm danger" type="button" onClick={removeAppLock}><Ic n="x" s={15} /> بردارش</button> : null}
+        </div>
+        {apMsg ? <div className="mini-ok big">{apMsg}</div> : null}
+      </section>
+
+      <section className="card setsec">
+        <h3><Ic n="send" s={17} /> اعلان پیام پارتنر {push.on ? <em className="haskey">روشنه</em> : null}</h3>
+        <p className="dim small">حتی وقتی اپ بسته‌ست، به‌محض اینکه پارتنرت تو «چت ما» پیام بده خبرت می‌کنیم. (فقط یه بیدارباش میاد؛ متن پیام تو اعلان نیست 🔒)</p>
+        {!push.sup ? (
+          <p className="dim small">مرورگرت وب‌پوش رو پشتیبانی نمی‌کنه 😕 (کروم/فایرفاکس اندروید یا دسکتاپ اوکیه)</p>
+        ) : (
+          <div className="m-row">
+            <button className={"btn sm " + (push.on ? "ghost danger" : "primary")} type="button" onClick={flipPush} disabled={pushBusy}>
+              {pushBusy ? "صبر کن…" : push.on ? "🔕 خاموشش کن" : "🔔 روشنش کن"}
+            </button>
+          </div>
+        )}
+        {pushMsg ? <div className="mini-ok big">{pushMsg}</div> : null}
+      </section>
+
+      <section className="card setsec">
+        <h3>💎 باهم پلاس {plus.plus ? <em className="haskey">فعاله</em> : null}</h3>
+        <p className="dim small">تماس تصویری 📹 + پیام ویدیویی + دستیار حافظه‌ی نامحدود 🔍</p>
+        {plus.plus ? (
+          <p className="mini-ok big">تا {plusUntilFa} فعاله ({plusLeftDays(plus.until)} روز مونده) 💎</p>
+        ) : (
+          <p className="dim small">الان نسخه‌ی رایگانی؛ پلاس رو فعال کن تا همه‌چی باز بشه ✨</p>
+        )}
+        <div className="m-row">
+          <input className="inp" dir="ltr" placeholder="کد فعال‌سازی (BHAM-…)" value={redeem} onChange={(e) => setRedeem(e.target.value)} style={{ flex: 1 }} maxLength={24} />
+          <button className="btn ghost sm" type="button" onClick={doRedeem} disabled={plusBusy}>{plusBusy ? "…" : "🎟 فعال کن"}</button>
+        </div>
+        <div className="m-row" style={{ marginTop: 8 }}>
+          <button className="btn primary sm" type="button" onClick={() => doBuy(1)} disabled={buyBusy}>💎 پلاس یک‌ماهه</button>
+          <button className="btn primary sm" type="button" onClick={() => doBuy(12)} disabled={buyBusy}>💎 پلاس یک‌ساله</button>
+        </div>
+        {plusMsg ? <div className="mini-ok big">{plusMsg}</div> : null}
+      </section>
+
       <section className={"card setsec adult" + (adult ? " on" : "")}>
         <h3><Ic n={adult ? "flame" : "lock"} s={17} /> فضای بزرگسال <em className="a18">+۱۸</em></h3>
         {!adult ? (
@@ -342,22 +466,22 @@ export default function SettingsTab({ user, onUser, logout, installEvt, install,
       <section className="card setsec">
         <h3><Ic n="download" s={17} /> نصب اپ</h3>
         {installEvt ? (
-          <button className="btn ghost" type="button" onClick={install}><Ic n="download" s={16} /> مخ‌یار رو نصب کن</button>
+          <button className="btn ghost" type="button" onClick={install}><Ic n="download" s={16} /> باهم رو نصب کن</button>
         ) : (
-          <p className="dim small">از منوی مرورگر گوشی «Add to Home Screen» رو بزن؛ مخ‌یار مثل اپ واقعی نصب می‌شه و آفلاین هم باز می‌مونه.</p>
+          <p className="dim small">از منوی مرورگر گوشی «Add to Home Screen» رو بزن؛ باهم مثل اپ واقعی نصب می‌شه و آفلاین هم باز می‌مونه.</p>
         )}
       </section>
 
       <section className="card setsec aboutsec">
         <h3><Ic n="info" s={17} /> درباره</h3>
-        <p className="dim small">مخ‌یار · نسخه ۷٫۰ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
+        <p className="dim small">باهم · نسخه ۱۰ — با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></p>
         <p className="dim tiny">پاسخ‌ها با اکانت/کلید خودت ساخته می‌شوند؛ هیچ کلیدی هیچ‌جا جز سرور خودت ذخیره نمی‌شه.</p>
         <div className="m-row">
           <a className="btn ghost sm" href="/legal"><Ic n="shield" s={15} /> قوانین و حریم خصوصی</a>
         </div>
       </section>
 
-      <p className="dim tiny center">@{user.username} · حساب مخ‌یار</p>
+      <p className="dim tiny center">@{user.username} · حساب باهم</p>
     </div>
   );
 }

@@ -8,7 +8,8 @@ import { useState } from "react";
 import Games from "./Games";
 
 const CELLS = [
-  { ic: "chatSpark", t: "چی جواب بدم؟", d: "پیامتو بفرست، ۳ تا جواب خفن تحویل بگیر", go: "chat", wide: true },
+  { ic: "hearts", t: "فضای ما 💑", d: "خونه‌ی دیجیتال رابطه‌تون: خاطره، تقویم، نامه، چت دونفره…", go: "space", wide: true },
+  { ic: "chatSpark", t: "چی جواب بدم؟", d: "پیامتو بفرست، ۳ تا جواب خفن تحویل بگیر", go: "chat" },
   { ic: "scan", t: "ببین این چت چی میگه", d: "اسکرین‌شات چت یا استوری‌ش رو بفرست؛ خودم می‌خونم و می‌گم", go: "chat" },
   { ic: "sparkles", t: "بذار جای اون جواب بده", d: "تمرین زنده با کرشت؛ ۹ تا لحن از بامزه تا جسور", go: "chat" },
   { ic: "shield", t: "اتاق +۱۸", d: "بعد از تأیید سن باز می‌شه؛ حرف مال خودته", go: "settings", lock: true },
@@ -104,7 +105,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
       {installEvt ? (
         <section className="card installcard">
           <Ic n="download" s={22} />
-          <div><b>مخ‌یار رو گوشیت نصب کن</b><p>همین الان، بدون فروشگاه اپ</p></div>
+          <div><b>باهم رو گوشیت نصب کن</b><p>همین الان، بدون فروشگاه اپ</p></div>
           <button className="btn primary sm" type="button" onClick={install}>نصب</button>
         </section>
       ) : (
@@ -116,7 +117,7 @@ export default function HomeTab({ go, user, installEvt, install }) {
 
       <footer className="credit">
         <span>با وسواس ساخته شده توسط <a href="https://t.me/AvidKiya" target="_blank" rel="noopener">اَوید کیا</a></span>
-        <span className="dim">مخ‌یار · نسخه ۷٫۰</span>
+        <span className="dim">باهم · نسخه ۱۰</span>
       </footer>
     </div>
   );

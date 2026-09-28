@@ -409,7 +409,7 @@ export default function ChatTab({ user, go, onUser }) {
       {busy && live ? (
         <div className="sim-bubble live card"><p>{live}<span className="caret" /></p></div>
       ) : busy ? (
-        <div className="thinking card"><span className="tdots"><i /><i /><i /></span> مخ‌یار داره فکر می‌کنه…</div>
+        <div className="thinking card"><span className="tdots"><i /><i /><i /></span> باهم داره فکر می‌کنه…</div>
       ) : null}
 
       {simMsg ? (

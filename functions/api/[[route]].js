@@ -10,7 +10,7 @@
 //   GET    /api/stats?key=…   → aggregated counts     [auth via key]
 //   GET    /api/health        → { ok, kv }
 //
-//   ---- اپ مخ‌یار ----
+//   ---- اپ باهم ----
 //   POST   /api/auth/register → ثبت‌نام {username,password,name}
 //   POST   /api/auth/login    → ورود
 //   GET    /api/me            → پروفایل [Bearer token]
@@ -60,6 +60,7 @@ const MODES = {
   sos: "الان چی بگم؟ — کاربر وسط مکالمه است و جواب فوری می‌خواهد؛ دقیقاً به آخرین پیام طرف، سه جواب کوتاهِ آماده‌ی ارسال بده (سرد، گرم، شاد) و در یک خط بگو کدام را پس بده.",
   aftercare: "پس‌مراقبت (aftercare) — پیام‌های گرم، آرام و مراقبت‌محور برای بعد از یک بازی/لحظه‌ی بزرگسال؛ لحن نرم، امن‌ساز و مسئولانه. سه پیام کوتاه بده.",
   game: "بازی کارتی (محلی) — اگر پیام آمد، راهنمای کوتاه بازی حقیقت یا جرأت بده.",
+  memory: "حافظه‌ی رابطه — کاربر از خاطرات و روزهای ثبت‌شده‌اش سؤال می‌پرسد؛ فقط با همان زمینه جواب بده.",
 };
 const INTERESTS_OK = new Set([
   "رابطه جدی", "آشنایی کژوال", "ازدواج", "دوستی اول",
@@ -251,15 +252,26 @@ async function readBody(request, maxLen) {
   } catch { return { err: "bad_json" }; }
 }
 
-/* ============================ پرامپت مخ‌یار ============================ */
+/* ============================ پرامپت باهم ============================ */
 
-function mokhyarPrompt(user, styleId, modeId, again) {
+function bahamPrompt(user, styleId, modeId, again) {
+  if (modeId === "memory") {
+    return (
+      "تو «باهم» هستی؛ دستیار حافظه‌ی رابطه برای کاربر فارسی‌زبان.\n" +
+      "کاربر از خاطرات، روزها و آرزوهایی که خودش ثبت کرده سؤال می‌پرسد؛ زمینه‌ی آن‌ها در ادامه‌ی همین پیام سیستمی آمده.\n" +
+      "قواعد:\n" +
+      "۱. فقط و فقط با همان زمینه جواب بده؛ چیزی که در زمینه نیست را نساز و حدس نزن.\n" +
+      "۲. اگر جواب در زمینه نیست، صمیمی بگو چنین چیزی ثبت نشده و پیشنهاد بده ثبتش کند.\n" +
+      "۳. فارسی محاوره‌ای گرم و کوتاه بنویس؛ مثل یه رفیق که همه‌چی رو یادشه.\n" +
+      "۴. تاریخ‌ها را همان‌طور که در زمینه آمده نقل کن؛ تاریخ جدید نساز.\n"
+    );
+  }
   const p = (user && user.profile) || {};
   const tone = (TONES[styleId] || TONES.funny).t;
   const isAdult = !!(TONES[styleId] || {}).adult;
   const sim = modeId === "sim";
   let s =
-    "تو «مخ‌یار» هستی؛ مشاور پیام‌رسان عاشقانه برای کاربر فارسی‌زبان که می‌خواهد با کراشش ارتباط بهتری بگیرد.\n" +
+    "تو «باهم» هستی؛ مشاور پیام‌رسان عاشقانه برای کاربر فارسی‌زبان که می‌خواهد با کراشش ارتباط بهتری بگیرد.\n" +
     "لحن درخواستی: " + tone + (p.crush ? "؛ اسم طرف مقابل: «" + p.crush + "»" : "") + "\n" +
     "ابزار فعال: " + (MODES[modeId] ? MODES[modeId] : MODES.reply) + "\n\n" +
     "قواعد:\n" +
@@ -290,7 +302,10 @@ function mokhyarPrompt(user, styleId, modeId, again) {
 
 function buildAiMessages(user, b, images) {
   const styleId = TONES[b.style] ? b.style : "funny";
-  const sys = mokhyarPrompt(user, styleId, b.mode, !!b.again);
+  let sys = bahamPrompt(user, styleId, b.mode, !!b.again);
+  if (b.mode === "memory" && b.memory) {
+    sys += "\n\nزمینه‌ی خاطرات و روزهای ثبت‌شده‌ی کاربر (فقط از همین استفاده کن؛ چیزی نساز):\n" + String(b.memory).slice(0, 8000);
+  }
   const text = String(b.text || "").slice(0, 6000).trim();
   const content = (text || "این تصویر را ببین.") + (b.again ? "\n(این بار گزینه‌های تازه و متفاوت از قبلی بده.)" : "");
   const hist = [];
@@ -325,7 +340,7 @@ async function callAi(user, messages, maxTokens, stream) {
   if (!/^https?:\/\//.test(base)) return { err: json({ ok: false, error: "bad_base", message: "این آدرس API یه چیزیش هست" }, 400) };
   const model = String(ai.model || "gpt-4o-mini").slice(0, 60);
   const headers = { "content-type": "application/json", authorization: "Bearer " + key };
-  if (/openrouter\.ai/.test(base)) headers["X-Title"] = "Mokhyar";
+  if (/openrouter\.ai/.test(base)) headers["X-Title"] = "Baham";
   let ctrl;
   try { ctrl = new AbortController(); } catch { ctrl = null; }
   const timer = ctrl && setTimeout(() => { try { ctrl.abort(); } catch {} }, 45000);
@@ -427,7 +442,510 @@ function invText(v, n) {
   return String(v || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, n || 140);
 }
 
+/* ---------- فضای ما (v8): سینک زوج + چت ---------- */
+const SPACE_LISTS = { memories: 200, events: 300, notes: 200, wishlist: 200, bucket: 200, letters: 200, songs: 200, expenses: 300, games: 100, dares: 200, polls: 200, trips: 100, spins: 100, capsules: 100, chains: 50, quests: 20, arts: 200, casts: 20, pins: 200, banks: 50, movies: 200, recipes: 100, dreams: 200, shots: 100, ballots: 24, counts: 50, laws: 100 };
+function spaceText(v, n) {
+  return String(v === null || v === undefined ? "" : v).replace(/[<>]/g, "").trim().slice(0, n || 500);
+}
+async function spacePair(env, uid) {
+  try {
+    const pid = await env.CONFIG.get("uspair:" + uid);
+    if (!pid || !/^[a-f0-9]{4,32}$/.test(pid)) return null;
+    const pair = await pairGet(env, "pair:" + pid);
+    if (!pair || (pair.a !== uid && pair.b !== uid)) return null;
+    const otherId = pair.a === uid ? pair.b : pair.a;
+    return { pid, otherId };
+  } catch { return null; }
+}
+async function spaceGetDoc(env, pid) {
+  try { return JSON.parse((await env.CONFIG.get("space:" + pid)) || "null") || {}; } catch { return {}; }
+}
+function spaceTrimDoc(doc) {
+  // اگر داک خیلی بزرگ شد، اول عکس‌های قدیمی‌ترین خاطرات را از سینک حذف کن
+  try {
+    let s = JSON.stringify(doc);
+    if (s.length <= 1800000) return doc;
+    const mems = ((doc && doc.memories) || []).slice().sort((a, b) => (a.u || 0) - (b.u || 0));
+    for (const m of mems) {
+      if (!m.photos || !m.photos.length) continue;
+      m.photos = [];
+      s = JSON.stringify(doc);
+      if (s.length <= 1800000) break;
+    }
+    return doc;
+  } catch { return doc; }
+}
+async function spacePutDoc(env, pid, doc) {
+  try { await env.CONFIG.put("space:" + pid, JSON.stringify(spaceTrimDoc(doc))); } catch {}
+}
+function spaceCleanItem(c, it) {
+  if (!it || typeof it !== "object") return null;
+  const id = String(it.id || "").slice(0, 40);
+  if (!/^[A-Za-z0-9_-]{2,40}$/.test(id)) return null;
+  const u = Math.min(Date.now(), Math.max(0, Number(it.u) || 0));
+  const ts = Math.min(Date.now(), Math.max(0, Number(it.ts) || 0));
+  const base = { id, u, ts };
+  const T = (v, n) => spaceText(v, n);
+  const by = String(it.by || "").slice(0, 40);
+  if (c === "memories") return { ...base, title: T(it.title, 80), text: T(it.text, 2000), date: T(it.date, 10), mood: T(it.mood, 12), place: T(it.place, 60), tags: Array.isArray(it.tags) ? it.tags.slice(0, 8).map((t) => T(t, 24)) : [], photos: Array.isArray(it.photos) ? it.photos.filter((p) => typeof p === "string" && p.indexOf("data:image/") === 0 && p.length < 420000).slice(0, 6) : [] };
+  if (c === "events") return { ...base, title: T(it.title, 80), date: T(it.date, 10), time: T(it.time, 5), kind: T(it.kind, 12), note: T(it.note, 500), recur: ["none", "daily", "weekly", "monthly", "yearly"].includes(it.recur) ? it.recur : "none" };
+  if (c === "notes") return { ...base, title: T(it.title, 80), body: T(it.body, 3000), kind: it.kind === "check" ? "check" : "text", items: Array.isArray(it.items) ? it.items.slice(0, 30).map((x) => ({ t: T(x && x.t, 120), done: !!(x && x.done) })) : [] };
+  if (c === "wishlist") return { ...base, by, title: T(it.title, 100), link: T(it.link, 300), price: T(it.price, 40), note: T(it.note, 300), mine: it.mine !== false };
+  if (c === "bucket") return { ...base, title: T(it.title, 120), done: !!it.done };
+  if (c === "letters") {
+    let voice = "", vdur = 0;
+    if (typeof it.voice === "string" && it.voice) {
+      vdur = Math.max(0, Math.min(90, Math.round(Number(it.vdur) || 0)));
+      if (vdur > 0 && it.voice.length <= 450000 && /^data:audio\/(webm|mp4|ogg|mpeg|wav);base64,[A-Za-z0-9+/=]+$/.test(it.voice)) voice = it.voice;
+    }
+    return { ...base, by, to: T(it.to, 40), title: T(it.title, 80), body: T(it.body, 5000), openAt: Math.max(0, Math.min(4102444800000, Number(it.openAt) || 0)), mine: it.mine !== false, opened: !!it.opened, voice: voice || undefined, vdur: vdur || undefined };
+  }
+  if (c === "songs") return { ...base, title: T(it.title, 100), artist: T(it.artist, 80), link: T(it.link, 300), note: T(it.note, 200) };
+  if (c === "expenses") return { ...base, by, mine: it.mine !== false, title: T(it.title, 80), amount: Math.max(0, Math.min(10000000000, Math.round(Number(it.amount) || 0))), kind: it.kind === "settle" ? "settle" : "exp", note: T(it.note, 200), date: T(it.date, 10) };
+  if (c === "games") {
+    const answers = {};
+    if (it.answers && typeof it.answers === "object") {
+      for (const [uid, an] of Object.entries(it.answers).slice(0, 4)) {
+        if (!an || typeof an !== "object") continue;
+        const rec = { ts: Math.min(Date.now(), Math.max(0, Number(an.ts) || 0)) };
+        if (Array.isArray(an.picks)) rec.picks = an.picks.slice(0, 8).map((x) => Math.max(0, Math.min(3, Number(x) || 0)));
+        if (an.pick === 0 || an.pick === 1 || an.pick === "0" || an.pick === "1") rec.pick = Number(an.pick);
+        answers[String(uid).slice(0, 40)] = rec;
+      }
+    }
+    if (it.kind === "yn") return { ...base, by, kind: "yn", title: T(it.title, 80), a: T(it.a, 80), b: T(it.b, 80), answers };
+    const qs = Array.isArray(it.qs) ? it.qs.slice(0, 8).map((q) => ({ q: T(q && q.q, 200), opts: Array.isArray(q && q.opts) ? q.opts.slice(0, 4).map((o) => T(o, 80)) : [], a: Math.max(0, Math.min(3, Number((q && q.a) || 0))) })).filter((q) => q.q) : [];
+    return { ...base, by, kind: "quiz", title: T(it.title, 80), qs, answers };
+  }
+  if (c === "movies") {
+    const votes = {};
+    if (it.votes && typeof it.votes === "object") {
+      for (const [uid, v] of Object.entries(it.votes).slice(0, 4)) {
+        if (v === "y" || v === "n") votes[String(uid).slice(0, 40)] = v;
+      }
+    }
+    if (!T(it.title, 100)) return null;
+    return { ...base, title: T(it.title, 100), kind: it.kind === "series" ? "series" : "film", votes, watched: !!it.watched, stars: Math.max(0, Math.min(5, Number(it.stars) || 0)) };
+  }
+  if (c === "recipes") {
+    const steps = Array.isArray(it.steps) ? it.steps.slice(0, 20).map((s) => T(s, 200)).filter(Boolean) : [];
+    if (!T(it.title, 80)) return null;
+    return { ...base, by, title: T(it.title, 80), desc: T(it.desc, 300), mins: Math.max(0, Math.min(600, Math.floor(Number(it.mins) || 0))), steps, cooked: Math.max(0, Math.min(9999, Math.floor(Number(it.cooked) || 0))), last: Math.min(Date.now(), Math.max(0, Number(it.last) || 0)) };
+  }
+  if (c === "dreams") {
+    if (!T(it.text, 1000)) return null;
+    return { ...base, by, text: T(it.text, 1000), day: T(it.day, 10) };
+  }
+  if (c === "laws") {
+    const signs = {};
+    if (it.signs && typeof it.signs === "object") {
+      for (const [uid, ts] of Object.entries(it.signs).slice(0, 4)) {
+        const n = Math.min(Date.now(), Math.max(0, Number(ts) || 0));
+        if (n) signs[String(uid).slice(0, 40)] = n;
+      }
+    }
+    if (!T(it.text, 200)) return null;
+    return { ...base, text: T(it.text, 200), signs };
+  }
+  if (c === "shots") {
+    const entries = {};
+    if (it.entries && typeof it.entries === "object") {
+      for (const [uid, e] of Object.entries(it.entries).slice(0, 4)) {
+        if (!e || typeof e.photo !== "string" || e.photo.indexOf("data:image/") !== 0 || e.photo.length >= 420000) continue;
+        entries[String(uid).slice(0, 40)] = { photo: e.photo, ts: Math.min(Date.now(), Math.max(0, Number(e.ts) || 0)) };
+      }
+    }
+    const votes = {};
+    if (it.votes && typeof it.votes === "object") {
+      for (const [uid, v] of Object.entries(it.votes).slice(0, 4)) votes[String(uid).slice(0, 40)] = String(v).slice(0, 40);
+    }
+    if (!T(it.week, 8)) return null;
+    return { ...base, week: T(it.week, 8), theme: T(it.theme, 60), entries, votes };
+  }
+  if (c === "ballots") {
+    const wishes = Array.isArray(it.wishes) ? it.wishes.slice(0, 20).map((w) => ({ id: T(w.id, 24), t: T(w.t, 120), by: String(w.by || "").slice(0, 40) })).filter((w) => w.id && w.t) : [];
+    const votes = {};
+    if (it.votes && typeof it.votes === "object") {
+      for (const [uid, v] of Object.entries(it.votes).slice(0, 4)) votes[String(uid).slice(0, 40)] = String(v).slice(0, 24);
+    }
+    if (!T(it.month, 7)) return null;
+    return { ...base, month: T(it.month, 7), wishes, votes, fulfilled: T(it.fulfilled, 24) };
+  }
+  if (c === "counts") {
+    if (!T(it.title, 80) || !T(it.date, 10)) return null;
+    return { ...base, title: T(it.title, 80), date: T(it.date, 10), emoji: T(it.emoji, 8) || "⏳" };
+  }
+  if (c === "casts") {
+    const segs = Array.isArray(it.segs) ? it.segs.slice(-12).map((s) => {
+      const au = (typeof s.audio === "string" && s.audio.length <= 450000 && /^data:audio\/(webm|mp4|ogg|mpeg|wav);base64,[A-Za-z0-9+/=]+$/.test(s.audio)) ? s.audio : "";
+      return { by: String(s.by || "").slice(0, 40), ts: Math.min(Date.now(), Math.max(0, Number(s.ts) || 0)), dur: Math.max(0, Math.min(300, Number(s.dur) || 0)), audio: au };
+    }).filter((s) => s.audio) : [];
+    if (!T(it.title, 80)) return null;
+    return { ...base, by, title: T(it.title, 80), segs };
+  }
+  if (c === "pins") {
+    const lat = Number(it.lat), lon = Number(it.lon);
+    if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    if (!T(it.title, 80)) return null;
+    return { ...base, by, title: T(it.title, 80), note: T(it.note, 300), lat, lon, day: T(it.day, 10) };
+  }
+  if (c === "banks") {
+    const dep = Array.isArray(it.dep) ? it.dep.slice(-200).map((d) => ({ by: String(d.by || "").slice(0, 40), amt: Math.max(0, Math.min(1e9, Math.floor(Number(d.amt) || 0))), ts: Math.min(Date.now(), Math.max(0, Number(d.ts) || 0)) })).filter((d) => d.amt > 0) : [];
+    if (!T(it.title, 80)) return null;
+    return { ...base, by, title: T(it.title, 80), target: Math.max(1, Math.min(1e12, Math.floor(Number(it.target) || 0))) || 1000000, dep };
+  }
+  if (c === "chains") {
+    const lines = Array.isArray(it.lines) ? it.lines.slice(-200).map((x) => ({ by: String(x.by || "").slice(0, 40), t: T(x.t, 200), ts: Math.min(Date.now(), Math.max(0, Number(x.ts) || 0)) })).filter((x) => x.t) : [];
+    if (!T(it.title, 80)) return null;
+    return { ...base, by, title: T(it.title, 80), lines };
+  }
+  if (c === "quests") {
+    const done = {};
+    if (it.done && typeof it.done === "object") {
+      for (const [day, dd] of Object.entries(it.done).slice(0, 30)) {
+        const di = Number(day);
+        if (!Number.isInteger(di) || di < 0 || di > 29 || !dd || typeof dd !== "object") continue;
+        const per = {};
+        for (const [uid, ts] of Object.entries(dd).slice(0, 4)) {
+          const n = Math.min(Date.now(), Math.max(0, Number(ts) || 0));
+          if (n) per[String(uid).slice(0, 40)] = n;
+        }
+        done[di] = per;
+      }
+    }
+    return { ...base, title: T(it.title, 80) || "چالش ۳۰ روزه", start: Math.min(Date.now(), Math.max(0, Number(it.start) || 0)), done };
+  }
+  if (c === "arts") {
+    const px = String(it.px || "");
+    if (!/^[0-7]{256}$/.test(px)) return null;
+    return { ...base, by, day: T(it.day, 10), px };
+  }
+  if (c === "spins") {
+    const opts = Array.isArray(it.opts) ? it.opts.slice(0, 8).map((o) => T(o, 60)).filter(Boolean) : [];
+    if (opts.length < 2) return null;
+    return { ...base, title: T(it.title, 80) || "؟", opts, win: Math.max(0, Math.min(opts.length - 1, Number(it.win) || 0)) };
+  }
+  if (c === "capsules") {
+    if (!T(it.body, 2000)) return null;
+    return { ...base, by, title: T(it.title, 80) || "کپسول زمان", body: T(it.body, 2000), openAt: Math.min(4102444800000, Math.max(0, Number(it.openAt) || 0)) };
+  }
+  if (c === "trips") {
+    const items = Array.isArray(it.items) ? it.items.slice(0, 60).map((x) => {
+      const done = {};
+      if (x && x.done && typeof x.done === "object") {
+        for (const [uid, ts] of Object.entries(x.done).slice(0, 4)) {
+          const n = Math.min(Date.now(), Math.max(0, Number(ts) || 0));
+          if (n) done[String(uid).slice(0, 40)] = n;
+        }
+      }
+      return { id: T(x && x.id, 24), t: T(x && x.t, 100), done };
+    }).filter((x) => x.id && x.t) : [];
+    if (!T(it.title, 80)) return null;
+    return { ...base, by, title: T(it.title, 80), dest: T(it.dest, 60), date: T(it.date, 10), items };
+  }
+  if (c === "dares") {
+    const done = {};
+    if (it.done && typeof it.done === "object") {
+      for (const [uid, ts] of Object.entries(it.done).slice(0, 4)) {
+        const n = Math.min(Date.now(), Math.max(0, Number(ts) || 0));
+        if (n) done[String(uid).slice(0, 40)] = n;
+      }
+    }
+    return { ...base, by, t: T(it.t, 120), e: T(it.e, 8), done };
+  }
+  if (c === "polls") {
+    const opts = Array.isArray(it.opts) ? it.opts.slice(0, 4).map((o) => T(o, 80)).filter(Boolean) : [];
+    const votes = {};
+    if (it.votes && typeof it.votes === "object") {
+      for (const [uid, v] of Object.entries(it.votes).slice(0, 4)) {
+        if (!v || typeof v !== "object") continue;
+        const pick = Math.max(0, Math.min(3, Number(v.pick ?? 0)));
+        if (pick < opts.length) votes[String(uid).slice(0, 40)] = { pick, ts: Math.min(Date.now(), Math.max(0, Number(v.ts) || 0)) };
+      }
+    }
+    if (!T(it.q, 200) || opts.length < 2) return null;
+    return { ...base, by, q: T(it.q, 200), opts, votes, closed: !!it.closed };
+  }
+  return null;
+}
+function spaceMergeList(cur, inc, cap, col) {
+  const map = new Map();
+  for (const it of (cur || [])) if (it && it.id) map.set(it.id, it);
+  for (const it of (inc || [])) {
+    if (!it || !it.id) continue;
+    const old = map.get(it.id);
+    if (!old || (it.u || 0) >= (old.u || 0)) {
+      // بازی/چالش: جواب‌های هر دو طرف union می‌شن
+      const UF = col === "games" ? "answers" : col === "dares" ? "done" : col === "polls" ? "votes" : col === "movies" ? "votes" : col === "laws" ? "signs" : null;
+      if (UF && old && it[UF]) {
+        const au = { ...(it[UF] || {}) };
+        for (const [uid, an] of Object.entries(old[UF] || {})) {
+          const has = au[uid];
+          const ats = an && typeof an === "object" ? (an.ts || 0) : (Number(an) || 0);
+          const hts = has && typeof has === "object" ? (has.ts || 0) : (Number(has) || 0);
+          if (an && (!has || ats > hts)) au[uid] = an;
+        }
+        map.set(it.id, { ...it, [UF]: au });
+      } else if (col === "shots" && old) {
+        map.set(it.id, { ...it, entries: { ...(old.entries || {}), ...(it.entries || {}) }, votes: { ...(old.votes || {}), ...(it.votes || {}) } });
+      } else if (col === "ballots" && old) {
+        const wmap = new Map();
+        for (const x of (old.wishes || [])) if (x && x.id) wmap.set(x.id, x);
+        for (const x of (it.wishes || [])) if (x && x.id && !wmap.has(x.id)) wmap.set(x.id, x);
+        map.set(it.id, { ...it, wishes: [...wmap.values()].slice(0, 20), votes: { ...(old.votes || {}), ...(it.votes || {}) } });
+      } else if (col === "casts" && old && Array.isArray(it.segs)) {
+        const seen = new Set((old.segs || []).map((x) => (x.by || "") + ":" + (x.ts || 0)));
+        const merged = (old.segs || []).slice();
+        for (const x of (it.segs || [])) {
+          if (!x || !x.audio) continue;
+          const sig = (x.by || "") + ":" + (x.ts || 0);
+          if (!seen.has(sig)) { seen.add(sig); merged.push(x); }
+        }
+        merged.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        map.set(it.id, { ...it, segs: merged.slice(-12) });
+      } else if (col === "banks" && old && Array.isArray(it.dep)) {
+        const seen = new Set((old.dep || []).map((x) => (x.by || "") + ":" + (x.ts || 0) + ":" + (x.amt || 0)));
+        const merged = (old.dep || []).slice();
+        for (const x of (it.dep || [])) {
+          if (!x || !(Number(x.amt) > 0)) continue;
+          const sig = (x.by || "") + ":" + (x.ts || 0) + ":" + (x.amt || 0);
+          if (!seen.has(sig)) { seen.add(sig); merged.push(x); }
+        }
+        merged.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        map.set(it.id, { ...it, dep: merged.slice(-200) });
+      } else if (col === "chains" && old && Array.isArray(it.lines)) {
+        const seen = new Set((old.lines || []).map((x) => (x.by || "") + ":" + (x.ts || 0)));
+        const merged = (old.lines || []).slice();
+        for (const x of (it.lines || [])) {
+          if (!x || !x.t) continue;
+          const sig = (x.by || "") + ":" + (x.ts || 0);
+          if (!seen.has(sig)) { seen.add(sig); merged.push(x); }
+        }
+        merged.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        map.set(it.id, { ...it, lines: merged.slice(-200) });
+      } else if (col === "quests" && old && it.done) {
+        const dn = { ...(old.done || {}) };
+        for (const [day, dd] of Object.entries(it.done || {})) {
+          dn[day] = { ...(dn[day] || {}), ...(dd || {}) };
+        }
+        map.set(it.id, { ...it, done: dn });
+      } else if (col === "trips" && old && Array.isArray(it.items)) {
+        const imap = new Map();
+        for (const x of (old.items || [])) if (x && x.id) imap.set(x.id, x);
+        for (const x of (it.items || [])) {
+          if (!x || !x.id) continue;
+          const o = imap.get(x.id);
+          if (o) imap.set(x.id, { ...x, done: { ...(o.done || {}), ...(x.done || {}) } });
+          else imap.set(x.id, x);
+        }
+        map.set(it.id, { ...it, items: [...imap.values()].slice(0, 60) });
+      } else if (col === "memories" && old && Array.isArray(old.photos) && old.photos.length) {
+        const seen = new Set((it.photos || []).map((p) => p.length + ":" + p.slice(0, 48)));
+        const merged = (it.photos || []).slice();
+        for (const p of old.photos) {
+          if (merged.length >= 6) break;
+          const sig = p.length + ":" + p.slice(0, 48);
+          if (!seen.has(sig)) { seen.add(sig); merged.push(p); }
+        }
+        map.set(it.id, { ...it, photos: merged });
+      } else {
+        map.set(it.id, it);
+      }
+    }
+  }
+  const out = [...map.values()];
+  out.sort((a, b) => (b.u || b.ts || 0) - (a.u || a.ts || 0));
+  return out.slice(0, cap);
+}
+/* tombstoneها: حذف‌های منتشرشده */
+function spaceApplyTombs(list, tombs) {
+  if (!tombs || !list || !list.length) return list || [];
+  return list.filter((it) => {
+    const t = tombs[it.id];
+    return !(t && t >= (it.u || 0));
+  });
+}
+function spaceMergeTombs(a, b) {
+  const out = { ...((a && typeof a === "object") ? a : {}) };
+  if (b && typeof b === "object") {
+    for (const [col, ids] of Object.entries(b)) {
+      if (!ids || typeof ids !== "object") continue;
+      out[col] = out[col] && typeof out[col] === "object" ? { ...out[col] } : {};
+      for (const [id, ts] of Object.entries(ids).slice(0, 500)) {
+        const n = Number(ts) || 0;
+        if (n > (out[col][id] || 0)) out[col][id] = Math.min(n, Date.now());
+      }
+    }
+  }
+  return out;
+}
+async function spaceGetChat(env, pid) {
+  try { return JSON.parse((await env.CONFIG.get("spacechat:" + pid)) || "null") || { msgs: [], typing: {} }; } catch { return { msgs: [], typing: {} }; }
+}
+async function spacePutChat(env, pid, c) {
+  try {
+    c.msgs = (c.msgs || []).slice(-300);
+    // مدیا (ویس/ویدیو): فقط ۲۵ تای آخر نگه داشته می‌شن تا KV منفجر نشه
+    let media = 0;
+    const kept = [];
+    for (let i = c.msgs.length - 1; i >= 0; i--) {
+      const m = c.msgs[i];
+      if (m && (m.voice || m.video)) { media++; if (media > 25) continue; }
+      kept.unshift(m);
+    }
+    c.msgs = kept;
+    await env.CONFIG.put("spacechat:" + pid, JSON.stringify(c));
+  } catch {}
+}
+const isPlusUser = (user) => !!((user && user.plusUntil) && Number(user.plusUntil) > Date.now());
+
 /* ============================ GET ============================ */
+
+/* ================= وب‌پوش واقعی (v8.2): tickle بدون محتوا ================= */
+function b64uEncode(bytes) {
+  let s = "";
+  const b = new Uint8Array(bytes);
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function b64uDecode(s) {
+  s = String(s || "").replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+/* کلید VAPID: اولین بار خودکار ساخته و در KV نگه داشته می‌شه (خصوصی هرگز بیرون نمیاد) */
+async function vapidGet(env) {
+  let v = await pairGet(env, "push:vapid");
+  if (v && v.pub && v.priv) return v;
+  const kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const pubJwk = await crypto.subtle.exportKey("jwk", kp.publicKey);
+  const privJwk = await crypto.subtle.exportKey("jwk", kp.privateKey);
+  const pubRaw = new Uint8Array([4, ...b64uDecode(pubJwk.x), ...b64uDecode(pubJwk.y)]);
+  v = { pub: b64uEncode(pubRaw.buffer), priv: privJwk };
+  await pairPut(env, "push:vapid", v);
+  return v;
+}
+async function vapidJWT(env, endpoint) {
+  const v = await vapidGet(env);
+  const aud = new URL(endpoint).origin;
+  const head = b64uEncode(new TextEncoder().encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const pay = b64uEncode(new TextEncoder().encode(JSON.stringify({ aud, exp: Math.floor(Date.now() / 1000) + 43200, sub: "https://baham.app" })));
+  const key = await crypto.subtle.importKey("jwk", v.priv, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, new TextEncoder().encode(head + "." + pay));
+  return "vapid t=" + head + "." + pay + "." + b64uEncode(sig) + ", k=" + v.pub;
+}
+/* ارسال tickle (بدون هیچ محتوایی) به یک اشتراک */
+async function pushTickleTo(env, sub) {
+  if (!sub || !sub.endpoint || !/^https:\/\//.test(String(sub.endpoint))) return "bad";
+  try {
+    const auth = await vapidJWT(env, sub.endpoint);
+    const r = await fetch(sub.endpoint, { method: "POST", headers: { Authorization: auth, TTL: "120", Urgency: "normal" } });
+    if (r.status === 404 || r.status === 410) return "gone";
+    return r.ok ? "ok" : "err";
+  } catch { return "err"; }
+}
+async function pushSubsGet(env, uid) {
+  const l = await pairGet(env, "pushsub:" + uid);
+  return Array.isArray(l) ? l : [];
+}
+/* خبر کردن پارتنر بعد از پیام چت */
+async function pushTicklePeer(env, sp, myUid) {
+  const peer = sp && sp.otherId;
+  if (!peer || !env || !env.CONFIG) return;
+  const subs = await pushSubsGet(env, peer);
+  if (!subs.length) return;
+  const keep = [];
+  for (const s of subs) {
+    const st = await pushTickleTo(env, s);
+    if (st !== "gone" && st !== "bad") keep.push(s);
+  }
+  if (keep.length !== subs.length) await pairPut(env, "pushsub:" + peer, keep);
+}
+
+/* ================= اشتراک عمومی 🔗 (v9.1): لینک خاطره و کارت ما ================= */
+const mkShareSlug = () => {
+  const A = "abcdefghjkmnpqrstuvwxyz23456789";
+  let s = "";
+  const a = new Uint8Array(8);
+  crypto.getRandomValues(a);
+  for (const b of a) s += A[b % A.length];
+  return s;
+};
+
+/* ================= باهم پلاس 💎 (v9): کد + زرین‌پال ================= */
+const PLUS_ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const mkPlusCode = () => {
+  let s = "";
+  const a = new Uint8Array(8);
+  crypto.getRandomValues(a);
+  for (const b of a) s += PLUS_ALPH[b % PLUS_ALPH.length];
+  return "BHAM-" + s.slice(0, 4) + "-" + s.slice(4);
+};
+async function plusExtend(env, uid, months) {
+  const user = await getUser(env, uid);
+  if (!user) return 0;
+  const m = Math.max(1, Math.min(24, Number(months) || 1));
+  const until = Math.max(Date.now(), Number(user.plusUntil) || 0) + m * 30 * 86400000;
+  user.plusUntil = until;
+  try { await env.CONFIG.put("user:" + user.id, JSON.stringify(user)); } catch {}
+  return until;
+}
+async function plusSettings(env) {
+  const s = await pairGet(env, "plus:settings");
+  return {
+    merchant: (s && s.merchant) || "",
+    price1: Math.max(0, Number((s && s.price1) || 0)),
+    price12: Math.max(0, Number((s && s.price12) || 0)),
+    sandbox: !!((s && s.sandbox)),
+  };
+}
+
+/* ================= تماس صوتی/تصویری (v9): سیگنالینگ WebRTC ================= */
+const callFresh = (call) => {
+  if (!call || typeof call !== "object") return false;
+  const age = Date.now() - (Number(call.ts) || 0);
+  if (call.state === "ringing") return age < 75000;
+  if (call.state === "active") return age < 3 * 3600000;
+  if (call.state === "ended") return age < 25000;
+  return false;
+};
+/* خلاصه برای چت/نظرسنجی سبک */
+async function callSummary(env, sp) {
+  const call = await pairGet(env, "call:" + sp.pid);
+  if (!callFresh(call) || (call.state !== "ringing" && call.state !== "active")) return null;
+  return { state: call.state, from: call.from, type: call.type, ts: call.ts };
+}
+/* نمای کامل سیگنالینگ برای یک طرف */
+async function callView(env, sp, myUid) {
+  const call = await pairGet(env, "call:" + sp.pid);
+  if (!callFresh(call)) return null;
+  const v = { state: call.state, type: call.type, from: call.from, ts: call.ts, mine: call.from === myUid };
+  if (call.from !== myUid && call.state === "ringing" && call.offer) v.offer = call.offer;
+  if (call.from === myUid && call.answer) v.answer = call.answer;
+  const pc = (call.cand && call.cand[sp.otherId]) || [];
+  if (pc.length) v.cand = pc.slice(-40);
+  return v;
+}
+const cleanSdp = (o) => {
+  if (!o || typeof o !== "object") return null;
+  const sdp = String(o.sdp || "");
+  const type = String(o.type || "");
+  if (!sdp || sdp.length > 12000 || (type !== "offer" && type !== "answer")) return null;
+  return { type, sdp: sdp.slice(0, 12000) };
+};
+const cleanCand = (c) => {
+  if (!c) return null;
+  if (typeof c === "string") return c.length <= 2000 ? c : null;
+  if (typeof c === "object") {
+    const s = JSON.stringify(c);
+    if (s.length > 2000) return null;
+    return { candidate: String(c.candidate || ""), sdpMid: String(c.sdpMid || c.sdpMLineIndex || ""), sdpMLineIndex: Number(c.sdpMLineIndex) || 0 };
+  }
+  return null;
+};
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -450,11 +968,96 @@ export async function onRequestGet(context) {
     return json({ ok: true, invite: invPublic(inv) });
   }
 
+  /* ---------- اشتراک عمومی: خواندن (بدون لاگین) ---------- */
+  if (seg[0] === "share" && seg[1]) {
+    const slug = String(seg[1]).slice(0, 16);
+    if (!/^[a-z0-9]{8}$/.test(slug)) return json({ ok: false, error: "bad_slug" }, 400);
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    if (rateLimited(request, "shareget", 120)) return json({ ok: false, error: "rate_limited" }, 429);
+    const sh = await pairGet(env, "share:" + slug);
+    if (!sh) return json({ ok: false, error: "not_found" }, 404);
+    return json({ ok: true, share: { kind: sh.kind, data: sh.data, ts: sh.ts } });
+  }
+
+  /* ---------- پلاس: وضعیت ---------- */
+  if (seg[0] === "plus" && !seg[1]) {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    return json({ ok: true, plus: isPlusUser(u.user), until: Number(u.user.plusUntil) || 0 });
+  }
+  /* ---------- پلاس: ادمین (کدها + تنظیمات درگاه) ---------- */
+  if (seg[0] === "plus" && seg[1] === "admin") {
+    if (rateLimited(request, "plusadm", 30)) return json({ ok: false, error: "rate_limited" }, 429);
+    const cfg = await currentConfig(env);
+    if (!isAuthed(request, env, cfg)) return json({ ok: false, error: "unauthorized" }, 401);
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    if (request.method === "GET") {
+      const s = await plusSettings(env);
+      let codes = [];
+      try {
+        const idx = await pairGet(env, "plus:idx");
+        codes = Array.isArray(idx) ? idx.slice(0, 100) : [];
+      } catch {}
+      return json({ ok: true, settings: { hasMerchant: !!s.merchant, price1: s.price1, price12: s.price12, sandbox: s.sandbox }, codes });
+    }
+    return json({ ok: false, error: "bad_method" }, 405);
+  }
+
+  /* ---------- تماس: وضعیت سیگنالینگ ---------- */
+  if (seg[0] === "call") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const sp = await spacePair(env, u.user.id);
+    if (!sp) return json({ ok: true, call: null });
+    if (rateLimited(request, "callget", 300)) return json({ ok: false, error: "rate_limited" }, 429);
+    return json({ ok: true, call: await callView(env, sp, u.user.id) });
+  }
+
+  /* ---------- وب‌پوش: کلید عمومی VAPID ---------- */
+  if (seg[0] === "push" && seg[1] === "key") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const v = await vapidGet(env);
+    return json({ ok: true, key: v.pub });
+  }
+
   /* ---------- حالت پارتنر: وضعیت ارتباط ---------- */
   if (seg[0] === "partner") {
     const u = await requireUser(request, env);
     if (u.err) return u.err;
     return json({ ok: true, ...(await partnerFullState(env, u.user.id)) });
+  }
+
+  /* ---------- فضای ما (v8): سینک زوج + چت ---------- */
+  if (seg[0] === "space") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const sp = await spacePair(env, u.user.id);
+    if (!sp) return json({ ok: true, paired: false });
+    const other = await getUser(env, sp.otherId);
+    const partnerName = (other && ((other.profile && other.profile.name) || other.username)) || "پارتنر";
+    if (url.searchParams.get("chat") === "1") {
+      const c = await spaceGetChat(env, sp.pid);
+      const since = Number(url.searchParams.get("since") || 0) || 0;
+      const peerTyping = ((c.typing && c.typing[sp.otherId]) || 0) > Date.now() - 9000;
+      // لوکیشن زنده: منقضی‌ها را هرس کن
+      let peerLive = null;
+      if (c.live && typeof c.live === "object") {
+        let dirty = false;
+        for (const [id, L] of Object.entries(c.live)) {
+          if (!L || !isFinite(L.lat) || !isFinite(L.lng) || (L.until || 0) < Date.now()) { delete c.live[id]; dirty = true; continue; }
+          if (id === sp.otherId) peerLive = L;
+        }
+        if (dirty) await spacePutChat(env, sp.pid, c);
+      }
+      const callSum = await callSummary(env, sp);
+      return json({ ok: true, paired: true, partner: partnerName, me: u.user.id, peer: sp.otherId, peerTyping, peerLive, call: callSum, msgs: (c.msgs || []).filter((m) => m.ts > since).slice(-60) });
+    }
+    const doc = await spaceGetDoc(env, sp.pid);
+    return json({ ok: true, paired: true, partner: partnerName, me: u.user.id, peer: sp.otherId, doc });
   }
 
   /* ---------- کشف: کارت من + کاندیدها + چت‌ها ---------- */
@@ -867,6 +1470,10 @@ export async function onRequestDelete(context) {
       await pairDel(env, "pshare:" + u.user.id);
       await pairDel(env, "pconf:" + u.user.id);
       await pairDel(env, "pair:" + pid);
+      // فضای ما: داک مشترک و چت زوج هم کامل پاک می‌شه
+      await pairDel(env, "space:" + pid);
+      await pairDel(env, "spacechat:" + pid);
+      await pairDel(env, "call:" + pid);
     }
     return json({ ok: true });
   }
@@ -1002,6 +1609,162 @@ export async function onRequestPost(context) {
     await pairPut(env, "pconf:" + u.user.id, { topic, ans, ts: Date.now() });
     const st = await partnerFullState(env, u.user.id);
     return json({ ok: true, bothDone: !!(st.theirConf) });
+  }
+
+  /* ---------- فضای ما (v8): ذخیره داک + چت زوج ---------- */
+  if (seg[0] === "space") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const sp = await spacePair(env, u.user.id);
+    if (!sp) return json({ ok: false, error: "not_paired", message: "اول پارتنرت رو وصل کن" }, 409);
+    const r = await readBody(request, 9000000);
+    if (r.err) return json({ ok: false, error: r.err || "bad_json" }, r.err === "too_large" ? 413 : 400);
+    const body = r.body || {};
+    // تایپینگ چت
+    if (body.typing) {
+      const c = await spaceGetChat(env, sp.pid);
+      c.typing = c.typing || {};
+      c.typing[u.user.id] = Date.now();
+      await spacePutChat(env, sp.pid, c);
+      return json({ ok: true });
+    }
+    // پیام چت
+    if (body.chat && typeof body.chat === "object") {
+      const ch = body.chat;
+      const text = spaceText(ch.text, 500);
+      const burst = ch.burst === true;
+      const react = typeof ch.react === "string" ? ch.react.slice(0, 8).replace(/[<>]/g, "") : "";
+      let loc = null;
+      if (ch.loc && typeof ch.loc === "object") {
+        const la = Number(ch.loc.lat), ln = Number(ch.loc.lng);
+        if (isFinite(la) && isFinite(ln) && Math.abs(la) <= 90 && Math.abs(ln) <= 180) {
+          loc = { lat: Math.round(la * 100000) / 100000, lng: Math.round(ln * 100000) / 100000 };
+        }
+      }
+      // استیکر (v9): ارجاع سبک pack:id
+      let sticker = "";
+      if (typeof ch.sticker === "string" && /^[a-z0-9-]{1,16}:[a-z0-9-]{1,16}$/.test(ch.sticker)) sticker = ch.sticker;
+      // ویس (v9): حداکثر ~۳۰۰KB و ۹۰ ثانیه
+      let voice = "", vdur = 0;
+      if (typeof ch.voice === "string" && ch.voice) {
+        const v = ch.voice;
+        vdur = Math.max(0, Math.min(90, Math.round(Number(ch.vdur) || 0)));
+        if (vdur > 0 && v.length <= 450000 && /^data:audio\/(webm|mp4|ogg|mpeg|wav);base64,[A-Za-z0-9+/=]+$/.test(v)) voice = v;
+        else if (v) return json({ ok: false, error: "bad_voice", message: "ویس خرابه یا خیلی سنگینه (حداکثر ۹۰ ثانیه)" }, 400);
+      }
+      // ویدیو (v9): فقط پلاس — حداکثر ~۲MB و ۳۰ ثانیه
+      let video = "", vidur = 0;
+      if (typeof ch.video === "string" && ch.video) {
+        if (!isPlusUser(u.user)) return json({ ok: false, error: "plus_only", message: "پیام ویدیویی مخصوص باهم پلاسه 💎" }, 402);
+        const v = ch.video;
+        vidur = Math.max(0, Math.min(30, Math.round(Number(ch.vidur) || 0)));
+        if (vidur > 0 && v.length <= 2900000 && /^data:video\/(webm|mp4);base64,[A-Za-z0-9+/=]+$/.test(v)) video = v;
+        else return json({ ok: false, error: "bad_video", message: "ویدیو خرابه یا خیلی سنگینه (حداکثر ۳۰ ثانیه)" }, 400);
+      }
+      if (!text && !burst && !react && !loc && !sticker && !voice && !video) return json({ ok: false, error: "empty" }, 400);
+      if (rateLimited(request, "spchat", 120)) return json({ ok: false, error: "rate_limited", message: "یه کم آروم‌تر ❤️" }, 429);
+      const c = await spaceGetChat(env, sp.pid);
+      const msg = { uid: u.user.id, ts: Date.now(), text, burst: burst || undefined, react: react || undefined, loc: loc || undefined, sticker: sticker || undefined, voice: voice || undefined, vdur: vdur || undefined, video: video || undefined, vidur: vidur || undefined };
+      c.msgs = (c.msgs || []).concat([msg]).slice(-300);
+      await spacePutChat(env, sp.pid, c);
+      try { await pushTicklePeer(env, sp, u.user.id); } catch {}
+      return json({ ok: true, msg });
+    }
+    // لوکیشن زنده (v8.1): {lat,lng,until} یا {stop:true} — حداکثر ۳ ساعت
+    if (body.live && typeof body.live === "object") {
+      const c = await spaceGetChat(env, sp.pid);
+      c.live = (c.live && typeof c.live === "object") ? c.live : {};
+      if (body.live.stop) {
+        delete c.live[u.user.id];
+      } else {
+        const la = Number(body.live.lat), ln = Number(body.live.lng);
+        const until = Number(body.live.until) || 0;
+        if (!isFinite(la) || !isFinite(ln) || Math.abs(la) > 90 || Math.abs(ln) > 180) return json({ ok: false, error: "bad_loc" }, 400);
+        if (rateLimited(request, "splive", 120)) return json({ ok: false, error: "rate_limited" }, 429);
+        c.live[u.user.id] = { lat: Math.round(la * 100000) / 100000, lng: Math.round(ln * 100000) / 100000, ts: Date.now(), until: Math.min(until, Date.now() + 3 * 3600000) };
+      }
+      await spacePutChat(env, sp.pid, c);
+      return json({ ok: true });
+    }
+    // داک سینک
+    if (body.doc && typeof body.doc === "object") {
+      const cur = await spaceGetDoc(env, sp.pid);
+      const inc = body.doc;
+      const next = { ...(cur || {}) };
+      if (inc.profile && typeof inc.profile === "object") {
+        const p = inc.profile;
+        const clean = { me: spaceText(p.me, 40), partner: spaceText(p.partner, 40), meNick: spaceText(p.meNick, 24), partnerNick: spaceText(p.partnerNick, 24), emoji: spaceText(p.emoji, 8), since: spaceText(p.since, 10), theme: spaceText(p.theme, 12), wallpaper: spaceText(p.wallpaper, 12), c1: spaceText(p.c1, 7), c2: spaceText(p.c2, 7), u: Math.min(Date.now(), Math.max(0, Number(p.u) || 0)) };
+        if (!next.profile || (clean.u || 0) >= (next.profile.u || 0)) next.profile = clean;
+      }
+      // tombstoneها اول ادغام می‌شن
+      next.tombs = spaceMergeTombs(next.tombs, inc.tombs);
+      for (const c of Object.keys(SPACE_LISTS)) {
+        if (!Array.isArray(inc[c])) continue;
+        const cleaned = [];
+        for (const it of inc[c].slice(0, SPACE_LISTS[c])) {
+          const cl = spaceCleanItem(c, it);
+          if (cl) cleaned.push(cl);
+        }
+        next[c] = spaceApplyTombs(spaceMergeList(next[c], cleaned, SPACE_LISTS[c], c), (next.tombs || {})[c]);
+      }
+      // یادآور قرار (v9.1): رویداد تازه‌ی نزدیک (۴۸ ساعت آینده) → خبر به پارتنر
+      if (Array.isArray(inc.events)) {
+        try {
+          const oldIds = new Set(((cur.events) || []).map((e) => e && e.id));
+          const now0 = Date.now();
+          const tk = (next.tkrev && typeof next.tkrev === "object") ? next.tkrev : {};
+          let ping = false;
+          for (const e of (next.events || [])) {
+            if (!e || !e.id || !e.date || oldIds.has(e.id) || tk[e.id]) continue;
+            const t = new Date(e.date + "T12:00:00").getTime();
+            if (isFinite(t) && t > now0 - 86400000 && t < now0 + 2 * 86400000) { tk[e.id] = now0; ping = true; }
+          }
+          next.tkrev = tk;
+          if (ping) { try { await pushTicklePeer(env, sp, u.user.id); } catch {} }
+        } catch {}
+      }
+      // حال مشترک (v8.2): مثل daily ولی با v/note
+      if (inc.moods && typeof inc.moods === "object") {
+        const md = { ...((next.moods && typeof next.moods === "object") ? next.moods : {}) };
+        for (const [k, v] of Object.entries(inc.moods).slice(-180)) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v || typeof v !== "object") continue;
+          const curD = (md[k] && typeof md[k] === "object") ? md[k] : {};
+          const a = { ...((curD.a && typeof curD.a === "object") ? curD.a : {}) };
+          const mv = Math.max(0, Math.min(5, Number(v.mineV) || 0));
+          const mTs = Number(v.mineTs || 0);
+          const prevMine = a[u.user.id] || {};
+          if (mv && mTs >= (prevMine.ts || 0)) a[u.user.id] = { v: mv, note: spaceText(v.mineNote, 200), ts: mTs };
+          md[k] = { a, u: Math.max(Number(curD.u || 0), Number(v.u || 0)) };
+        }
+        const mkeys = Object.keys(md).sort().slice(-180);
+        const mslim = {};
+        for (const k of mkeys) mslim[k] = md[k];
+        next.moods = mslim;
+      }
+      // سؤال روزانه: هر کس جواب خودش (mine) را می‌فرستد؛ سرور per-user نگه می‌دارد
+      if (inc.daily && typeof inc.daily === "object") {
+        const dd = { ...((next.daily && typeof next.daily === "object") ? next.daily : {}) };
+        for (const [k, v] of Object.entries(inc.daily).slice(-180)) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v || typeof v !== "object") continue;
+          const curD = (dd[k] && typeof dd[k] === "object") ? dd[k] : {};
+          const a = { ...((curD.a && typeof curD.a === "object") ? curD.a : {}) };
+          const myText = spaceText(v.mine, 500);
+          const myTs = Number(v.mineTs || 0);
+          const prevMine = a[u.user.id] || {};
+          if (myText && myTs >= (prevMine.ts || 0)) a[u.user.id] = { t: myText, ts: myTs };
+          const q = spaceText(v.q || curD.q, 200);
+          dd[k] = { q, a, u: Math.max(Number(curD.u || 0), Number(v.u || 0)) };
+        }
+        const keys = Object.keys(dd).sort().slice(-180);
+        const slim = {};
+        for (const k of keys) slim[k] = dd[k];
+        next.daily = slim;
+      }
+      await spacePutDoc(env, sp.pid, next);
+      return json({ ok: true, me: u.user.id, peer: sp.otherId, doc: next });
+    }
+    return json({ ok: false, error: "bad_request" }, 400);
   }
 
   /* ---------- ایونت‌های دعوت‌نامه ---------- */
@@ -1296,6 +2059,263 @@ export async function onRequestPost(context) {
   }
 
   /* ---------- چت یار ---------- */
+  /* ---------- اشتراک عمومی: ساخت/حذف ---------- */
+  if (seg[0] === "share") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const r = await readBody(request, 600000);
+    if (r.err) return json({ ok: false, error: r.err || "bad_json" }, r.err === "too_large" ? 413 : 400);
+    const b = r.body || {};
+    // حذف
+    if (b.delete) {
+      const slug = String(b.delete).slice(0, 16);
+      if (!/^[a-z0-9]{8}$/.test(slug)) return json({ ok: false, error: "bad_slug" }, 400);
+      const sh = await pairGet(env, "share:" + slug);
+      if (!sh) return json({ ok: true, gone: true });
+      if (sh.uid !== u.user.id) return json({ ok: false, error: "forbidden" }, 403);
+      await pairDel(env, "share:" + slug);
+      try {
+        const idx = (await pairGet(env, "shareidx:" + u.user.id)) || [];
+        await pairPut(env, "shareidx:" + u.user.id, idx.filter((x) => x !== slug));
+      } catch {}
+      return json({ ok: true, deleted: true });
+    }
+    if (rateLimited(request, "sharemk", 20)) return json({ ok: false, error: "rate_limited" }, 429);
+    let data = null, kind = "";
+    if (b.kind === "memory" && b.m && typeof b.m === "object") {
+      kind = "memory";
+      let photo = "";
+      if (typeof b.m.photo === "string" && b.m.photo.length <= 400000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(b.m.photo)) photo = b.m.photo;
+      data = { title: spaceText(b.m.title, 80), text: spaceText(b.m.text, 2000), date: spaceText(b.m.date, 10), place: spaceText(b.m.place, 60), photo };
+      if (!data.title && !data.text && !photo) return json({ ok: false, error: "empty" }, 400);
+    } else if (b.kind === "card" && b.c && typeof b.c === "object") {
+      kind = "card";
+      data = { me: spaceText(b.c.me, 40), partner: spaceText(b.c.partner, 40), since: spaceText(b.c.since, 10), emoji: spaceText(b.c.emoji, 8) || "❤️" };
+      if (!data.me && !data.partner) return json({ ok: false, error: "empty" }, 400);
+    } else {
+      return json({ ok: false, error: "bad_kind" }, 400);
+    }
+    const slug = mkShareSlug();
+    await pairPut(env, "share:" + slug, { kind, uid: u.user.id, ts: Date.now(), data }, 90 * 86400);
+    try {
+      const idx = (await pairGet(env, "shareidx:" + u.user.id)) || [];
+      await pairPut(env, "shareidx:" + u.user.id, [slug].concat(idx).slice(0, 20));
+    } catch {}
+    let origin = "";
+    try { origin = new URL(request.url).origin; } catch {}
+    return json({ ok: true, slug, url: origin + "/share?s=" + slug });
+  }
+
+  /* ---------- پلاس: redeem / خرید / تأیید / ادمین ---------- */
+  if (seg[0] === "plus" && seg[1] === "redeem") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    if (rateLimited(request, "plusredeem", 20)) return json({ ok: false, error: "rate_limited" }, 429);
+    const r = await readBody(request, 1024);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const code = String((r.body && r.body.code) || "").trim().toUpperCase().slice(0, 24);
+    if (!/^[A-Z0-9-]{6,24}$/.test(code)) return json({ ok: false, error: "bad_code", message: "فرمت کد درست نیست" }, 400);
+    const rec = await pairGet(env, "pluscode:" + code);
+    if (!rec) return json({ ok: false, error: "not_found", message: "چنین کدی پیدا نشد" }, 404);
+    if (rec.used) return json({ ok: false, error: "used", message: "این کد قبلاً استفاده شده" }, 409);
+    const until = await plusExtend(env, u.user.id, rec.months);
+    rec.used = { uid: u.user.id, ts: Date.now() };
+    await pairPut(env, "pluscode:" + code, rec);
+    try {
+      const idx = (await pairGet(env, "plus:idx")) || [];
+      const it = idx.find((x) => x && x.code === code);
+      if (it) { it.used = true; await pairPut(env, "plus:idx", idx.slice(0, 200)); }
+    } catch {}
+    return json({ ok: true, until });
+  }
+  if (seg[0] === "plus" && seg[1] === "pay") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    if (rateLimited(request, "pluspay", 20)) return json({ ok: false, error: "rate_limited" }, 429);
+    const r = await readBody(request, 1024);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const months = Number((r.body && r.body.months) || 1) === 12 ? 12 : 1;
+    const s = await plusSettings(env);
+    const amount = months === 12 ? s.price12 : s.price1;
+    if (!s.merchant || !amount || amount < 1000) return json({ ok: false, error: "no_gateway", message: "فعلاً خرید آنلاین فعال نیست؛ از کد فعال‌سازی استفاده کن 🎟" }, 503);
+    let origin = "";
+    try { origin = new URL(request.url).origin; } catch {}
+    const host = s.sandbox ? "api.sandbox.zarinpal.com" : "api.zarinpal.com";
+    const web = s.sandbox ? "www.sandbox.zarinpal.com" : "www.zarinpal.com";
+    try {
+      const zr = await fetch("https://" + host + "/pg/v4/payment/request.json", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ merchant_id: s.merchant, amount, callback_url: origin + "/?plus=verify", description: "باهم پلاس " + (months === 12 ? "یک‌ساله 💎" : "یک‌ماهه 💎") }),
+      });
+      const zj = await zr.json();
+      if (!zj || !zj.data || zj.data.code !== 100 || !zj.data.authority) {
+        return json({ ok: false, error: "gateway", message: "درگاه جواب نداد؛ بعداً دوباره بزن 🔄" }, 502);
+      }
+      await pairPut(env, "pluspay:" + zj.data.authority, { uid: u.user.id, months, amount }, 1800);
+      return json({ ok: true, url: "https://" + web + "/pg/StartPay/" + zj.data.authority });
+    } catch {
+      return json({ ok: false, error: "gateway", message: "درگاه جواب نداد؛ بعداً دوباره بزن 🔄" }, 502);
+    }
+  }
+  if (seg[0] === "plus" && seg[1] === "verify") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const r = await readBody(request, 1024);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const authority = String((r.body && r.body.authority) || "").slice(0, 64);
+    const status = String((r.body && r.body.status) || "");
+    if (!authority) return json({ ok: false, error: "bad_authority" }, 400);
+    if (status !== "" && status !== "OK") return json({ ok: false, error: "cancelled", message: "پرداخت لغو شد" }, 400);
+    const pay = await pairGet(env, "pluspay:" + authority);
+    if (!pay || pay.uid !== u.user.id) {
+      // قبلاً تأیید و مصرف شده؟ وضعیت فعلی رو برگردون
+      return json({ ok: true, dup: true, until: Number(u.user.plusUntil) || 0 });
+    }
+    const s = await plusSettings(env);
+    const host = s.sandbox ? "api.sandbox.zarinpal.com" : "api.zarinpal.com";
+    try {
+      const zr = await fetch("https://" + host + "/pg/v4/payment/verify.json", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ merchant_id: s.merchant, amount: pay.amount, authority }),
+      });
+      const zj = await zr.json();
+      const code = zj && zj.data && zj.data.code;
+      if (code !== 100 && code !== 101) return json({ ok: false, error: "not_verified", message: "پرداخت تأیید نشد؛ اگه پول کم شده خودش برمی‌گرده" }, 400);
+      const until = await plusExtend(env, u.user.id, pay.months);
+      await pairDel(env, "pluspay:" + authority);
+      return json({ ok: true, until, ref: (zj.data && zj.data.ref_id) || "" });
+    } catch {
+      return json({ ok: false, error: "gateway", message: "درگاه جواب نداد؛ چند دقیقه دیگه از تنظیمات دوباره چک کن 🔄" }, 502);
+    }
+  }
+  if (seg[0] === "plus" && seg[1] === "admin") {
+    if (rateLimited(request, "plusadm", 30)) return json({ ok: false, error: "rate_limited" }, 429);
+    const cfg = await currentConfig(env);
+    if (!isAuthed(request, env, cfg)) return json({ ok: false, error: "unauthorized" }, 401);
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const r = await readBody(request, 8192);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const b = r.body || {};
+    // تنظیمات درگاه
+    if (b.op === "settings") {
+      const cur = await plusSettings(env);
+      const next = {
+        merchant: String(b.merchant || "").trim().slice(0, 64) || cur.merchant,
+        price1: Math.max(0, Math.round(Number(b.price1) || 0)),
+        price12: Math.max(0, Math.round(Number(b.price12) || 0)),
+        sandbox: !!b.sandbox,
+      };
+      if (b.clearMerchant) next.merchant = "";
+      await pairPut(env, "plus:settings", next);
+      return json({ ok: true, settings: { hasMerchant: !!next.merchant, price1: next.price1, price12: next.price12, sandbox: next.sandbox } });
+    }
+    // ساخت کد
+    if (b.op === "mkcodes") {
+      const months = Math.max(1, Math.min(24, Number(b.months) || 1));
+      const count = Math.max(1, Math.min(50, Number(b.count) || 1));
+      const made = [];
+      for (let i = 0; i < count; i++) {
+        const code = mkPlusCode();
+        await pairPut(env, "pluscode:" + code, { months, ts: Date.now(), used: null });
+        made.push({ code, months, used: false, ts: Date.now() });
+      }
+      try {
+        const idx = (await pairGet(env, "plus:idx")) || [];
+        await pairPut(env, "plus:idx", made.concat(idx).slice(0, 200));
+      } catch {}
+      return json({ ok: true, codes: made });
+    }
+    return json({ ok: false, error: "bad_op" }, 400);
+  }
+
+  /* ---------- تماس: شروع/جواب/کاندید/قطع ---------- */
+  if (seg[0] === "call") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const sp = await spacePair(env, u.user.id);
+    if (!sp) return json({ ok: false, error: "not_paired" }, 409);
+    if (rateLimited(request, "callpost", 150)) return json({ ok: false, error: "rate_limited" }, 429);
+    const r = await readBody(request, 32768);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const b = r.body || {};
+    const key = "call:" + sp.pid;
+    const cur = await pairGet(env, key);
+    const live = cur && callFresh(cur) && (cur.state === "ringing" || cur.state === "active") ? cur : null;
+    // شروع تماس
+    if (b.action === "start") {
+      if (live) return json({ ok: false, error: "busy", message: "یه تماس در جریانه 📞" }, 409);
+      const type = b.type === "video" ? "video" : "audio";
+      if (type === "video" && !isPlusUser(u.user)) return json({ ok: false, error: "plus_only", message: "تماس تصویری مخصوص باهم پلاسه 💎" }, 402);
+      const offer = cleanSdp(b.offer);
+      if (!offer || offer.type !== "offer") return json({ ok: false, error: "bad_offer" }, 400);
+      const call = { state: "ringing", from: u.user.id, type, offer, answer: null, cand: {}, ts: Date.now() };
+      await pairPut(env, key, call, 180);
+      try { await pushTicklePeer(env, sp, u.user.id); } catch {}
+      return json({ ok: true, call: await callView(env, sp, u.user.id) });
+    }
+    // جواب دادن (فقط طرف مقابل، فقط در حال زنگ)
+    if (b.action === "answer") {
+      if (!live || live.state !== "ringing" || live.from === u.user.id) return json({ ok: false, error: "no_call" }, 409);
+      const answer = cleanSdp(b.answer);
+      if (!answer || answer.type !== "answer") return json({ ok: false, error: "bad_answer" }, 400);
+      live.answer = answer; live.state = "active";
+      await pairPut(env, key, live, 3 * 3600);
+      return json({ ok: true, call: await callView(env, sp, u.user.id) });
+    }
+    // کاندید ICE
+    if (b.action === "candidate") {
+      if (!live) return json({ ok: false, error: "no_call" }, 409);
+      const cd = cleanCand(b.candidate);
+      if (!cd) return json({ ok: false, error: "bad_cand" }, 400);
+      live.cand = live.cand || {};
+      const mine = (live.cand[u.user.id] || []).concat([cd]).slice(-40);
+      live.cand[u.user.id] = mine;
+      await pairPut(env, key, live, live.state === "active" ? 3 * 3600 : 180);
+      return json({ ok: true });
+    }
+    // قطع / رد
+    if (b.action === "hangup" || b.action === "decline") {
+      if (cur && callFresh(cur)) {
+        cur.state = "ended"; cur.ts = Date.now();
+        await pairPut(env, key, cur, 30);
+      }
+      return json({ ok: true, ended: true });
+    }
+    return json({ ok: false, error: "bad_action" }, 400);
+  }
+
+  /* ---------- وب‌پوش: اشتراک/لغو tickle ---------- */
+  if (seg[0] === "push") {
+    const u = await requireUser(request, env);
+    if (u.err) return u.err;
+    if (!env || !env.CONFIG) return json({ ok: false, error: "no_kv" }, 501);
+    const r = await readBody(request, 2048);
+    if (r.err) return json({ ok: false, error: "bad_json" }, 400);
+    const b = r.body || {};
+    const subs = await pushSubsGet(env, u.user.id);
+    if (b.unsub) {
+      const ep = String(b.unsub).slice(0, 500);
+      await pairPut(env, "pushsub:" + u.user.id, subs.filter((s) => s && s.endpoint !== ep));
+      return json({ ok: true, off: true });
+    }
+    const s = b.sub || {};
+    if (!s.endpoint || !/^https:\/\/.{4,500}$/.test(String(s.endpoint))) return json({ ok: false, error: "bad_sub" }, 400);
+    if (!s.keys || typeof s.keys.p256dh !== "string" || typeof s.keys.auth !== "string") return json({ ok: false, error: "bad_sub" }, 400);
+    if (rateLimited(request, "pushsub", 30)) return json({ ok: false, error: "rate_limited" }, 429);
+    const clean = { endpoint: String(s.endpoint).slice(0, 500), keys: { p256dh: String(s.keys.p256dh).slice(0, 200), auth: String(s.keys.auth).slice(0, 100) }, ts: Date.now() };
+    const rest = subs.filter((x) => x && x.endpoint !== clean.endpoint);
+    rest.unshift(clean);
+    await pairPut(env, "pushsub:" + u.user.id, rest.slice(0, 3));
+    return json({ ok: true, on: true });
+  }
+
   if (seg[0] === "chat") {
     const u = await requireUser(request, env);
     if (u.err) return u.err;
@@ -1319,12 +2339,21 @@ export async function onRequestPost(context) {
     const qText = String(b.text || "").replace(/\s+/g, " ").trim().slice(0, 6000);
     if (!qText && !images.length) return json({ ok: false, error: "empty", message: "یه چیزی بنویس یا عکس بذار، بعد بفرست" }, 400);
     const modeId = MODES[b.mode] ? b.mode : "reply";
+    // دستیار حافظه (v9): رایگان روزی ۵ سؤال، پلاس نامحدود
+    if (modeId === "memory" && !isPlusUser(u.user)) {
+      const day = new Date().toISOString().slice(0, 10);
+      const qk = "memq:" + u.user.id + ":" + day;
+      const qn = (await pairGet(env, qk)) || { d: day, n: 0 };
+      const n = (qn.d === day ? Number(qn.n) || 0 : 0) + 1;
+      if (n > 5) return json({ ok: false, error: "memory_quota", message: "سهم امروزت از دستیار حافظه تموم شد (۵ سؤال)؛ با باهم پلاس نامحدود می‌شه 💎" }, 402);
+      await pairPut(env, qk, { d: day, n });
+    }
     const messages = buildAiMessages(u.user, { ...b, style: styleId }, images);
 
     const saveChat = async (fullText) => {
       try {
         const h = await getHist(env, u.user.id);
-        const LBL = { reply: "چی جواب بدم", opener: "شروع گفتگو", rewrite: "بهترش کن", analyze: "چی می‌گه؟", date: "کجا بریم", sim: "جای اون", apology: "آشتی", sensitive: "موضوع حساس", sos: "الان چی بگم", comfort: "دلداری", congrats: "تبریک", express: "دوستش دارم؟", nothing: "هیچی نیستم" };
+        const LBL = { reply: "چی جواب بدم", opener: "شروع گفتگو", rewrite: "بهترش کن", analyze: "چی می‌گه؟", date: "کجا بریم", sim: "جای اون", apology: "آشتی", sensitive: "موضوع حساس", sos: "الان چی بگم", comfort: "دلداری", congrats: "تبریک", express: "دوستش دارم؟", nothing: "هیچی نیستم", memory: "حافظه‌ی رابطه" };
         h.chats.unshift({
           id: randHex(4) + "-" + Date.now().toString(36),
           ts: Date.now(),

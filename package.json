@@ -1,6 +1,6 @@
 {
-  "name": "rol-invite-next",
-  "version": "7.0.0",
+  "name": "baham",
+  "version": "10.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,6 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "leaflet": "^1.9.4",
     "next": "14.2.35",
     "react": "18.3.1",
     "react-dom": "18.3.1"

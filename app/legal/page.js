@@ -1,6 +1,6 @@
 import { Ic } from "@/lib/icons";
 
-export const metadata = { title: "قوانین و حریم خصوصی — مخ‌یار" };
+export const metadata = { title: "قوانین و حریم خصوصی — باهم" };
 
 export default function LegalPage() {
   return (
@@ -48,10 +48,10 @@ export default function LegalPage() {
 
         <section className="card setsec">
           <h3><Ic n="info" s={17} /> هوش مصنوعی از کجا می‌آید؟</h3>
-          <p className="dim small">مخ‌یار فقط واسطه است: پاسخ‌ها با اکانت یا کلید هوش مصنوعیِ خودت (مثلاً از طریق اتصال OpenRouter یا کلید شخصی) و روی سرورِ خودِ این اپ ساخته می‌شوند. متن گفتگو برای ساخت پاسخ به همان سرویس می‌رود و ذیل قوانین همان سرویس است.</p>
+          <p className="dim small">باهم فقط واسطه است: پاسخ‌ها با اکانت یا کلید هوش مصنوعیِ خودت (مثلاً از طریق اتصال OpenRouter یا کلید شخصی) و روی سرورِ خودِ این اپ ساخته می‌شوند. متن گفتگو برای ساخت پاسخ به همان سرویس می‌رود و ذیل قوانین همان سرویس است.</p>
         </section>
 
-        <a className="btn primary big" href="/">برگشت به مخ‌یار</a>
+        <a className="btn primary big" href="/">برگشت به باهم</a>
       </main>
     </div>
   );

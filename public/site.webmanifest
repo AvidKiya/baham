@@ -1,15 +1,25 @@
 {
-  "name": "مخ‌یار — همراهِ مخ زدن",
-  "short_name": "مخ‌یار",
-  "description": "همراهِ همیشگیِ مخ زدن: پاسخ‌های هوشمند، تحلیل استوری، دعوت‌نامه‌ی تعاملی",
+  "id": "/",
+  "name": "باهم — از مخ زدن تا ما شدن",
+  "short_name": "باهم",
+  "description": "از اولین پیام تا خونه‌ی مشترک: چت‌یار هوشمند، فضای دونفره، خاطرات، تقویم و قرار",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "orientation": "portrait",
-  "background_color": "#0b0810",
-  "theme_color": "#0b0810",
+  "background_color": "#16132a",
+  "theme_color": "#ff4f8b",
   "lang": "fa",
   "dir": "rtl",
+  "categories": [
+    "lifestyle",
+    "social",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "/assets/icon-192.png",
@@ -20,7 +30,72 @@
       "src": "/assets/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "فضای ما",
+      "short_name": "فضا",
+      "description": "خونه‌ی دیجیتال رابطه‌تون",
+      "url": "/?tab=space",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "چت ما",
+      "short_name": "چت",
+      "description": "گفتگوی خصوصی با پارتنرت",
+      "url": "/?tab=space&view=chat",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "خاطره جدید",
+      "short_name": "خاطره",
+      "description": "ثبت سریع خاطره",
+      "url": "/?tab=space&view=memories&new=1",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "چت‌یار",
+      "short_name": "یار",
+      "description": "چی جواب بدم؟",
+      "url": "/?tab=chat",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/?share=1",
+    "method": "GET",
+    "params": {
+      "title": "t",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
